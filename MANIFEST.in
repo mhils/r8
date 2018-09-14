@@ -1,0 +1,2 @@
+graft r8
+global-exclude *.py[cod] __pycache__

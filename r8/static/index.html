@@ -1,0 +1,359 @@
+<!doctype html>
+<html lang="en">
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
+
+    <title>CTF</title>
+
+    <link rel="stylesheet" href="css/bootstrap.css">
+    <link rel="stylesheet" href="css/style.css">
+</head>
+<body>
+<div id="root"></div>
+<footer class="text-center mb-2">
+    <a href="https://github.com/mhils/r8"
+       class="text-muted" target="_blank">📧 Feedback</a>
+    &ndash;
+    <a href="https://github.com/mhils/r8"
+       class="text-muted" target="_blank">🐛 Report Bugs</a>
+</footer>
+
+<script src="js/polyfills.js"></script>
+<script src="js/react.js"></script>
+<script src="js/react-dom.js"></script>
+<script src="js/babel.js"></script>
+<script type="text/babel">
+    // Grunt, Gulp, Webpack, Browserify, create-react-app, etc. are just not worth it.
+    // in-browser compilation will do.
+
+    function fetchApi(url, options) {
+        if ("token" in localStorage) {
+            url += (url.includes("?") ? "&" : "?") + `token=${localStorage["token"]}`;
+        }
+        return fetch(url, options)
+            .catch(err => {
+                throw "Network error."
+            })
+            .then(r => r.text())
+            .then(text => {
+                try {
+                    return JSON.parse(text);
+                } catch (e) {
+                    throw text;
+                }
+            })
+    }
+
+    function login(username, password) {
+        let req = {
+            username: username.trim(),
+            password: password.trim()
+        }
+        return fetchApi("/api/login", {
+            method: "POST",
+            body: JSON.stringify(req)
+        }).then(json => {
+            localStorage["token"] = json["token"];
+        });
+    }
+
+    function logout() {
+        delete localStorage["token"];
+        return Promise.resolve(true);
+    }
+
+
+    /**
+     * Like React's dangerouslySetInnerHTML, but also with JS evaluation.
+     * Usage:
+     *   <div ref={setDangerousHtml.bind(null, html)}/>
+     */
+    const setDangerousHtml = (html, el) => {
+        if (el === null) return;
+        const range = document.createRange();
+        range.selectNodeContents(el);
+        range.deleteContents();
+        el.appendChild(range.createContextualFragment(html));
+    }
+
+
+    function Nav({ user, onLogout }) {
+        function doLogout() {
+            logout().then(onLogout);
+        }
+
+        return <nav className="navbar sticky-top navbar-light bg-light">
+            <div className="container">
+                <a className="navbar-brand" href="#">
+                    <div className="logo"/>
+                    Capture The Flag
+                </a>
+                <span className="navbar-text">
+                {user &&
+                <button className="btn btn-sm btn-outline-dark"
+                        onClick={doLogout}>Logout {user}</button>
+                }
+                </span>
+            </div>
+        </nav>
+    }
+
+    class Login extends React.Component {
+        constructor(props) {
+            super(props);
+            this.state = {
+                username: "",
+                password: "",
+                error: false
+            };
+            this.onChange = this.onChange.bind(this);
+            this.onSubmit = this.onSubmit.bind(this);
+        }
+
+        render() {
+            return <div className="container p-5">
+                <div className="row justify-content-md-center">
+                    <form className="col-4 text-center" onSubmit={this.onSubmit}>
+
+                        <div className="form-group">
+                            <input name="username" type="text" placeholder="Username"
+                                   className="form-control" value={this.state.username}
+                                   autoComplete="username"
+                                   onChange={this.onChange}/>
+                        </div>
+                        <div className="form-group">
+                            <input name="password" type="password" placeholder="Password"
+                                   className="form-control" value={this.state.password}
+                                   autoComplete="current-password"
+                                   onChange={this.onChange}/>
+                        </div>
+                        <div className="form-group">
+                            <button className="btn btn-primary btn-lg px-5">Login</button>
+                        </div>
+                        {this.state.error &&
+                        <div className="alert alert-danger" role="alert">
+                            {this.state.error}
+                        </div>
+                        }
+                    </form>
+                </div>
+            </div>;
+        }
+
+        onChange(e) {
+            this.setState({
+                [e.target.name]: e.target.value
+            });
+        }
+
+        onSubmit(e) {
+            e.preventDefault();
+            this.setState({
+                error: false
+            }, () => {
+                login(this.state.username, this.state.password)
+                    .then(this.props.onLogin)
+                    .catch(err => {
+                        console.log("AYY", err)
+                        this.setState({ error: err });
+                    });
+            });
+
+        }
+    }
+
+    class Submit extends React.Component {
+        constructor(props) {
+            super(props);
+
+            this.state = {
+                flag: "",  // maybe this one? __flag__{30b1bef89d542fe722551d0d3e575a72}
+                error: false,
+                success: false,
+            }
+            this.onSubmit = this.onSubmit.bind(this);
+            this.onChange = this.onChange.bind(this);
+        }
+
+        onSubmit(e) {
+            e.preventDefault();
+            if (this.state.flag.trim() === "") {
+                return;
+            }
+            fetchApi("/api/submit", {
+                method: "POST",
+                body: JSON.stringify({ flag: this.state.flag.trim() })
+            }).then(json => {
+                this.props.onSolve(json.challenges);
+                this.setState({ success: json.solved, error: false, flag: "" }, () => {
+                    setTimeout(() => this.setState({ success: false }), 10000)
+                })
+            }).catch(error => {
+                this.setState({ error, success: false, flag: "" }, () => {
+                    setTimeout(() => this.setState({ error: false }), 1000)
+                })
+            })
+        }
+
+        onChange(e) {
+            this.setState({
+                [e.target.name]: e.target.value
+            });
+        }
+
+        render() {
+            return <section id="flag-submission">
+                <form className="container p-5" onSubmit={this.onSubmit}>
+                    <div className="form-group">
+                        <input name="flag" type="text" className="form-control"
+                               placeholder="__flag__{...}" value={this.state.flag}
+                               onChange={this.onChange} autoComplete="off"/>
+                    </div>
+                    <div className="form-group">
+                        {this.state.error &&
+                        <button
+                            className="btn btn-danger btn-lg">{this.state.error}</button>
+                        }
+                        {!this.state.error && this.state.success &&
+                        <button
+                            className="btn btn-success btn-lg">
+                            <strong>Congratulations!</strong> {this.state.success} is solved.</button>
+                        }
+                        {!this.state.error && !this.state.success &&
+                        <button className="btn btn-dark btn-lg">Submit Flag</button>
+                        }
+                    </div>
+                </form>
+            </section>;
+        }
+    }
+
+    function Challenge({ challenge }) {
+        const expired = Date.now() / 1000 > challenge.stop;
+        let className = "card mb-2";
+        let time;
+        if (challenge.solved) {
+            className += " card-solved";
+            time = `Gelöst: ${new Date(challenge.solved * 1000).toLocaleString()}`;
+        } else if (expired) {
+            className += " card-expired";
+            time = `Abgelaufen: ${new Date(challenge.stop * 1000).toLocaleString()}`;
+        } else {
+            className += " card-active";
+            let stopDate = new Date(challenge.stop * 1000);
+            let stop = stopDate.getFullYear() > 3000 ? "–" : stopDate.toLocaleString()
+            time = `Frist: ${stop}`;
+        }
+
+        return <div className={className}>
+            <div className="card-body">
+                <h5 className="card-title">{challenge.title}</h5>
+                <h6 className="card-subtitle text-muted mb-2">{time}</h6>
+                <div className="card-text"
+                     ref={setDangerousHtml.bind(null, challenge.description)}/>
+            </div>
+        </div>;
+    }
+
+    function ChallengeList({ title, challenges }) {
+        return <React.Fragment>
+            <h2>{title}</h2>
+            {challenges.map(x => {
+                return <Challenge key={x.cid} challenge={x}/>
+            })}
+        </React.Fragment>;
+    }
+
+    function Dashboard({ challenges, onSolve }) {
+        let solved = challenges
+            .filter(c => c.solved)
+            .sort((a, b) => b.solved - a.solved);
+        let active = challenges
+            .filter(c => !c.solved && Date.now() / 1000 <= c.stop)
+            .sort((a, b) => a.stop - b.stop)
+        let expired = challenges
+            .filter(c => !c.solved && Date.now() / 1000 > c.stop)
+            .sort((a, b) => a.stop - b.stop);
+        return <React.Fragment>
+            <Submit onSolve={onSolve}/>
+            <section id="challenge-list" className="container mt-4">
+                <ChallengeList title="Active Challenges" challenges={active}/>
+                <ChallengeList title="Solved Challenges" challenges={solved}/>
+                <ChallengeList title="Expired Challenges" challenges={expired}/>
+            </section>
+        </React.Fragment>
+    }
+
+    class Main extends React.Component {
+        constructor(props) {
+            super(props);
+            this.state = {
+                uiState: ("token" in localStorage) ? "fetching" : "login",
+                challenges: []
+            };
+            this.onLogin = this.onLogin.bind(this);
+            this.onLogout = this.onLogout.bind(this);
+            this.onSolve = this.onSolve.bind(this);
+            this.fetchStatus = this.fetchStatus.bind(this);
+        }
+
+        componentDidMount() {
+            if (this.state.uiState === "fetching") {
+                this.fetchStatus()
+            }
+        }
+
+        render() {
+            let body;
+            switch (this.state.uiState) {
+                case "fetching":
+                    body = <div className="text-center rotating">⌛</div>;
+                    break;
+                case "login":
+                    body = <Login onLogin={this.onLogin}/>;
+                    break;
+                case "dashboard":
+                    body = <Dashboard challenges={this.state.challenges} onSolve={this.onSolve}/>;
+                    break;
+            }
+            let user = "token" in localStorage ? localStorage["token"].split(".")[0] : false;
+
+            return <React.Fragment>
+                <Nav user={user} onLogout={this.onLogout}/>
+                {body}
+            </React.Fragment>;
+        }
+
+        onLogin() {
+            this.setState({ uiState: "fetching" }, this.fetchStatus);
+        }
+
+        onLogout() {
+            this.setState({ uiState: "login", challenges: [] });
+        }
+
+        onSolve(challenges) {
+            this.setState({ challenges });
+        }
+
+        fetchStatus() {
+            fetchApi("/api/challenges")
+                .then(challenges => {
+                    console.debug("challenges", challenges)
+                    this.setState({
+                        uiState: "dashboard",
+                        challenges: challenges,
+                    })
+                })
+                .catch(error => {
+                    console.error(error);
+                    this.setState({ uiState: "login" })
+                })
+        }
+    }
+
+    ReactDOM.render(<Main/>, document.getElementById('root'));
+</script>
+</body>
+</html>

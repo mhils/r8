@@ -1,0 +1,12 @@
+[Unit]
+Description=r8 autograding system
+
+[Service]
+Type=simple
+ExecStart=/usr/local/bin/r8 run
+WorkingDirectory=/root/r8
+EnvironmentFile=/root/.r8_secret
+Restart=always
+
+[Install]
+WantedBy=multi-user.target
