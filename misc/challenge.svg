@@ -2,7 +2,7 @@
 	<!-- 
 		https://github.com/googlei18n/noto-emoji/blob/master/svg/emoji_u1f3f0.svg + flag 
 		PNG Conversion:
-		convert -density 400 -resize x128 challenge.svg challenge.png
+		convert -density 400 -resize x128 -background transparent challenge.svg challenge.png
 	-->
 	<path
        style="fill:#ed434b"

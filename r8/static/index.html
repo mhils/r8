@@ -155,7 +155,6 @@
                 login(this.state.username, this.state.password)
                     .then(this.props.onLogin)
                     .catch(err => {
-                        console.log("AYY", err)
                         this.setState({ error: err });
                     });
             });

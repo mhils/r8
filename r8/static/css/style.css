@@ -42,4 +42,5 @@ body {
     height: 30px;
     margin-right: 6px;
     background-image: url("../logo.svg");
+    background-size: cover;
 }
