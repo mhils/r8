@@ -53,10 +53,7 @@ def authenticated(f: Callable[[str, web.Request], Any]) -> Callable[[web.Request
 
     @wraps(f)
     def wrapper(request):
-        try:
-            token = request.query["token"]
-        except KeyError:
-            return web.HTTPUnauthorized()
+        token = request.query.get("token", "")
         try:
             user = auth_sign.unsign(token).decode()
         except itsdangerous.BadData:
