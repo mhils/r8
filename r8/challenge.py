@@ -119,6 +119,26 @@ class Challenge:
         else:
             return ""
 
+    def get_data(self, key: str) -> Optional[str]:
+        """
+        Get persistent challenge data for a specific key.
+        """
+        # Could be extended to support key: Optional[str] and then return a list.
+        with r8.db:
+            return (r8.db.execute("""
+                SELECT value FROM data WHERE cid = ? AND key = ?
+            """, (self.id, key)).fetchone() or [None])[0]
+
+    def set_data(self, key: str, value: str):
+        """
+        Set persistent challenge data for a specific key.
+        """
+        with r8.db:
+            r8.db.execute(
+                """INSERT OR REPLACE INTO data (cid, key, value) VALUES (?,?,?)""",
+                (self.id, key, value)
+            )
+
 
 def get_challenges() -> List[str]:
     with r8.db:
