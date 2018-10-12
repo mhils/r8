@@ -25,29 +25,3 @@ class Attendance(r8.Challenge):
     @property
     def title(self):
         return f"Attendance {self.args}"
-
-    async def description(self, user: str, solved: bool):
-        return ""
-
-
-class Stage(r8.Challenge):
-    # FIXME: Remove this. The SuperBank example shows how to do it better.
-    """
-    (Hacky) Support for multi-stage challenges.
-    """
-
-    @property
-    def title(self):
-        t = r8.challenges[self.args].title
-
-        def repl(m):
-            stage = int(m.group(1) or "1") + 1
-            return f" (Stage {stage})"
-
-        return re.sub(r"(?: \(Stage (\d+)\)|)$", repl, t)
-
-    async def description(self, user: str, solved: bool):
-        return ""
-
-    async def visible(self, user: str):
-        return r8.util.has_solved(user, self.args)

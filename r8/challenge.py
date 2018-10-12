@@ -28,13 +28,12 @@ class Challenge:
         """The challenge name visible to the user."""
         pass
 
-    @abc.abstractmethod
     async def description(self, user: str, solved: bool) -> str:
         """
         Challenge description visible to the user. Supports full HTML.
         There is no additional security layer, XSS is entirely possible.
         """
-        pass
+        return ""
 
     async def start(self) -> None:
         """Start the challenge, e.g. by starting a server."""
@@ -56,10 +55,11 @@ class Challenge:
     def log_and_create_flag(
         self,
         ip: r8.util.THasIP,
+        user: Optional[str] = None,
+        *,
         max_submissions: int = 1,
-        flag: str = None,
-        stage: int = 1,
-        log_uid: Optional[str] = None,
+        flag: Optional[str] = None,
+        challenge: Optional[str] = None,
     ) -> str:
         """
         Create a new flag that can be redeemed for this challenge and log its creation.
@@ -70,15 +70,14 @@ class Challenge:
         automatically on startup), use r8.util.create_flag directly.
         """
         if not self.active:
-            self.log(ip, "flag-inactive", uid=log_uid)
+            self.log(ip, "flag-inactive", uid=user)
             return "__flag__{challenge inactive}"
 
-        challenge = self.id
-        for _ in range(1, stage):
-            challenge = f"Stage({challenge})"
+        if not challenge:
+            challenge = self.id
 
         flag = r8.util.create_flag(challenge, max_submissions, flag)
-        self.log(ip, "flag-create", data=flag, uid=log_uid)
+        r8.log(ip, "flag-create", flag, uid=user, cid=challenge)
         return flag
 
     @property

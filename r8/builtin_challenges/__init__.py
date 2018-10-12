@@ -3,5 +3,4 @@ from . import (
     basic,
     form_example,
     from_folder,
-    stages_example,
 )

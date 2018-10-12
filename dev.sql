@@ -11,10 +11,7 @@ INSERT INTO challenges (cid, team, t_start, t_stop) VALUES
   ('Attendance(01.01.2042)', 0, datetime('2042-01-01 00:00:00'), datetime('2042-01-01 14:00:00')),
   -- Other examples
   ('FormExample', 1, datetime('now'), datetime('now','+1 month')),
-  ('FromFolder(../r8/misc/folder-example)', 1, datetime('now'), datetime('now','+1 month','start of day')),
-  ('MultiStageExample', 1, datetime('now'), datetime('now','+1 month','start of day')),
-  -- Make sure to register all stages for multi stage challenges. This is a bit unintuitive.
-  ('Stage(MultiStageExample)', 1, datetime('now'), datetime('now','+1 month','start of day'))
+  ('FromFolder(../r8/misc/folder-example)', 1, datetime('now'), datetime('now','+1 month','start of day'))
 ;
 
 DELETE FROM users;
