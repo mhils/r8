@@ -1,6 +1,7 @@
 import asyncio
 import datetime
 import functools
+import os
 import secrets
 import sqlite3
 import textwrap
@@ -10,6 +11,7 @@ from typing import Optional, Union, Tuple
 
 import argon2
 import click
+import itsdangerous
 import texttable
 from aiohttp import web
 
@@ -36,6 +38,11 @@ def echo(namespace: str, message: str, err: bool = False) -> None:
         color = _colors[hash(str) % len(_colors)]
     click.echo(click.style(f"[{namespace}] ", fg=color) + message)
 
+
+auth_sign = itsdangerous.Signer(
+    os.getenv("R8_SECRET", secrets.token_bytes(32)),
+    salt="auth"
+)
 
 database_path = click.option(
     "--database",
@@ -121,6 +128,38 @@ def media(src, desc, visible: bool = True):
             <div class="align-self-center media-body">{desc}</div>
         </div>
         """)
+
+
+def spoiler(help_text: str, button_text="🕵️ Show Hint") -> str:
+    """
+    HTML for spoiler element in challenge descriptions
+    """
+    div_id = secrets.token_hex(5)
+    return f"""<div id="{div_id}-help" class="d-none">
+                <hr/>
+                {help_text}
+            </div>
+            <div id="{div_id}-button" class="btn btn-outline-info btn-sm">{button_text}</div>
+            <script>
+            document.getElementById("{div_id}-button").addEventListener("click", function(){{
+                document.getElementById("{div_id}-button").classList.add("d-none");
+                document.getElementById("{div_id}-help").classList.remove("d-none");
+            }});
+            </script>"""
+
+
+def api_url(user: str, path: str) -> str:
+    """
+    URL to the CTF System API
+    """
+    origin = os.getenv("R8_ORIGIN", "").rstrip("/")
+    token = r8.util.auth_sign.sign(user.encode()).decode()
+    path = path.lstrip("/")
+    if "?" in path:
+        path += f"&token={token}"
+    else:
+        path += f"?token={token}"
+    return f"{origin}/{path}"
 
 
 def create_flag(

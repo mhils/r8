@@ -31,6 +31,7 @@ class Attendance(r8.Challenge):
 
 
 class Stage(r8.Challenge):
+    # FIXME: Remove this. The SuperBank example shows how to do it better.
     """
     (Hacky) Support for multi-stage challenges.
     """

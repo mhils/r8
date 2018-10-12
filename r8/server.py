@@ -15,12 +15,6 @@ import r8
 
 DEFAULT_STATIC_DIR = Path(__file__).parent / "static"
 
-auth_sign = itsdangerous.Signer(
-    os.getenv("R8_SECRET", secrets.token_bytes(32)),
-    salt="auth"
-)
-
-
 async def login(request: web.Request):
     logindata = await request.json()
     try:
@@ -39,7 +33,7 @@ async def login(request: web.Request):
             raise RuntimeError()
         r8.util.verify_hash(ok[0], password)
         r8.log(request, "login-success", uid=user)
-        token = auth_sign.sign(user.encode()).decode()
+        token = r8.util.auth_sign.sign(user.encode()).decode()
         return web.json_response({"token": token})
     except (argon2.exceptions.VerificationError, RuntimeError):
         r8.log(request, "login-fail", user, uid=user if ok else None)
@@ -55,7 +49,7 @@ def authenticated(f: Callable[[str, web.Request], Any]) -> Callable[[web.Request
     def wrapper(request):
         token = request.query.get("token", "")
         try:
-            user = auth_sign.unsign(token).decode()
+            user = r8.util.auth_sign.unsign(token).decode()
         except itsdangerous.BadData:
             return web.HTTPUnauthorized()
         else:
@@ -190,7 +184,8 @@ async def handle_challenge_request(user: str, request: web.Request):
     cid = request.match_info["cid"]
     if cid not in r8.challenges:
         return web.HTTPBadRequest(reason="Unknown challenge.")
-    r8.log(request, "handle-request", await request.text(), uid=user, cid=cid)
+    path = (request.match_info["path"] + " ").lstrip()
+    r8.log(request, "handle-request", path + await request.text(), uid=user, cid=cid)
     inst = r8.challenges[cid]
     resp = await inst.handle_request(user, request)
     if isinstance(resp, str):
@@ -200,6 +195,7 @@ async def handle_challenge_request(user: str, request: web.Request):
 
 def make_app(static_dir: Union[Path,str]) -> web.Application:
     static_dir = Path(static_dir)
+
     async def index(_):
         return web.FileResponse(static_dir / 'index.html')
 
@@ -207,7 +203,7 @@ def make_app(static_dir: Union[Path,str]) -> web.Application:
     app.router.add_get('/api/challenges', get_challenges)
     app.router.add_post('/api/login', login)
     app.router.add_post('/api/submit', submit_flag)
-    app.router.add_post('/api/challenges/{cid}{path:/.+}', handle_challenge_request)
+    app.router.add_post('/api/challenges/{cid}{path:(/.+)?}', handle_challenge_request)
     app.router.add_get('/', index)
     app.router.add_static('/', path=static_dir)
     return app
