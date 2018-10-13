@@ -1,7 +1,5 @@
 import html
-import os
 import re
-import secrets
 import traceback
 from functools import wraps
 from pathlib import Path
@@ -14,6 +12,7 @@ from aiohttp import web
 import r8
 
 DEFAULT_STATIC_DIR = Path(__file__).parent / "static"
+
 
 async def login(request: web.Request):
     logindata = await request.json()
@@ -181,19 +180,24 @@ async def submit_flag(user: str, request: web.Request):
 
 @authenticated
 async def handle_challenge_request(user: str, request: web.Request):
-    cid = request.match_info["cid"]
-    if cid not in r8.challenges:
+    try:
+        inst = r8.challenges[request.match_info["cid"]]
+    except KeyError:
         return web.HTTPBadRequest(reason="Unknown challenge.")
-    path = (request.match_info["path"] + " ").lstrip()
-    r8.log(request, "handle-request", path + await request.text(), uid=user, cid=cid)
-    inst = r8.challenges[cid]
-    resp = await inst.handle_request(user, request)
+
+    if request.method == "GET":
+        resp = await inst.handle_get_request(user, request)
+    else:
+        path = (request.match_info["path"] + " ").lstrip()
+        r8.log(request, "handle-request", path + await request.text(), uid=user, cid=inst.id)
+        resp = await inst.handle_post_request(user, request)
+
     if isinstance(resp, str):
         resp = web.json_response({"message": resp})
     return resp
 
 
-def make_app(static_dir: Union[Path,str]) -> web.Application:
+def make_app(static_dir: Union[Path, str]) -> web.Application:
     static_dir = Path(static_dir)
 
     async def index(_):
@@ -203,6 +207,7 @@ def make_app(static_dir: Union[Path,str]) -> web.Application:
     app.router.add_get('/api/challenges', get_challenges)
     app.router.add_post('/api/login', login)
     app.router.add_post('/api/submit', submit_flag)
+    app.router.add_get('/api/challenges/{cid}{path:(/.+)?}', handle_challenge_request)
     app.router.add_post('/api/challenges/{cid}{path:(/.+)?}', handle_challenge_request)
     app.router.add_get('/', index)
     app.router.add_static('/', path=static_dir)
@@ -212,7 +217,7 @@ def make_app(static_dir: Union[Path,str]) -> web.Application:
 runner: web.AppRunner = None
 
 
-async def start(address=("", 8000), static_dir = DEFAULT_STATIC_DIR):
+async def start(address=("", 8000), static_dir=DEFAULT_STATIC_DIR):
     global runner
     r8.echo("ctf", "Starting...")
     app = make_app(static_dir)

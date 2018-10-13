@@ -148,9 +148,9 @@ def spoiler(help_text: str, button_text="🕵️ Show Hint") -> str:
             </script>"""
 
 
-def api_url(user: str, path: str) -> str:
+def url_for(user: str, path: str) -> str:
     """
-    URL to the CTF System API
+    Construct an absolute URL for the CTF System
     """
     origin = os.getenv("R8_ORIGIN", "").rstrip("/")
     token = r8.util.auth_sign.sign(user.encode()).decode()

@@ -1,9 +1,12 @@
 import abc
 import asyncio
 import functools
+import inspect
+import re
 import time
 import traceback
-from typing import Dict, Optional, Type, ClassVar, List, Set, Tuple, Union
+from pathlib import Path
+from typing import Dict, Optional, Type, List, Set, Tuple, Union
 
 import pkg_resources
 from aiohttp import web
@@ -18,8 +21,13 @@ class Challenge:
     id: str
     """The challenge id, sometimes referred to as cid."""
 
+    static_dir: Optional[Path] = None
+    """Folder to serve static files from"""
+
     def __init__(self, cid: str) -> None:
         self.id = cid
+        if not self.static_dir:
+            self.static_dir = Path(inspect.getfile(type(self))).parent.absolute() / "static"
 
     # Overridable methods.
     @property
@@ -47,9 +55,26 @@ class Challenge:
         """Determine if the challenge is visible for a given user."""
         return True
 
-    async def handle_request(self, user: str, request: web.Request) -> Union[str, web.Response]:
-        """Requests to /api/challenges/cid land here."""
-        return web.HTTPBadRequest(reason="Challenge has no API.")
+    def api_url(self, user: str, path: str) -> str:
+        path = path.lstrip("/")
+        return r8.util.url_for(user, f"/api/challenges/{self.id}/{path}")
+
+    async def handle_get_request(self, user: str, request: web.Request):
+        """GET Requests to /api/challenges/cid land here."""
+        if self.static_dir:
+            filename = re.sub(
+                "[^a-zA-Z0-9_.]",
+                "",
+                request.match_info["path"]
+            )
+            filepath = self.static_dir / filename
+            if filepath.is_file():
+                return web.FileResponse(filepath)
+        return web.HTTPNotFound()
+
+    async def handle_post_request(self, user: str, request: web.Request) -> Union[str, web.Response]:
+        """POST Requests to /api/challenges/cid land here."""
+        return web.HTTPNotFound()
 
     # Utility methods
     def log_and_create_flag(
@@ -90,7 +115,7 @@ class Challenge:
         with r8.db:
             return r8.db.execute("""
                 SELECT CAST(strftime('%s', t_start) AS INT), CAST(strftime('%s', t_stop) AS INT) FROM challenges WHERE cid = ?
-            """, (self.id, )).fetchone()
+            """, (self.id,)).fetchone()
 
     def log(
         self,
