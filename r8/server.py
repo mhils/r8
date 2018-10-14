@@ -207,8 +207,8 @@ def make_app(static_dir: Union[Path, str]) -> web.Application:
     app.router.add_get('/api/challenges', get_challenges)
     app.router.add_post('/api/login', login)
     app.router.add_post('/api/submit', submit_flag)
-    app.router.add_get('/api/challenges/{cid}{path:(/.+)?}', handle_challenge_request)
-    app.router.add_post('/api/challenges/{cid}{path:(/.+)?}', handle_challenge_request)
+    app.router.add_get('/api/challenges/{cid}{path:(/.*)?}', handle_challenge_request)
+    app.router.add_post('/api/challenges/{cid}{path:(/.*)?}', handle_challenge_request)
     app.router.add_get('/', index)
     app.router.add_static('/', path=static_dir)
     return app
