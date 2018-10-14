@@ -228,21 +228,28 @@
         }
     }
 
+    function fmtDate(unixtime) {
+        let date = new Date(unixtime * 1000);
+        if (date.getFullYear() > 3000) {
+            return "–";
+        } else {
+            return date.toLocaleString().replace(/(?<=\d*:\d*):\d*/, "");
+        }
+    }
+
     function Challenge({ challenge }) {
         const expired = Date.now() / 1000 > challenge.stop;
         let className = "card mb-2";
         let time;
         if (challenge.solved) {
             className += " card-solved";
-            time = `Gelöst: ${new Date(challenge.solved * 1000).toLocaleString()}`;
+            time = `Gelöst: ${fmtDate(challenge.solved)}`;
         } else if (expired) {
             className += " card-expired";
-            time = `Abgelaufen: ${new Date(challenge.stop * 1000).toLocaleString()}`;
+            time = `Abgelaufen: ${fmtDate(challenge.stop)}`;
         } else {
             className += " card-active";
-            let stopDate = new Date(challenge.stop * 1000);
-            let stop = stopDate.getFullYear() > 3000 ? "–" : stopDate.toLocaleString()
-            time = `Frist: ${stop}`;
+            time = `Frist: ${fmtDate(challenge.stop)}`;
         }
 
         return <div className={className}>
@@ -256,6 +263,9 @@
     }
 
     function ChallengeList({ title, challenges }) {
+        if(challenges.length === 0){
+            return <React.Fragment/>;
+        }
         return <React.Fragment>
             <h2>{title}</h2>
             {challenges.map(x => {
