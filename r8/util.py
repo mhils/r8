@@ -135,7 +135,9 @@ def spoiler(help_text: str, button_text="🕵️ Show Hint") -> str:
     HTML for spoiler element in challenge descriptions
     """
     div_id = secrets.token_hex(5)
-    return f"""<div id="{div_id}-help" class="d-none">
+    return f"""
+            <div>
+            <div id="{div_id}-help" class="d-none">
                 <hr/>
                 {help_text}
             </div>
@@ -145,7 +147,9 @@ def spoiler(help_text: str, button_text="🕵️ Show Hint") -> str:
                 document.getElementById("{div_id}-button").classList.add("d-none");
                 document.getElementById("{div_id}-help").classList.remove("d-none");
             }});
-            </script>"""
+            </script>
+            </div>
+            """
 
 
 def url_for(user: str, path: str) -> str:
@@ -160,6 +164,15 @@ def url_for(user: str, path: str) -> str:
     else:
         path += f"?token={token}"
     return f"{origin}/{path}"
+
+
+def get_host() -> str:
+    """
+    Return the hostname of the CTF system
+    """
+    origin = os.getenv("R8_ORIGIN", "").rstrip("/")
+    scheme, host, *_ = origin.split(":")
+    return host
 
 
 def create_flag(
