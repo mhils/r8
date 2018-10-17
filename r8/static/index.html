@@ -233,7 +233,7 @@
         if (date.getFullYear() > 3000) {
             return "–";
         } else {
-            return date.toLocaleString().replace(/(?<=\d*:\d*):\d*/, "");
+            return date.toLocaleString().replace(/(\d*:\d*):\d*/, "$1");
         }
     }
 
