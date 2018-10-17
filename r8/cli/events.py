@@ -24,8 +24,11 @@ def cli(rows, query):
         ip = ip.rjust(15)
         uid = (uid or "-").ljust(8)
         type = type.ljust(20)
-        data = ((data or "-")[:20]).ljust(20)
         cid = cid or "-"
+        cid_w = max(20, len(cid))
+        w, h = click.get_terminal_size()
+        data_w = w - len(time) - 15 - 8 - 20 - cid_w - 5
+        data = ((data or "-")[:data_w]).ljust(data_w)
         print(time, ip, uid, type, data, cid)
 
     with r8.db:
