@@ -60,7 +60,7 @@ class Challenge:
             path = "/" + path
         return r8.util.url_for(user, f"/api/challenges/{self.id}{path}")
 
-    async def handle_get_request(self, user: str, request: web.Request) -> Union[str, web.Response, web.StreamResponse]:
+    async def handle_get_request(self, user: str, request: web.Request) -> Union[str, web.StreamResponse]:
         """GET Requests to /api/challenges/cid land here."""
         if self.static_dir:
             filename = re.sub(
@@ -73,7 +73,7 @@ class Challenge:
                 return web.FileResponse(filepath)
         return web.HTTPNotFound()
 
-    async def handle_post_request(self, user: str, request: web.Request) -> Union[str, web.Response, web.StreamResponse]:
+    async def handle_post_request(self, user: str, request: web.Request) -> Union[str, web.StreamResponse]:
         """POST Requests to /api/challenges/cid land here."""
         return web.HTTPNotFound()
 

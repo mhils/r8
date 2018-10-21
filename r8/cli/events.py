@@ -28,7 +28,11 @@ def cli(rows, query):
         cid_w = max(20, len(cid))
         w, h = click.get_terminal_size()
         data_w = w - len(time) - 15 - 8 - 20 - cid_w - 5
-        data = ((data or "-")[:data_w]).ljust(data_w)
+        if data:
+            data = r8.util.console_escape(data)
+        else:
+            data = "-"
+        data = (data[:data_w]).ljust(data_w)
         print(time, ip, uid, type, data, cid)
 
     with r8.db:

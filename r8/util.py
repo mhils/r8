@@ -316,3 +316,15 @@ def challenge_form_js(cid: str) -> str:
         });
         }</script>
     """ % cid
+
+
+_control_char_trans = {
+            x: x + 0x2400
+            for x in range(32)
+        }
+_control_char_trans[127] = 0x2421
+_control_char_trans = str.maketrans(_control_char_trans)
+
+
+def console_escape(text: str):
+    return text.translate(_control_char_trans)
