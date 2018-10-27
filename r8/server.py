@@ -189,8 +189,15 @@ async def handle_challenge_request(user: str, request: web.Request):
         resp = await inst.handle_get_request(user, request)
     else:
         path = (request.match_info["path"] + " ").lstrip()
-        r8.log(request, "handle-request", path + await request.text(), uid=user, cid=inst.id)
+        data = path + await request.text()
+        # We want this to appear before any challenge-specific logging...
+        rowid = r8.log(request, "handle-request", data, uid=user, cid=inst.id)
         resp = await inst.handle_post_request(user, request)
+        # ...yet we also want to include the response code.
+        with r8.db:
+            r8.db.execute("""
+                UPDATE events SET data = ? WHERE ROWID = ?
+            """, (f"{data} -> {resp.status} {resp.reason}", rowid))
 
     if isinstance(resp, str):
         resp = web.json_response({"message": resp})

@@ -152,11 +152,19 @@ def spoiler(help_text: str, button_text="🕵️ Show Hint") -> str:
             """
 
 
+def _get_origin() -> str:
+    origin = os.getenv("R8_ORIGIN", "").rstrip("/")
+    if not origin:
+        r8.echo("r8", "R8_ORIGIN is undefined.", err=True)
+        return ""
+    return origin
+
+
 def url_for(user: str, path: str) -> str:
     """
     Construct an absolute URL for the CTF System
     """
-    origin = os.getenv("R8_ORIGIN", "").rstrip("/")
+    origin = _get_origin()
     token = r8.util.auth_sign.sign(user.encode()).decode()
     path = path.lstrip("/")
     if "?" in path:
@@ -170,9 +178,11 @@ def get_host() -> str:
     """
     Return the hostname of the CTF system
     """
-    origin = os.getenv("R8_ORIGIN", "").rstrip("/")
+    origin = _get_origin()
+    if not origin:
+        return "$R8_ORIGIN"
     scheme, host, *_ = origin.split(":")
-    return host
+    return host.lstrip("/")
 
 
 def create_flag(
@@ -228,11 +238,11 @@ def log(
     *,
     cid: Optional[str] = None,
     uid: Optional[str] = None,
-) -> None:
+) -> int:
     """
     Create a log entry.
 
-    For convenience reasons, ip can also be an address tuple or an asyncio.StreamWriter.
+    For convenience reasons, ip can also be an address tuple, a aiohttp.web.Reqest, or an asyncio.StreamWriter.
     """
     if isinstance(ip, web.Request):
         ip = ip.headers.get("X-Forwarded-For", ip.transport)
@@ -241,10 +251,10 @@ def log(
     if isinstance(ip, tuple):
         ip = ip[0]
     with r8.db:
-        r8.db.execute(
+        return r8.db.execute(
             "INSERT INTO events (ip, type, data, cid, uid) VALUES (?, ?, ?, ?, ?)",
             (ip, type, data, cid, uid)
-        )
+        ).lastrowid
 
 
 ph = argon2.PasswordHasher()
