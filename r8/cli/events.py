@@ -19,14 +19,7 @@ def cli(rows, query):
     """
     query = " ".join(query)
 
-    last_event = []
-
     def print_event(event):
-        nonlocal last_event
-        if event[1:] == last_event[1:] and event[0][:-2] == last_event[0][:-2]:
-            return
-        else:
-            last_event = event
         time, ip, uid, cid, type, data = event
         ip = ip.rjust(15)
         uid = (uid or "-").ljust(8)
