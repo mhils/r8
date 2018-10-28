@@ -127,7 +127,7 @@ class Challenge:
         uid: Optional[str] = None
     ) -> None:
         """Log an event for the current challenge."""
-        return r8.log(ip, type, data, uid=uid, cid=self.id)
+        r8.log(ip, type, data, uid=uid, cid=self.id)
 
     def echo(self, message: str) -> None:
         """Print to console with the challenge's namespace added in front."""

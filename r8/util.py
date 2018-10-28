@@ -245,7 +245,7 @@ def log(
     For convenience reasons, ip can also be an address tuple, a aiohttp.web.Reqest, or an asyncio.StreamWriter.
     """
     if isinstance(ip, web.Request):
-        ip = ip.headers.get("X-Forwarded-For", ip.transport)
+        ip = ip.transport
     if isinstance(ip, (asyncio.StreamWriter, asyncio.BaseTransport)):
         ip = ip.get_extra_info("peername")
     if isinstance(ip, tuple):
