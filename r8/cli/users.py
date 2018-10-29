@@ -15,12 +15,12 @@ from r8 import util
 def cli(user, challenge, t, format, teams):
     """View users and their progress."""
     if teams:
-        challenges_stmt = "SELECT cid FROM challenges WHERE t_start < datetime('now') AND team = 1"
-        users_stmt = "SELECT DISTINCT tid FROM teams"
+        challenges_stmt = "SELECT cid FROM challenges WHERE t_start < datetime('now') AND team = 1 ORDER BY ROWID ASC"
+        users_stmt = "SELECT DISTINCT tid FROM teams ORDER BY ROWID ASC"
         submissions_stmt = "SELECT tid, cid FROM submissions NATURAL JOIN flags NATURAL JOIN teams"
     else:
-        challenges_stmt = "SELECT cid FROM challenges WHERE t_start < datetime('now')"
-        users_stmt = "SELECT uid FROM users"
+        challenges_stmt = "SELECT cid FROM challenges WHERE t_start < datetime('now') ORDER BY ROWID ASC"
+        users_stmt = "SELECT uid FROM users ORDER BY ROWID ASC"
         submissions_stmt = "SELECT uid, cid FROM submissions NATURAL JOIN flags"
 
     with r8.db:
