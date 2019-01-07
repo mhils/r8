@@ -328,6 +328,16 @@ def challenge_form_js(cid: str) -> str:
     """ % cid
 
 
+def challenge_invoke_button(cid: str, text: str) -> str:
+    return f"""
+        <form class="form-inline">
+            <button class="btn btn-primary m-1">{text}</button>
+            <div class="response m-1"></div>
+        </form>
+        {challenge_form_js(cid)}
+    """
+
+
 _control_char_trans = {
             x: x + 0x2400
             for x in range(32)
