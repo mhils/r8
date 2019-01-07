@@ -166,15 +166,23 @@ async def submit_flag(user: str, request: web.Request):
             r8.log(request, "flag-err-used", flag, uid=user, cid=cid)
             return web.HTTPBadRequest(reason="Flag already used too often.")
 
-        # print(f"{user} solved {challenge} with {flag}.")
         r8.log(request, "flag-submit", flag, uid=user, cid=cid)
         r8.db.execute("""
           INSERT INTO submissions (uid, fid) VALUES (?, ?)
         """, (user, flag))
 
+        '''
+        solves = r8.db.execute("""
+          SELECT COUNT(*) FROM submissions 
+          NATURAL INNER JOIN flags
+          WHERE cid = ?
+        """, (cid,)).fetchone()[0]
+        '''
+
     return web.json_response({
         "challenges": await _get_challenges(user),
-        "solved": r8.challenges[cid].title
+        "solved": r8.challenges[cid].title,
+        # "solves": solves,
     })
 
 
