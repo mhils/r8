@@ -39,17 +39,31 @@ def echo(namespace: str, message: str, err: bool = False) -> None:
     click.echo(click.style(f"[{namespace}] ", fg=color) + message)
 
 
-auth_sign = itsdangerous.Signer(
-    os.getenv("R8_SECRET", secrets.token_bytes(32)),
-    salt="auth"
-)
+class Signer:
+    """Lazy-initialized signer. We need to do this because the secret is in the db."""
+    def __init__(self, salt):
+        self._signer = None
+        self._salt = salt
 
-database_path = click.option(
-    "--database",
-    type=click.Path(exists=True),
-    envvar="R8_DATABASE",
-    default="r8.db"
-)
+    def _init(self):
+        if not self._signer:
+            # We could in theory fall back to a random value if we don't have settings,
+            # but not having a DB connection would be unexpected and we want to fail.
+            self._signer = itsdangerous.Signer(
+                r8.settings["secret"],
+                salt=self._salt
+            )
+
+    def sign(self, value):
+        self._init()
+        return self._signer.sign(value)
+
+    def unsign(self, signed_value):
+        self._init()
+        return self._signer.unsign(signed_value)
+
+
+auth_sign = Signer("auth")
 
 database_rows = click.option(
     '--rows',
@@ -59,14 +73,29 @@ database_rows = click.option(
 )
 
 
-def with_database(f):
-    @database_path
-    @wraps(f)
-    def wrapper(database, **kwds):
-        r8.db = sqlite3_connect(database)
-        return f(**kwds)
+def with_database(echo=False):
+    def decorator(f):
+        @click.option(
+            "--database",
+            type=click.Path(exists=True),
+            envvar="R8_DATABASE",
+            default="r8.db"
+        )
+        @wraps(f)
+        def wrapper(database, **kwds):
+            if echo:
+                r8.echo("r8", f"Loading database ({database})...")
+            r8.db = sqlite3_connect(database)
+            with r8.db:
+                r8.settings = {
+                    k: v for (k, v) in
+                    r8.db.execute("SELECT key, value FROM settings").fetchall()
+                }
+            return f(**kwds)
 
-    return wrapper
+        return wrapper
+
+    return decorator
 
 
 def backup_db(f):
@@ -152,36 +181,24 @@ def spoiler(help_text: str, button_text="🕵️ Show Hint") -> str:
             """
 
 
-def _get_origin() -> str:
-    origin = os.getenv("R8_ORIGIN", "").rstrip("/")
-    if not origin:
-        r8.echo("r8", "R8_ORIGIN is undefined.", err=True)
-        return ""
-    return origin
-
-
 def url_for(user: str, path: str) -> str:
     """
     Construct an absolute URL for the CTF System
     """
-    origin = _get_origin()
     token = r8.util.auth_sign.sign(user.encode()).decode()
     path = path.lstrip("/")
     if "?" in path:
         path += f"&token={token}"
     else:
         path += f"?token={token}"
-    return f"{origin}/{path}"
+    return f"{r8.settings['origin']}/{path}"
 
 
 def get_host() -> str:
     """
     Return the hostname of the CTF system
     """
-    origin = _get_origin()
-    if not origin:
-        return "$R8_ORIGIN"
-    scheme, host, *_ = origin.split(":")
+    scheme, host, *_ = r8.settings['origin'].split(":")
     return host.lstrip("/")
 
 
@@ -339,9 +356,9 @@ def challenge_invoke_button(cid: str, text: str) -> str:
 
 
 _control_char_trans = {
-            x: x + 0x2400
-            for x in range(32)
-        }
+    x: x + 0x2400
+    for x in range(32)
+}
 _control_char_trans[127] = 0x2421
 _control_char_trans = str.maketrans(_control_char_trans)
 

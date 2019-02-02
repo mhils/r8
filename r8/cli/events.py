@@ -7,7 +7,7 @@ from r8 import util
 
 
 @click.command("events")
-@util.with_database
+@util.with_database()
 @util.database_rows
 @click.argument("query", nargs=-1)
 def cli(rows, query):

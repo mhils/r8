@@ -12,7 +12,7 @@ def cli():
 
 
 @cli.command("list")
-@util.with_database
+@util.with_database()
 @util.database_rows
 @click.argument("query", nargs=-1)
 def list_challenges(rows, query):

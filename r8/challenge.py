@@ -197,7 +197,6 @@ class _Challenges:
         r8.echo("r8", "Loading challenges...")
         for entry_point in pkg_resources.iter_entry_points('r8.challenges'):
             entry_point.load()
-        r8.echo("r8", f"Challenges loaded: {', '.join(self._classes)}")
 
         for cid in get_challenges():
             self._instances[cid] = self.make_instance(cid)

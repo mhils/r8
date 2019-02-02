@@ -6,7 +6,7 @@ from r8 import util
 
 
 @click.command("users")
-@util.with_database
+@util.with_database()
 @click.option("--user", multiple=True, help="Only display users/teams that start with the given string. Can be passed multiple times.")
 @click.option("--challenge", multiple=True, help="Only display challenges that start with the given string. Can be passed multiple times.")
 @click.option("-T", is_flag=True, help="Transpose table.")

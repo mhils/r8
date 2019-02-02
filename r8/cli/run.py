@@ -11,23 +11,17 @@ from r8 import util
 
 
 @click.command("run")
-@util.database_path
 @click.option('--debug', is_flag=True)
-@click.option(
-    "--static-dir",
-    type=click.Path(exists=True, dir_okay=True, file_okay=False, resolve_path=True),
-    envvar="R8_STATIC",
-    default=server.DEFAULT_STATIC_DIR
-)
-def cli(database, debug, static_dir) -> None:
+@util.with_database(echo=True)
+def cli(debug) -> None:
     """Run the server."""
     print(cars.best_car())
-    r8.echo("r8", f"Loading database ({database})...")
-    r8.db = util.sqlite3_connect(database)
 
     loop = asyncio.get_event_loop()
 
     if debug:
+        # TODO: We may want to do r8.settings["debug"] = debug at some point,
+        # but for now we don't need it and don't introduce additional complexity.
         def log_sql(msg):
             if msg.startswith("SELECT cid FROM challenges"):
                 return
@@ -39,7 +33,7 @@ def cli(database, debug, static_dir) -> None:
     r8.challenges.load()
 
     loop.run_until_complete(asyncio.gather(
-        server.start(static_dir=static_dir),
+        server.start(),
         r8.challenges.start()
     ))
 

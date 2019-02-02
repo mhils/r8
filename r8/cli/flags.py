@@ -11,7 +11,7 @@ def cli():
 
 
 @cli.command("create")
-@util.with_database
+@util.with_database()
 @click.argument("challenge")
 @click.argument("name", required=False)
 @click.option("--max", type=int, default=999999, help="Maximum number of submissions.")
@@ -22,7 +22,7 @@ def create_flag(challenge, name, max):
 
 
 @cli.command("limit")
-@util.with_database
+@util.with_database()
 @click.argument("flag")
 @click.argument("max", type=int, required=False)
 def limit_flag(flag, max):
@@ -43,7 +43,7 @@ def limit_flag(flag, max):
 
 
 @cli.command("list")
-@util.with_database
+@util.with_database()
 @util.database_rows
 @click.argument("challenge", required=False)
 def list_flags(rows, challenge):

@@ -11,9 +11,6 @@ from aiohttp import web
 
 import r8
 
-DEFAULT_STATIC_DIR = Path(__file__).parent / "static"
-
-
 async def login(request: web.Request):
     logindata = await request.json()
     try:
@@ -232,19 +229,19 @@ def make_app(static_dir: Union[Path, str]) -> web.Application:
 runner: web.AppRunner = None
 
 
-async def start(address=("", 8000), static_dir=DEFAULT_STATIC_DIR):
+async def start(address=("", 8000)):
     global runner
-    r8.echo("ctf", "Starting...")
-    app = make_app(static_dir)
+    r8.echo("r8", "Starting server...")
+    app = make_app(r8.settings["static_dir"])
     runner = web.AppRunner(app)
     await runner.setup()
     site = web.TCPSite(runner, *address)
     await site.start()
-    r8.echo("ctf", f"Running at {r8.util.format_address(address)}.")
+    r8.echo("r8", f"Running at {r8.util.format_address(address)}.")
     return runner
 
 
 async def stop():
-    r8.echo("ctf", "Stopping...")
+    r8.echo("r8", "Stopping server...")
     await runner.cleanup()
-    r8.echo("ctf", "Stopped.")
+    r8.echo("r8", "Stopped.")
