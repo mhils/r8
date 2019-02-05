@@ -2,6 +2,7 @@ import asyncio
 import datetime
 import functools
 import os
+import re
 import secrets
 import sqlite3
 import textwrap
@@ -365,3 +366,80 @@ _control_char_trans = str.maketrans(_control_char_trans)
 
 def console_escape(text: str):
     return text.translate(_control_char_trans)
+
+
+def correct_flag(flag: str) -> str:
+    filtered = flag.replace(" ", "").lower()
+    match = re.search(r"[0-9a-f]{32}", filtered)
+    if match:
+        return "__flag__{" + match.group(0) + "}"
+    return flag
+
+
+def submit_flag(
+    flag: str,
+    user: str,
+    ip: THasIP,
+    force: bool=False
+) -> str:
+    """
+    Returns:
+        the challenge id
+    Raises:
+        ValueError, if there is an input error.
+    """
+    flag = correct_flag(flag)
+    with r8.db:
+        user_exists = r8.db.execute("""
+          SELECT 1 FROM users
+          WHERE uid = ?
+        """, (user,)).fetchone()
+        if not user_exists:
+            r8.log(ip, "flag-err-unknown", flag)
+            raise ValueError("Unknown user.")
+
+        cid = (r8.db.execute("""
+          SELECT cid FROM flags 
+          NATURAL INNER JOIN challenges
+          WHERE fid = ? 
+        """, (flag,)).fetchone() or [None])[0]
+        if not cid:
+            r8.log(ip, "flag-err-unknown", flag, uid=user)
+            raise ValueError("Unknown Flag ¯\\_(ツ)_/¯")
+
+        is_active = r8.db.execute("""
+          SELECT 1 FROM challenges
+          WHERE cid = ? 
+          AND datetime('now') BETWEEN t_start AND t_stop
+        """, (cid,)).fetchone()
+        if not is_active and not force:
+            r8.log(ip, "flag-err-inactive", flag, uid=user, cid=cid)
+            raise ValueError("Challenge is not active.")
+
+        is_already_submitted = r8.db.execute("""
+          SELECT COUNT(*) FROM submissions 
+          NATURAL INNER JOIN flags
+          NATURAL INNER JOIN challenges
+          WHERE cid = ? AND (
+          uid = ? OR
+          challenges.team = 1 AND submissions.uid IN (SELECT uid FROM teams WHERE tid = (SELECT tid FROM teams WHERE uid = ?))
+          )
+        """, (cid, user, user)).fetchone()[0]
+        if is_already_submitted:
+            r8.log(ip, "flag-err-solved", flag, uid=user, cid=cid)
+            raise ValueError("Challenge already solved.")
+
+        is_oversubscribed = r8.db.execute("""
+          SELECT 1 FROM flags
+          WHERE fid = ?
+          AND (SELECT COUNT(*) FROM submissions WHERE flags.fid = submissions.fid) >= max_submissions
+        """, (flag,)).fetchone()
+        if is_oversubscribed and not force:
+            r8.log(ip, "flag-err-used", flag, uid=user, cid=cid)
+            raise ValueError("Flag already used too often.")
+
+        r8.log(ip, "flag-submit", flag, uid=user, cid=cid)
+        r8.db.execute("""
+          INSERT INTO submissions (uid, fid) VALUES (?, ?)
+        """, (user, flag))
+    return cid

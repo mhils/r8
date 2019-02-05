@@ -1,5 +1,4 @@
 import html
-import re
 import traceback
 from functools import wraps
 from pathlib import Path
@@ -109,78 +108,19 @@ async def _get_challenges(user: str):
         return results
 
 
-def correct_flag(flag: str) -> str:
-    filtered = flag.replace(" ", "").lower()
-    match = re.search(r"[0-9a-f]{32}", filtered)
-    if match:
-        return "__flag__{" + match.group(0) + "}"
-    return flag
-
-
 @authenticated
 async def submit_flag(user: str, request: web.Request):
     """Submit a flag."""
     flag = (await request.json()).get("flag", "")
-    flag = correct_flag(flag)
-    with r8.db:
-        cid = (r8.db.execute("""
-          SELECT cid FROM flags 
-          NATURAL INNER JOIN challenges
-          WHERE fid = ? 
-        """, (flag,)).fetchone() or [None])[0]
-        if not cid:
-            r8.log(request, "flag-err-unknown", flag, uid=user)
-            return web.HTTPBadRequest(reason="Unknown Flag ¯\\_(ツ)_/¯")
-
-        is_active = r8.db.execute("""
-          SELECT 1 FROM challenges
-          WHERE cid = ? 
-          AND datetime('now') BETWEEN t_start AND t_stop
-        """, (cid,)).fetchone()
-        if not is_active:
-            r8.log(request, "flag-err-inactive", flag, uid=user, cid=cid)
-            return web.HTTPBadRequest(reason="Challenge is not active.")
-
-        is_already_submitted = r8.db.execute("""
-          SELECT COUNT(*) FROM submissions 
-          NATURAL INNER JOIN flags
-          NATURAL INNER JOIN challenges
-          WHERE cid = ? AND (
-          uid = ? OR
-          challenges.team = 1 AND submissions.uid IN (SELECT uid FROM teams WHERE tid = (SELECT tid FROM teams WHERE uid = ?))
-          )
-        """, (cid, user, user)).fetchone()[0]
-        if is_already_submitted:
-            r8.log(request, "flag-err-solved", flag, uid=user, cid=cid)
-            return web.HTTPBadRequest(reason="Challenge already solved.")
-
-        is_oversubscribed = r8.db.execute("""
-          SELECT 1 FROM flags
-          WHERE fid = ?
-          AND (SELECT COUNT(*) FROM submissions WHERE flags.fid = submissions.fid) >= max_submissions
-        """, (flag,)).fetchone()
-        if is_oversubscribed:
-            r8.log(request, "flag-err-used", flag, uid=user, cid=cid)
-            return web.HTTPBadRequest(reason="Flag already used too often.")
-
-        r8.log(request, "flag-submit", flag, uid=user, cid=cid)
-        r8.db.execute("""
-          INSERT INTO submissions (uid, fid) VALUES (?, ?)
-        """, (user, flag))
-
-        '''
-        solves = r8.db.execute("""
-          SELECT COUNT(*) FROM submissions 
-          NATURAL INNER JOIN flags
-          WHERE cid = ?
-        """, (cid,)).fetchone()[0]
-        '''
-
-    return web.json_response({
-        "challenges": await _get_challenges(user),
-        "solved": r8.challenges[cid].title,
-        # "solves": solves,
-    })
+    try:
+        cid = r8.util.submit_flag(flag, user, request)
+    except ValueError as e:
+        return web.HTTPBadRequest(reason=str(e))
+    else:
+        return web.json_response({
+            "challenges": await _get_challenges(user),
+            "solved": r8.challenges[cid].title,
+        })
 
 
 @authenticated
