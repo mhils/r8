@@ -63,3 +63,18 @@ def list_flags(rows, challenge):
         GROUP BY fid
         ORDER BY cid, submissions DESC
         """, parameters, rows=rows)
+
+
+@cli.command("submit")
+@util.with_database()
+@click.argument("user")
+@click.argument("flag")
+@click.option("--force", "-f", is_flag=True)
+def list_flags(user, flag, force):
+    """Submit a flag for a user."""
+    try:
+        cid = r8.util.submit_flag(flag, user, "127.0.0.1", force)
+    except ValueError as e:
+        r8.echo("r8", str(e), err=True)
+    else:
+        r8.echo("r8", f"Solved {cid}.")
