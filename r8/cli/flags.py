@@ -66,7 +66,7 @@ def list_flags(rows, challenge):
 
 
 @cli.command("submit")
-@util.with_database()
+@util.with_database
 @click.argument("user")
 @click.argument("flag")
 @click.option("--force", "-f", is_flag=True)
