@@ -1,11 +1,12 @@
 import asyncio
 import datetime
 import functools
-import os
+import html
 import re
 import secrets
 import sqlite3
 import textwrap
+import traceback
 from functools import wraps
 from pathlib import Path
 from typing import Optional, Union, Tuple
@@ -42,6 +43,7 @@ def echo(namespace: str, message: str, err: bool = False) -> None:
 
 class Signer:
     """Lazy-initialized signer. We need to do this because the secret is in the db."""
+
     def __init__(self, salt):
         self._signer = None
         self._salt = salt
@@ -182,17 +184,22 @@ def spoiler(help_text: str, button_text="🕵️ Show Hint") -> str:
             """
 
 
-def url_for(user: str, path: str) -> str:
+def url_for(path: str, absolute: bool = False, user: Optional[str] = None) -> str:
     """
-    Construct an absolute URL for the CTF System
+    Construct a URL for the CTF System.
+    If absolute is true, construct an absolute URL including the origin.
+    If user is passed, add an authentication token to the URL.
     """
-    token = r8.util.auth_sign.sign(user.encode()).decode()
-    path = path.lstrip("/")
-    if "?" in path:
-        path += f"&token={token}"
-    else:
-        path += f"?token={token}"
-    return f"{r8.settings['origin']}/{path}"
+    if user:
+        token = r8.util.auth_sign.sign(user.encode()).decode()
+        if "?" in path:
+            path += f"&token={token}"
+        else:
+            path += f"?token={token}"
+    if absolute:
+        path = path.lstrip("/")
+        path = f"{r8.settings['origin']}/{path}"
+    return path
 
 
 def get_host() -> str:
@@ -380,7 +387,7 @@ def submit_flag(
     flag: str,
     user: str,
     ip: THasIP,
-    force: bool=False
+    force: bool = False
 ) -> str:
     """
     Returns:
@@ -443,3 +450,51 @@ def submit_flag(
           INSERT INTO submissions (uid, fid) VALUES (?, ?)
         """, (user, flag))
     return cid
+
+
+async def get_challenges(user: str):
+    """Get challenges to display for a specific user"""
+    with r8.db:
+        cursor = r8.db.execute("""
+          SELECT 
+            challenges.cid AS cid, 
+            cast(strftime('%s',t_start) AS INTEGER) AS start, 
+            cast(strftime('%s',t_stop) AS INTEGER) AS stop, 
+            max(cast(strftime('%s',submissions.timestamp) AS INTEGER)) AS solved,
+            team
+            FROM challenges
+          LEFT JOIN flags ON flags.cid = challenges.cid
+          LEFT JOIN submissions ON (
+            flags.fid = submissions.fid 
+            AND (
+            submissions.uid = ? OR
+            team = 1 AND submissions.uid IN (SELECT uid FROM teams WHERE tid = (SELECT tid FROM teams WHERE uid = ?))
+            )
+          )
+          WHERE t_start < datetime('now')  -- hide not yet active challenges
+          GROUP BY challenges.cid
+        """, (user, user))
+        column_names = tuple(x[0] for x in cursor.description)
+        results = [
+            {
+                key: value
+                for key, value in zip(column_names, row)
+            } for row in cursor.fetchall()
+        ]
+        results = [
+            x for x in results
+            if x["solved"] or await r8.challenges[x["cid"]].visible(user)
+        ]
+        for challenge in results:
+            inst = r8.challenges[challenge["cid"]]
+            try:
+                challenge["title"] = str(inst.title)
+            except Exception:
+                challenge["title"] = "Title Error"
+                challenge["description"] = f"<pre>{html.escape(traceback.format_exc())}</pre>"
+                continue
+            try:
+                challenge["description"] = await inst.description(user, bool(challenge["solved"]))
+            except Exception:
+                challenge["description"] = f"<pre>{html.escape(traceback.format_exc())}</pre>"
+        return results

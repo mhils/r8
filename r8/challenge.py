@@ -55,10 +55,12 @@ class Challenge:
         """Determine if the challenge is visible for a given user."""
         return True
 
-    def api_url(self, user: str, path: str) -> str:
+    def api_url(self, path: str, absolute: bool = False, user: Optional[str] = None) -> str:
+        if not isinstance(absolute, bool):
+            raise RuntimeError("api_url signature has changed.")
         if path and not path.startswith("/"):
-            path = "/" + path
-        return r8.util.url_for(user, f"/api/challenges/{self.id}{path}")
+            path = "/" + path  # don't use .lstrip() to make sure that "" returns in no trailing "/"
+        return r8.util.url_for(f"/api/challenges/{self.id}{path}", absolute, user)
 
     async def handle_get_request(self, user: str, request: web.Request) -> Union[str, web.StreamResponse]:
         """GET Requests to /api/challenges/cid land here."""

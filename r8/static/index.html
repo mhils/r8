@@ -27,10 +27,8 @@
     // Grunt, Gulp, Webpack, Browserify, create-react-app, etc. are just not worth it.
     // in-browser compilation will do.
 
-    function fetchApi(url, options) {
-        if ("token" in localStorage) {
-            url += (url.includes("?") ? "&" : "?") + `token=${localStorage["token"]}`;
-        }
+    function fetchApi(url, options={}) {
+        options["credentials"] = "same-origin";
         return fetch(url, options)
             .catch(err => {
                 throw "Network error."
@@ -53,14 +51,11 @@
         return fetchApi("/api/login", {
             method: "POST",
             body: JSON.stringify(req)
-        }).then(json => {
-            localStorage["token"] = json["token"];
         });
     }
 
     function logout() {
-        delete localStorage["token"];
-        return Promise.resolve(true);
+        return fetchApi("/api/logout", { method: "POST" });
     }
 
 
@@ -153,10 +148,10 @@
                 error: false
             }, () => {
                 login(this.state.username, this.state.password)
-                    .then(this.props.onLogin)
-                    .catch(err => {
-                        this.setState({ error: err });
-                    });
+                    .then(
+                        this.props.onLogin,
+                        err => this.setState({ error: err })
+                    );
             });
 
         }
@@ -217,7 +212,8 @@
                         {!this.state.error && this.state.success &&
                         <button
                             className="btn btn-success btn-lg">
-                            <strong>Congratulations!</strong> {this.state.success} is solved.</button>
+                            <strong>Congratulations!</strong> {this.state.success} is solved.
+                        </button>
                         }
                         {!this.state.error && !this.state.success &&
                         <button className="btn btn-dark btn-lg">Submit Flag</button>
@@ -263,7 +259,7 @@
     }
 
     function ChallengeList({ title, challenges }) {
-        if(challenges.length === 0){
+        if (challenges.length === 0) {
             return <React.Fragment/>;
         }
         return <React.Fragment>
@@ -298,7 +294,8 @@
         constructor(props) {
             super(props);
             this.state = {
-                uiState: ("token" in localStorage) ? "fetching" : "login",
+                uiState: "fetching",
+                user: false,
                 challenges: []
             };
             this.onLogin = this.onLogin.bind(this);
@@ -326,10 +323,9 @@
                     body = <Dashboard challenges={this.state.challenges} onSolve={this.onSolve}/>;
                     break;
             }
-            let user = "token" in localStorage ? localStorage["token"].split(".")[0] : false;
 
             return <React.Fragment>
-                <Nav user={user} onLogout={this.onLogout}/>
+                <Nav user={this.state.user} onLogout={this.onLogout}/>
                 {body}
             </React.Fragment>;
         }
@@ -347,12 +343,13 @@
         }
 
         fetchStatus() {
-            fetchApi("/api/challenges")
-                .then(challenges => {
-                    console.debug("challenges", challenges)
+            fetchApi("/api/status")
+                .then(status => {
+                    console.debug("status", status)
                     this.setState({
                         uiState: "dashboard",
-                        challenges: challenges,
+                        challenges: status.challenges,
+                        user: status.user,
                     })
                 })
                 .catch(error => {

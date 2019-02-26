@@ -1,5 +1,3 @@
-import html
-import traceback
 from functools import wraps
 from pathlib import Path
 from typing import Callable, Any, Union
@@ -9,6 +7,7 @@ import itsdangerous
 from aiohttp import web
 
 import r8
+
 
 async def login(request: web.Request):
     logindata = await request.json()
@@ -25,16 +24,31 @@ async def login(request: web.Request):
         ).fetchone()
     try:
         if not ok:
-            raise RuntimeError()
+            raise ValueError()
         r8.util.verify_hash(ok[0], password)
         r8.log(request, "login-success", uid=user)
         token = r8.util.auth_sign.sign(user.encode()).decode()
-        return web.json_response({"token": token})
-    except (argon2.exceptions.VerificationError, RuntimeError):
+        secure_flag = "; Secure"
+        if r8.settings["origin"].startswith("http://"):
+            secure_flag = ""
+        return web.json_response(
+            {},
+            headers={
+                # aiohttp doesn't support SameSite as of writing this.
+                "Set-Cookie": f"token={token}; Path=/; Max-Age=31536000; SameSite=strict; HttpOnly{secure_flag}"
+            }
+        )
+    except (argon2.exceptions.VerificationError, ValueError):
         r8.log(request, "login-fail", user, uid=user if ok else None)
         return web.HTTPUnauthorized(
             reason="Invalid credentials."
         )
+
+
+async def logout(request: web.Request):
+    resp = web.json_response({})
+    resp.del_cookie("token")
+    return resp
 
 
 def authenticated(f: Callable[[str, web.Request], Any]) -> Callable[[web.Request], Any]:
@@ -42,7 +56,7 @@ def authenticated(f: Callable[[str, web.Request], Any]) -> Callable[[web.Request
 
     @wraps(f)
     def wrapper(request):
-        token = request.query.get("token", "")
+        token = request.query.get("token", "") or request.cookies.get("token", "")
         try:
             user = r8.util.auth_sign.unsign(token).decode()
         except itsdangerous.BadData:
@@ -54,59 +68,14 @@ def authenticated(f: Callable[[str, web.Request], Any]) -> Callable[[web.Request
 
 
 @authenticated
-async def get_challenges(user: str, request: web.Request):
+async def get_status(user: str, request: web.Request):
     """Get the current status."""
-    r8.log(request, "get-challenges", request.headers.get("User-Agent"), uid=user)
-    challenges = await _get_challenges(user)
-    return web.json_response(challenges)
-
-
-async def _get_challenges(user: str):
-    with r8.db:
-        cursor = r8.db.execute("""
-          SELECT 
-            challenges.cid AS cid, 
-            cast(strftime('%s',t_start) AS INTEGER) AS start, 
-            cast(strftime('%s',t_stop) AS INTEGER) AS stop, 
-            max(cast(strftime('%s',submissions.timestamp) AS INTEGER)) AS solved,
-            team
-            FROM challenges
-          LEFT JOIN flags ON flags.cid = challenges.cid
-          LEFT JOIN submissions ON (
-            flags.fid = submissions.fid 
-            AND (
-            submissions.uid = ? OR
-            team = 1 AND submissions.uid IN (SELECT uid FROM teams WHERE tid = (SELECT tid FROM teams WHERE uid = ?))
-            )
-          )
-          WHERE t_start < datetime('now')  -- hide not yet active challenges
-          GROUP BY challenges.cid
-        """, (user, user))
-        column_names = tuple(x[0] for x in cursor.description)
-        results = [
-            {
-                key: value
-                for key, value in zip(column_names, row)
-            } for row in cursor.fetchall()
-        ]
-        results = [
-            x for x in results
-            if x["solved"] or await r8.challenges[x["cid"]].visible(user)
-        ]
-        for challenge in results:
-            inst = r8.challenges[challenge["cid"]]
-            try:
-                challenge["title"] = str(inst.title)
-            except Exception:
-                challenge["title"] = "Title Error"
-                challenge["description"] = f"<pre>{html.escape(traceback.format_exc())}</pre>"
-                continue
-            try:
-                challenge["description"] = await inst.description(user, bool(challenge["solved"]))
-            except Exception:
-                challenge["description"] = f"<pre>{html.escape(traceback.format_exc())}</pre>"
-        return results
-
+    r8.log(request, "get-status", request.headers.get("User-Agent"), uid=user)
+    challenges = await r8.util.get_challenges(user)
+    return web.json_response({
+        "user": user,
+        "challenges": challenges,
+    })
 
 @authenticated
 async def submit_flag(user: str, request: web.Request):
@@ -118,7 +87,7 @@ async def submit_flag(user: str, request: web.Request):
         return web.HTTPBadRequest(reason=str(e))
     else:
         return web.json_response({
-            "challenges": await _get_challenges(user),
+            "challenges": await r8.util.get_challenges(user),
             "solved": r8.challenges[cid].title,
         })
 
@@ -156,8 +125,9 @@ def make_app(static_dir: Union[Path, str]) -> web.Application:
         return web.FileResponse(static_dir / 'index.html')
 
     app = web.Application()
-    app.router.add_get('/api/challenges', get_challenges)
+    app.router.add_get('/api/status', get_status)
     app.router.add_post('/api/login', login)
+    app.router.add_post('/api/logout', logout)
     app.router.add_post('/api/submit', submit_flag)
     app.router.add_get('/api/challenges/{cid}{path:(/.*)?}', handle_challenge_request)
     app.router.add_post('/api/challenges/{cid}{path:(/.*)?}', handle_challenge_request)

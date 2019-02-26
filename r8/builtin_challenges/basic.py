@@ -1,4 +1,3 @@
-import re
 from typing import ClassVar
 
 import r8

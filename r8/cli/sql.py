@@ -84,7 +84,7 @@ def sql_init(origin, static_dir, database) -> None:
         [
             ("secret", secrets.token_hex(32)),
             ("static_dir", static_dir),
-            ("origin", origin),
+            ("origin", origin.rstrip("/")),
         ]
     )
     conn.commit()
