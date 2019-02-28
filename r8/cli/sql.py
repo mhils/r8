@@ -117,7 +117,7 @@ def sql_file(input, debug):
     """
     Run a SQL file on the database.
     There are no safeguards in place here: If you drop the table, the table is dropped.
-    Foreign key constrains are deferred until transactions are commited, i.e. the database
+    Foreign key constraints are deferred until transactions are commited, i.e. the database
     can be in an inconsistent state in between.
     """
     if debug:
