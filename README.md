@@ -85,7 +85,7 @@ r8 challenges list-available
 ```
 
 To make the challenge available to users, we also need to instantiate it by adding it to the database. 
-Go back to the SQL configuration file (`dev.sql` in the example above) and add the following at the bottom:
+Go back to the SQL configuration file (`dev.sql` in the example above) and add the following:
 ```sql
 INSERT INTO challenges (cid, team, t_start, t_stop) VALUES
   ('HelloWorld', 0, datetime('now'), datetime('now','+1 month'));

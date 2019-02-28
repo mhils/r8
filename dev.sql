@@ -1,4 +1,7 @@
 BEGIN;
+
+-- Configure which challenge instances should be displayed to users at which point in time.
+-- You can pass a single string argument to challenges by appending it in parentheses.
 DELETE FROM challenges;
 INSERT INTO challenges (cid, team, t_start, t_stop) VALUES
   -- expired
@@ -14,6 +17,7 @@ INSERT INTO challenges (cid, team, t_start, t_stop) VALUES
   ('FromFolder(../r8/misc/folder-example)', 1, datetime('now'), datetime('now','+1 month','start of day'))
 ;
 
+-- Configure all user accounts. See `r8 password --help` for password generation.
 DELETE FROM users;
 INSERT INTO users (uid, password) VALUES
   -- Username: userN
@@ -22,6 +26,21 @@ INSERT INTO users (uid, password) VALUES
   ('user2', '$argon2i$v=19$m=512,t=2,p=2$xDeorlDXJFgubKyG+YJvHQ$MC1qibUX5Ah04ZFHVPsqNQ'),
   ('user3', '$argon2i$v=19$m=512,t=2,p=2$xDeorlDXJFgubKyG+YJvHQ$MC1qibUX5Ah04ZFHVPsqNQ')
 ;
+
+-- Configure all teams. For challenges with team=1,
+-- a single submission will mark challenges as solved by all team members.
+DELETE FROM teams;
+INSERT INTO teams (tid, uid) VALUES
+  ('42', 'user1'),
+  ('42', 'user2')
+;
+
+--
+--
+-- The SQL statements only serve to illustrate the r8 UI.
+-- In a production deployment, we would COMMIT; here and be done.
+--
+--
 
 DELETE FROM flags;
 INSERT INTO flags (fid, cid, max_submissions) VALUES
@@ -45,9 +64,4 @@ INSERT INTO submissions (uid, fid) VALUES
   ('user1', 'solved')
 ;
 
-DELETE FROM teams;
-INSERT INTO teams (tid, uid) VALUES
-  ('42', 'user1'),
-  ('42', 'user2')
-;
 COMMIT;
