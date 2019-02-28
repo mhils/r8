@@ -15,14 +15,11 @@ import r8
 
 
 class Challenge:
-    def __init_subclass__(cls, **kwargs):
-        challenges.add_class(cls)  # register challenge plugin
-
     id: str
     """The challenge id, sometimes referred to as cid."""
 
     static_dir: Optional[Path] = None
-    """Folder to serve static files from"""
+    """Folder to serve static files from. Defaults to __file__/static"""
 
     def __init__(self, cid: str) -> None:
         self.id = cid
@@ -66,7 +63,7 @@ class Challenge:
         """GET Requests to /api/challenges/cid land here."""
         if self.static_dir:
             filename = re.sub(
-                "[^a-zA-Z0-9_.]",
+                "[^a-zA-Z0-9_.-]",
                 "",
                 request.match_info["path"]
             )
@@ -166,19 +163,14 @@ class Challenge:
                 (self.id, key, value)
             )
 
+    def __init_subclass__(cls, **kwargs):
+        challenges.add_class(cls)  # register challenge plugin
+
 
 def get_challenges() -> List[str]:
     with r8.db:
         cursor = r8.db.execute("SELECT cid FROM challenges")
     return [row[0] for row in cursor.fetchall()]
-
-
-def get_active_challenges() -> Set[str]:
-    with r8.db:
-        cursor = r8.db.execute(
-            "SELECT cid FROM challenges WHERE datetime('now') BETWEEN t_start AND t_stop"
-        )
-    return {row[0] for row in cursor.fetchall()}
 
 
 def class_name(cid: str) -> str:

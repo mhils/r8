@@ -6,8 +6,8 @@
 
     <title>CTF</title>
 
-    <link rel="stylesheet" href="css/bootstrap.css">
-    <link rel="stylesheet" href="css/style.css">
+    <link rel="stylesheet" href="/css/bootstrap.css">
+    <link rel="stylesheet" href="/css/style.css">
 </head>
 <body>
 <div id="root"></div>
@@ -19,10 +19,10 @@
        class="text-muted" target="_blank">🐛 Report Bugs</a>
 </footer>
 
-<script src="js/polyfills.js"></script>
-<script src="js/react.js"></script>
-<script src="js/react-dom.js"></script>
-<script src="js/babel.js"></script>
+<script src="/js/polyfills.js"></script>
+<script src="/js/react.js"></script>
+<script src="/js/react-dom.js"></script>
+<script src="/js/babel.js"></script>
 <script type="text/babel">
     // Grunt, Gulp, Webpack, Browserify, create-react-app, etc. are just not worth it.
     // in-browser compilation will do.
@@ -343,7 +343,7 @@
         }
 
         fetchStatus() {
-            fetchApi("/api/status")
+            fetchApi("/api/challenges")
                 .then(status => {
                     console.debug("status", status)
                     this.setState({

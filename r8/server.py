@@ -68,14 +68,15 @@ def authenticated(f: Callable[[str, web.Request], Any]) -> Callable[[web.Request
 
 
 @authenticated
-async def get_status(user: str, request: web.Request):
-    """Get the current status."""
-    r8.log(request, "get-status", request.headers.get("User-Agent"), uid=user)
+async def get_challenges(user: str, request: web.Request):
+    """Get the current challenge state."""
+    r8.log(request, "get-challenges", request.headers.get("User-Agent"), uid=user)
     challenges = await r8.util.get_challenges(user)
     return web.json_response({
         "user": user,
         "challenges": challenges,
     })
+
 
 @authenticated
 async def submit_flag(user: str, request: web.Request):
@@ -125,10 +126,10 @@ def make_app(static_dir: Union[Path, str]) -> web.Application:
         return web.FileResponse(static_dir / 'index.html')
 
     app = web.Application()
-    app.router.add_get('/api/status', get_status)
     app.router.add_post('/api/login', login)
     app.router.add_post('/api/logout', logout)
     app.router.add_post('/api/submit', submit_flag)
+    app.router.add_get('/api/challenges', get_challenges)
     app.router.add_get('/api/challenges/{cid}{path:(/.*)?}', handle_challenge_request)
     app.router.add_post('/api/challenges/{cid}{path:(/.*)?}', handle_challenge_request)
     app.router.add_get('/', index)

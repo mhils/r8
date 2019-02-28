@@ -112,14 +112,16 @@ def sql_stmt(rows, query):
     "input",
     type=click.File("r"),
 )
-def sql_file(input):
+@click.option('--debug', is_flag=True)
+def sql_file(input, debug):
     """
     Run a SQL file on the database.
     There are no safeguards in place here: If you drop the table, the table is dropped.
     Foreign key constrains are deferred until transactions are commited, i.e. the database
     can be in an inconsistent state in between.
     """
-    r8.db.set_trace_callback(print)
+    if debug:
+        r8.db.set_trace_callback(print)
 
     with r8.db:
         try:

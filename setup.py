@@ -44,12 +44,12 @@ setup(
         ]
     },
     install_requires=[
-        "click==6.7",
-        "texttable==1.2.1",
-        "argon2_cffi==18.1.0",
-        "aiohttp==3.0.5",
-        "aiodns==1.1.1",
-        "itsdangerous==0.24",
+        "click",
+        "texttable",
+        "argon2_cffi",
+        "aiohttp",
+        "aiodns",
+        "itsdangerous",
     ],
     extras_require={
         'faster': [
