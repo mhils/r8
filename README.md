@@ -44,13 +44,13 @@ r8 run
 
 You can now browse to <http://localhost:8000/> and log in as `user1` with password `test`.
 
-### Next Steps
+## Next Steps
 
  1. `r8` has a comprehensive command line interface. Check out `r8 --help`, `r8 users --help`, etc.
  2. Take a look at `dev.sql` to learn how r8 can be configured.
  3. Install additional challenges and create new ones (see next section).
 
-### Installing additional challenges
+## Installing additional challenges
 
 We likely want to install additional challenges, for example from the [r8-example](https://github.com/mhils/r8-example) repository.
 
@@ -99,15 +99,13 @@ r8 run
 
 The *Hello World* challenge is now visible to users! 🎉
 
-### Creating new challenges
+## Creating new challenges
 
 It is recommended to use [r8-example](https://github.com/mhils/r8-example) as a template
 and place challenges in a new separate repository. See `r8.builtin_challenges` and `r8_example` 
 for challenge examples.
 
 # Development
-
-### Architecture
 
 r8 consists of the following parts:
   1. The core **`r8` application** written in Python, which manages the currently active challenges. 
