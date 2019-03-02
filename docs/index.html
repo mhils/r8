@@ -1,0 +1,371 @@
+
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN"
+  "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+
+<html xmlns="http://www.w3.org/1999/xhtml">
+  <head>
+    <meta http-equiv="X-UA-Compatible" content="IE=Edge" />
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+    <title>r8 API Reference &#8212; r8  documentation</title>
+    <link rel="stylesheet" href="_static/alabaster.css" type="text/css" />
+    <link rel="stylesheet" href="_static/pygments.css" type="text/css" />
+    <script type="text/javascript" id="documentation_options" data-url_root="./" src="_static/documentation_options.js"></script>
+    <script type="text/javascript" src="_static/jquery.js"></script>
+    <script type="text/javascript" src="_static/underscore.js"></script>
+    <script type="text/javascript" src="_static/doctools.js"></script>
+    <script type="text/javascript" src="_static/language_data.js"></script>
+    <link rel="index" title="Index" href="genindex.html" />
+    <link rel="search" title="Search" href="search.html" />
+   
+  <link rel="stylesheet" href="_static/custom.css" type="text/css" />
+  
+  
+  <meta name="viewport" content="width=device-width, initial-scale=0.9, maximum-scale=0.9" />
+
+  </head><body>
+  
+
+    <div class="document">
+      <div class="documentwrapper">
+          
+
+          <div class="body" role="main">
+            
+  <div class="section" id="r8-api-reference">
+<h1>r8 API Reference<a class="headerlink" href="#r8-api-reference" title="Permalink to this headline">¶</a></h1>
+<dl class="class">
+<dt id="r8.Challenge">
+<em class="property">class </em><code class="descclassname">r8.</code><code class="descname">Challenge</code><span class="sig-paren">(</span><em>cid: str</em><span class="sig-paren">)</span><a class="headerlink" href="#r8.Challenge" title="Permalink to this definition">¶</a></dt>
+<dd><h3>Challenge Display</h3><dl class="attribute">
+<dt id="r8.Challenge.title">
+<code class="descname">title</code><em class="property"> = &quot;Hello World&quot;</em><a class="headerlink" href="#r8.Challenge.title" title="Permalink to this definition">¶</a></dt>
+<dd><p>The challenge name visible to the user.</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="r8.Challenge.description">
+<em class="property">await </em><code class="descname">description</code><span class="sig-paren">(</span><em>user: str</em>, <em>solved: bool</em><span class="sig-paren">)</span> &#x2192; str<a class="headerlink" href="#r8.Challenge.description" title="Permalink to this definition">¶</a></dt>
+<dd><p>Challenge description visible to the user. Supports full HTML.
+There is no additional security layer, XSS is entirely possible.</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="r8.Challenge.visible">
+<em class="property">await </em><code class="descname">visible</code><span class="sig-paren">(</span><em>user: str</em><span class="sig-paren">)</span> &#x2192; bool<a class="headerlink" href="#r8.Challenge.visible" title="Permalink to this definition">¶</a></dt>
+<dd><p>Determine if the challenge is visible for a given user.
+Defaults to <cite>True</cite>.</p>
+</dd></dl>
+
+<h3>Challenge Lifecycle</h3><dl class="attribute">
+<dt id="r8.Challenge.active">
+<code class="descname">active</code><em class="property"> : bool</em><a class="headerlink" href="#r8.Challenge.active" title="Permalink to this definition">¶</a></dt>
+<dd><p><cite>True</cite> if the challenge is currently active, <cite>False</cite> otherwise.</p>
+</dd></dl>
+
+<dl class="attribute">
+<dt id="r8.Challenge.args">
+<code class="descname">args</code><em class="property"> : str</em><a class="headerlink" href="#r8.Challenge.args" title="Permalink to this definition">¶</a></dt>
+<dd><p>The raw string passed to the challenge as an argument between parentheses.
+For example, given a cid of <cite>“Challenge(foo bar)”</cite>, this would be <cite>“foo bar”</cite>.</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="r8.Challenge.start">
+<em class="property">await </em><code class="descname">start</code><span class="sig-paren">(</span><span class="sig-paren">)</span> &#x2192; None<a class="headerlink" href="#r8.Challenge.start" title="Permalink to this definition">¶</a></dt>
+<dd><p>Called when the challenge is started,
+can be used to e.g. start additional servers.</p>
+<p>Note that challenge instances are always started immediately when running r8,
+independent of when the challenge will be active. This makes sure that there
+are no surprising startup errors.</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="r8.Challenge.stop">
+<em class="property">await </em><code class="descname">stop</code><span class="sig-paren">(</span><span class="sig-paren">)</span> &#x2192; None<a class="headerlink" href="#r8.Challenge.stop" title="Permalink to this definition">¶</a></dt>
+<dd><p>Called when the challenge is stopped.</p>
+<p>Note that challenge instances will not be stopped on the challenge deadline,
+only flag generation and submission will be halted. This allows in-class
+demonstrations after the deadline.</p>
+</dd></dl>
+
+<h3>Logging and Flag Creation</h3><dl class="method">
+<dt id="r8.Challenge.echo">
+<code class="descname">echo</code><span class="sig-paren">(</span><em>message: str</em><span class="sig-paren">)</span> &#x2192; None<a class="headerlink" href="#r8.Challenge.echo" title="Permalink to this definition">¶</a></dt>
+<dd><p>Print to console with the challenge’s namespace added in front.</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="r8.Challenge.log">
+<code class="descname">log</code><span class="sig-paren">(</span><em>ip: THasIP</em>, <em>type: str</em>, <em>data: Optional[str] = None</em>, <em>*</em>, <em>uid: Optional[str] = None</em><span class="sig-paren">)</span> &#x2192; None<a class="headerlink" href="#r8.Challenge.log" title="Permalink to this definition">¶</a></dt>
+<dd><p>Log an event for the current challenge.
+See <a class="reference internal" href="#r8.log" title="r8.log"><code class="xref py py-func docutils literal notranslate"><span class="pre">r8.log()</span></code></a>.</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="r8.Challenge.log_and_create_flag">
+<code class="descname">log_and_create_flag</code><span class="sig-paren">(</span><em>ip: THasIP</em>, <em>user: Optional[str] = None</em>, <em>*</em>, <em>max_submissions: int = 1</em>, <em>flag: Optional[str] = None</em>, <em>challenge: Optional[str] = None</em><span class="sig-paren">)</span> &#x2192; str<a class="headerlink" href="#r8.Challenge.log_and_create_flag" title="Permalink to this definition">¶</a></dt>
+<dd><p>Create a new flag that can be redeemed for this challenge and log its creation.</p>
+<p>If the challenge is currently inactive, <cite>__flag__{challenge inactive}</cite> will be returned instead.</p>
+<p>If flag creation should not be logged (e.g. because it’s done by the challenge
+automatically on startup), use <a class="reference internal" href="#r8.util.create_flag" title="r8.util.create_flag"><code class="xref py py-func docutils literal notranslate"><span class="pre">r8.util.create_flag()</span></code></a> directly.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first last simple">
+<li><strong>ip</strong> – IP address which caused this flag to be created. Used for logging only.</li>
+<li><strong>user</strong> – User who caused this flag to be created. Used for logging only.</li>
+<li><strong>challenge</strong> – If given, override the challenge for which this flag is valid.</li>
+</ul>
+</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<h3>HTTP API</h3><p>Challenges can expose an HTTP API. This is for example used to serve static files (such as challenge icons)
+that accompany the challenge.</p>
+<dl class="attribute">
+<dt id="r8.Challenge.static_dir">
+<code class="descname">static_dir</code><em class="property"> = &quot;&lt;challenge file directory&gt;/static&quot;</em><a class="headerlink" href="#r8.Challenge.static_dir" title="Permalink to this definition">¶</a></dt>
+<dd><p>Directory that includes static files for the challenge.
+Will be served from <a class="reference internal" href="#r8.Challenge.handle_get_request" title="r8.Challenge.handle_get_request"><code class="xref py py-meth docutils literal notranslate"><span class="pre">handle_get_request()</span></code></a>.</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="r8.Challenge.api_url">
+<code class="descname">api_url</code><span class="sig-paren">(</span><em>path: str</em>, <em>absolute: bool = False</em>, <em>user: Optional[str] = None</em><span class="sig-paren">)</span> &#x2192; str<a class="headerlink" href="#r8.Challenge.api_url" title="Permalink to this definition">¶</a></dt>
+<dd><p>Construct a URL pointing to this challenge’s API.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first last simple">
+<li><strong>path</strong> – The request path relative to the API endpoint.</li>
+<li><strong>absolute</strong> – If True, an absolute URL is constructed.</li>
+<li><strong>user</strong> – If given, an authentication token will be included in the URL, making it possible to access the resource without additional authentication.</li>
+</ul>
+</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="method">
+<dt id="r8.Challenge.handle_get_request">
+<em class="property">await </em><code class="descname">handle_get_request</code><span class="sig-paren">(</span><em>user: str</em>, <em>request: aiohttp.web_request.Request</em><span class="sig-paren">)</span> &#x2192; Union[str, aiohttp.web_response.StreamResponse]<a class="headerlink" href="#r8.Challenge.handle_get_request" title="Permalink to this definition">¶</a></dt>
+<dd><p>HTTP GET requests to <cite>/api/challenges/cid/*</cite> land here.
+Serves static resources from <a class="reference internal" href="#r8.Challenge.static_dir" title="r8.Challenge.static_dir"><code class="xref py py-attr docutils literal notranslate"><span class="pre">static_dir</span></code></a> by default.</p>
+<p>The request path can be accessed using <cite>request.match_info[“path”]</cite>.</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="r8.Challenge.handle_post_request">
+<em class="property">await </em><code class="descname">handle_post_request</code><span class="sig-paren">(</span><em>user: str</em>, <em>request: aiohttp.web_request.Request</em><span class="sig-paren">)</span> &#x2192; Union[str, aiohttp.web_response.StreamResponse]<a class="headerlink" href="#r8.Challenge.handle_post_request" title="Permalink to this definition">¶</a></dt>
+<dd><p>HTTP POST requests to <cite>/api/challenges/cid/*</cite> land here. Serves 404s by default.</p>
+<p>The request path can be accessed using <cite>request.match_info[“path”]</cite>.</p>
+</dd></dl>
+
+<h3>Key-Value Storage</h3><p>Challenges can store additional data in a persistent key value storage in the database.</p>
+<dl class="method">
+<dt id="r8.Challenge.get_data">
+<code class="descname">get_data</code><span class="sig-paren">(</span><em>key: str</em>, <em>*</em>, <em>cid: Optional[str] = None</em><span class="sig-paren">)</span> &#x2192; Optional[str]<a class="headerlink" href="#r8.Challenge.get_data" title="Permalink to this definition">¶</a></dt>
+<dd><p>Get persistent challenge data for a specific key.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><strong>cid</strong> – If given, override the challenge for which data should be accessed.</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="method">
+<dt id="r8.Challenge.set_data">
+<code class="descname">set_data</code><span class="sig-paren">(</span><em>key: str</em>, <em>value: str</em>, <em>*</em>, <em>cid: Optional[str] = None</em><span class="sig-paren">)</span><a class="headerlink" href="#r8.Challenge.set_data" title="Permalink to this definition">¶</a></dt>
+<dd><p>Set persistent challenge data for a specific key.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><strong>cid</strong> – If given, override the challenge for which data should be modified.</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+</dd></dl>
+
+<div class="section" id="utilities">
+<h2>Utilities<a class="headerlink" href="#utilities" title="Permalink to this headline">¶</a></h2>
+<dl class="function">
+<dt id="r8.util.get_team">
+<code class="descclassname">r8.util.</code><code class="descname">get_team</code><span class="sig-paren">(</span><em>user: str</em><span class="sig-paren">)</span> &#x2192; Optional[str]<a class="headerlink" href="#r8.util.get_team" title="Permalink to this definition">¶</a></dt>
+<dd><p>Get a given user’s team.</p>
+</dd></dl>
+
+<dl class="function">
+<dt id="r8.util.has_solved">
+<code class="descclassname">r8.util.</code><code class="descname">has_solved</code><span class="sig-paren">(</span><em>user: str</em>, <em>challenge: str</em><span class="sig-paren">)</span> &#x2192; bool<a class="headerlink" href="#r8.util.has_solved" title="Permalink to this definition">¶</a></dt>
+<dd><p>Check if a user has solved a challenge.</p>
+</dd></dl>
+
+<div class="section" id="challenge-description-helpers">
+<h3>Challenge Description Helpers<a class="headerlink" href="#challenge-description-helpers" title="Permalink to this headline">¶</a></h3>
+<dl class="function">
+<dt id="r8.util.media">
+<code class="descclassname">r8.util.</code><code class="descname">media</code><span class="sig-paren">(</span><em>src</em>, <em>desc</em>, <em>visible: bool = True</em><span class="sig-paren">)</span><a class="headerlink" href="#r8.util.media" title="Permalink to this definition">¶</a></dt>
+<dd><p>HTML boilerplate for a bootstrap media element. Commonly used to display challenge icons.</p>
+</dd></dl>
+
+<dl class="function">
+<dt id="r8.util.spoiler">
+<code class="descclassname">r8.util.</code><code class="descname">spoiler</code><span class="sig-paren">(</span><em>help_text: str</em>, <em>button_text='🕵️ Show Hint'</em><span class="sig-paren">)</span> &#x2192; str<a class="headerlink" href="#r8.util.spoiler" title="Permalink to this definition">¶</a></dt>
+<dd><p>HTML boilerplate for spoiler element in challenge descriptions.</p>
+</dd></dl>
+
+<dl class="function">
+<dt id="r8.util.challenge_form_js">
+<code class="descclassname">r8.util.</code><code class="descname">challenge_form_js</code><span class="sig-paren">(</span><em>cid: str</em><span class="sig-paren">)</span> &#x2192; str<a class="headerlink" href="#r8.util.challenge_form_js" title="Permalink to this definition">¶</a></dt>
+<dd><p>JS Boilerplate for simple interactive form submissions in the challenge description.</p>
+</dd></dl>
+
+<dl class="function">
+<dt id="r8.util.challenge_invoke_button">
+<code class="descclassname">r8.util.</code><code class="descname">challenge_invoke_button</code><span class="sig-paren">(</span><em>cid: str</em>, <em>text: str</em><span class="sig-paren">)</span> &#x2192; str<a class="headerlink" href="#r8.util.challenge_invoke_button" title="Permalink to this definition">¶</a></dt>
+<dd><p>“Trigger” button for challenges. Clicking it invokes the challenge’s HTTP POST handler.</p>
+</dd></dl>
+
+<dl class="function">
+<dt id="r8.util.url_for">
+<code class="descclassname">r8.util.</code><code class="descname">url_for</code><span class="sig-paren">(</span><em>path: str</em>, <em>absolute: bool = False</em>, <em>user: Optional[str] = None</em><span class="sig-paren">)</span> &#x2192; str<a class="headerlink" href="#r8.util.url_for" title="Permalink to this definition">¶</a></dt>
+<dd><p>Construct a URL for the CTF System.
+If absolute is true, construct an absolute URL including the origin.
+If user is passed, add an authentication token to the URL.</p>
+</dd></dl>
+
+<dl class="function">
+<dt id="r8.util.get_host">
+<code class="descclassname">r8.util.</code><code class="descname">get_host</code><span class="sig-paren">(</span><span class="sig-paren">)</span> &#x2192; str<a class="headerlink" href="#r8.util.get_host" title="Permalink to this definition">¶</a></dt>
+<dd><p>Return the hostname of the CTF system.</p>
+</dd></dl>
+
+</div>
+<div class="section" id="tcp-server-challenge-helpers">
+<h3>TCP Server Challenge Helpers<a class="headerlink" href="#tcp-server-challenge-helpers" title="Permalink to this headline">¶</a></h3>
+<dl class="function">
+<dt id="r8.util.connection_timeout">
+<code class="descclassname">r8.util.</code><code class="descname">connection_timeout</code><span class="sig-paren">(</span><em>f</em><span class="sig-paren">)</span><a class="headerlink" href="#r8.util.connection_timeout" title="Permalink to this definition">¶</a></dt>
+<dd><p>Decorator to timeout an asyncio TCP connection handler after 60 seconds.</p>
+</dd></dl>
+
+<dl class="function">
+<dt id="r8.util.tolerate_connection_error">
+<code class="descclassname">r8.util.</code><code class="descname">tolerate_connection_error</code><span class="sig-paren">(</span><em>f</em><span class="sig-paren">)</span><a class="headerlink" href="#r8.util.tolerate_connection_error" title="Permalink to this definition">¶</a></dt>
+<dd><p>Decorator to silently catch all ConnectionErrors for asyncio TCP connections.</p>
+</dd></dl>
+
+<dl class="function">
+<dt id="r8.util.format_address">
+<code class="descclassname">r8.util.</code><code class="descname">format_address</code><span class="sig-paren">(</span><em>address: Tuple[str, int]</em><span class="sig-paren">)</span> &#x2192; str<a class="headerlink" href="#r8.util.format_address" title="Permalink to this definition">¶</a></dt>
+<dd><p>Format an (ip, port) address tuple.</p>
+</dd></dl>
+
+</div>
+<div class="section" id="low-level-helpers">
+<h3>Low-Level Helpers<a class="headerlink" href="#low-level-helpers" title="Permalink to this headline">¶</a></h3>
+<div class="admonition seealso">
+<p class="first admonition-title">See also</p>
+<p class="last">For challenge development, it is recommende to use the equivalent methods
+exposed by the challenge class instead:
+<a class="reference internal" href="#r8.Challenge.echo" title="r8.Challenge.echo"><code class="xref py py-meth docutils literal notranslate"><span class="pre">r8.Challenge.echo()</span></code></a>, <a class="reference internal" href="#r8.Challenge.log" title="r8.Challenge.log"><code class="xref py py-meth docutils literal notranslate"><span class="pre">r8.Challenge.log()</span></code></a> and <a class="reference internal" href="#r8.Challenge.log_and_create_flag" title="r8.Challenge.log_and_create_flag"><code class="xref py py-meth docutils literal notranslate"><span class="pre">r8.Challenge.log_and_create_flag()</span></code></a>.</p>
+</div>
+<dl class="function">
+<dt id="r8.echo">
+<code class="descclassname">r8.</code><code class="descname">echo</code><span class="sig-paren">(</span><em>namespace: str</em>, <em>message: str</em>, <em>err: bool = False</em><span class="sig-paren">)</span> &#x2192; None<a class="headerlink" href="#r8.echo" title="Permalink to this definition">¶</a></dt>
+<dd><p>Print to console with a namespace added in front.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first last simple">
+<li><strong>namespace</strong> – The message ‘category’, e.g. the challenge name.</li>
+<li><strong>message</strong> – The message.</li>
+<li><strong>err</strong> – If <cite>True</cite>, print to stderr.</li>
+</ul>
+</td>
+</tr>
+</tbody>
+</table>
+<p>For quick and dirty challenge development, it is completely okay to just <cite>print()</cite> instead.</p>
+</dd></dl>
+
+<dl class="function">
+<dt id="r8.log">
+<code class="descclassname">r8.</code><code class="descname">log</code><span class="sig-paren">(</span><em>ip: THasIP</em>, <em>type: str</em>, <em>data: Optional[str] = None</em>, <em>*</em>, <em>cid: Optional[str] = None</em>, <em>uid: Optional[str] = None</em><span class="sig-paren">)</span> &#x2192; int<a class="headerlink" href="#r8.log" title="Permalink to this definition">¶</a></dt>
+<dd><p>Create a log entry.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first last simple">
+<li><strong>ip</strong> – IP address which caused this log entry to be created.</li>
+<li><strong>type</strong> – Event type, for example “submission attempt”</li>
+<li><strong>data</strong> – Additional event data, for example the actually submitted value.</li>
+<li><strong>cid</strong> – Challenge this log entry relates to.</li>
+<li><strong>uid</strong> – User this log entry relates to.</li>
+</ul>
+</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="function">
+<dt id="r8.util.create_flag">
+<code class="descclassname">r8.util.</code><code class="descname">create_flag</code><span class="sig-paren">(</span><em>challenge: str</em>, <em>max_submissions: int = 1</em>, <em>flag: str = None</em><span class="sig-paren">)</span> &#x2192; str<a class="headerlink" href="#r8.util.create_flag" title="Permalink to this definition">¶</a></dt>
+<dd><p>Create a new flag for an existing challenge. When creating flags from challenges,
+see also <a class="reference internal" href="#r8.Challenge.log_and_create_flag" title="r8.Challenge.log_and_create_flag"><code class="xref py py-meth docutils literal notranslate"><span class="pre">r8.Challenge.log_and_create_flag()</span></code></a>.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first last simple">
+<li><strong>challenge</strong> – Challenge for which the flag is valid.</li>
+<li><strong>max_submissions</strong> – Maximum number of times the flag can be redeemed.</li>
+<li><strong>flag</strong> – If given, use this as the flag string. Otherwise, generate random flag.</li>
+</ul>
+</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="class">
+<dt id="r8.util.THasIP">
+<em class="property">class </em><code class="descclassname">r8.util.</code><code class="descname">THasIP</code><a class="headerlink" href="#r8.util.THasIP" title="Permalink to this definition">¶</a></dt>
+<dd><p>An object from which we can derive an IP address,.
+e.g. a <cite>web.Request</cite>, an <cite>asyncio.StreamWriter</cite>, a <cite>str</cite>  or an <cite>(ip, port)</cite> tuple.</p>
+</dd></dl>
+
+</div>
+</div>
+</div>
+
+
+          </div>
+          
+      </div>
+      <div class="clearer"></div>
+    </div>
+    <div class="footer">
+      
+      
+    </div>
+
+    
+
+    
+  </body>
+</html>

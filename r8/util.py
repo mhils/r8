@@ -9,7 +9,7 @@ import textwrap
 import traceback
 from functools import wraps
 from pathlib import Path
-from typing import Optional, Union, Tuple
+from typing import Optional, Tuple, TypeVar
 
 import argon2
 import click
@@ -18,6 +18,171 @@ import texttable
 from aiohttp import web
 
 import r8
+
+
+def get_team(user: str) -> Optional[str]:
+    """Get a given user's team."""
+    with r8.db:
+        row = r8.db.execute("""SELECT tid FROM teams WHERE uid = ?""", (user,)).fetchone()
+        if row:
+            return row[0]
+        return None
+
+
+def has_solved(user: str, challenge: str) -> bool:
+    """Check if a user has solved a challenge."""
+    with r8.db:
+        return r8.db.execute("""
+            SELECT COUNT(*)
+            FROM challenges
+            NATURAL JOIN flags
+            INNER JOIN submissions ON (
+                flags.fid = submissions.fid
+                AND (
+                    submissions.uid = ? OR
+                    team = 1 AND submissions.uid IN (SELECT uid FROM teams WHERE tid = (SELECT tid FROM teams WHERE uid = ?))
+                )
+            )
+            WHERE challenges.cid = ?
+        """, (user, user, challenge)).fetchone()[0]
+
+
+def media(src, desc, visible: bool = True):
+    """
+    HTML boilerplate for a bootstrap media element. Commonly used to display challenge icons.
+    """
+    return textwrap.dedent(f"""
+        <div class="media">
+            <img class="mr-3" style="max-width: 128px; max-height: 128px;" src="{src if visible else "/challenge.png"}">
+            <div class="align-self-center media-body">{desc}</div>
+        </div>
+        """)
+
+
+def spoiler(help_text: str, button_text="🕵️ Show Hint") -> str:
+    """
+    HTML boilerplate for spoiler element in challenge descriptions.
+    """
+    div_id = secrets.token_hex(5)
+    return f"""
+            <div>
+            <div id="{div_id}-help" class="d-none">
+                <hr/>
+                {help_text}
+            </div>
+            <div id="{div_id}-button" class="btn btn-outline-info btn-sm">{button_text}</div>
+            <script>
+            document.getElementById("{div_id}-button").addEventListener("click", function(){{
+                document.getElementById("{div_id}-button").classList.add("d-none");
+                document.getElementById("{div_id}-help").classList.remove("d-none");
+            }});
+            </script>
+            </div>
+            """
+
+
+def challenge_form_js(cid: str) -> str:
+    """
+    JS Boilerplate for simple interactive form submissions in the challenge description.
+    """
+    return """
+        <script>{ // make sure to add a block here so that `let` is scoped.
+        let form = document.currentScript.previousElementSibling;
+        let response = form.querySelector(".response")
+        form.addEventListener("submit", (e) => {
+            e.preventDefault();
+            let post = {};
+            (new FormData(form)).forEach(function(v,k){
+                post[k] = v;
+            });
+            fetchApi(
+                "/api/challenges/%s",
+                {method: "POST", body: JSON.stringify(post)}
+            ).then(json => {
+                response.textContent = json['message'];
+            }).catch(e => {
+                response.textContent = "Error: " + e;
+            })
+        });
+        }</script>
+    """ % cid
+
+
+def challenge_invoke_button(cid: str, text: str) -> str:
+    """
+    "Trigger" button for challenges. Clicking it invokes the challenge's HTTP POST handler.
+    """
+    return f"""
+        <form class="form-inline">
+            <button class="btn btn-primary m-1">{text}</button>
+            <div class="response m-1"></div>
+        </form>
+        {challenge_form_js(cid)}
+    """
+
+
+def url_for(path: str, absolute: bool = False, user: Optional[str] = None) -> str:
+    """
+    Construct a URL for the CTF System.
+    If absolute is true, construct an absolute URL including the origin.
+    If user is passed, add an authentication token to the URL.
+    """
+    if user:
+        token = r8.util.auth_sign.sign(user.encode()).decode()
+        if "?" in path:
+            path += f"&token={token}"
+        else:
+            path += f"?token={token}"
+    if absolute:
+        path = path.lstrip("/")
+        path = f"{r8.settings['origin']}/{path}"
+    return path
+
+
+def get_host() -> str:
+    """
+    Return the hostname of the CTF system.
+    """
+    scheme, host, *_ = r8.settings['origin'].split(":")
+    return host.lstrip("/")
+
+
+def connection_timeout(f):
+    """Decorator to timeout an asyncio TCP connection handler after 60 seconds."""
+
+    @functools.wraps(f)
+    async def wrapper(*args, **kwds):
+        try:
+            await asyncio.wait_for(f(*args, **kwds), 60)
+        except asyncio.TimeoutError:
+            writer = args[-1]
+            writer.write("\nconnection timed out.\n".encode())
+            await writer.drain()
+            writer.close()
+
+    return wrapper
+
+
+def tolerate_connection_error(f):
+    """Decorator to silently catch all ConnectionErrors for asyncio TCP connections."""
+
+    @functools.wraps(f)
+    async def wrapper(*args, **kwds):
+        try:
+            return await f(*args, **kwds)
+        except ConnectionError:
+            pass
+
+    return wrapper
+
+
+def format_address(address: Tuple[str, int]) -> str:
+    """Format an `(ip, port)` address tuple."""
+    host, port = address
+    if not host:
+        host = "0.0.0.0"
+    return f"{host}:{port}"
+
 
 _colors = [
     "black",
@@ -33,12 +198,77 @@ _colors = [
 def echo(namespace: str, message: str, err: bool = False) -> None:
     """
     Print to console with a namespace added in front.
+
+    Args:
+        namespace: The message 'category', e.g. the challenge name.
+        message: The message.
+        err: If `True`, print to stderr.
+
+    For quick and dirty challenge development, it is completely okay to just `print()` instead.
     """
     if err:
         color = "red"
     else:
         color = _colors[hash(str) % len(_colors)]
-    click.echo(click.style(f"[{namespace}] ", fg=color) + message)
+    click.echo(click.style(f"[{namespace}] ", fg=color) + message, err=err)
+
+
+THasIP = TypeVar("THasIP", str, tuple, asyncio.StreamWriter, asyncio.BaseTransport, web.Request)
+
+
+def log(
+    ip: THasIP,
+    type: str,
+    data: Optional[str] = None,
+    *,
+    cid: Optional[str] = None,
+    uid: Optional[str] = None,
+) -> int:
+    """
+    Create a log entry.
+
+    Args:
+        ip: IP address which caused this log entry to be created.
+        type: Event type, for example "submission attempt"
+        data: Additional event data, for example the actually submitted value.
+        cid: Challenge this log entry relates to.
+        uid: User this log entry relates to.
+    """
+    if isinstance(ip, web.Request):
+        ip = ip.headers.get("X-Forwarded-For", ip.transport)
+    if isinstance(ip, (asyncio.StreamWriter, asyncio.BaseTransport)):
+        ip = ip.get_extra_info("peername")
+    if isinstance(ip, tuple):
+        ip = ip[0]
+    with r8.db:
+        return r8.db.execute(
+            "INSERT INTO events (ip, type, data, cid, uid) VALUES (?, ?, ?, ?, ?)",
+            (ip, type, data, cid, uid)
+        ).lastrowid
+
+
+def create_flag(
+    challenge: str,
+    max_submissions: int = 1,
+    flag: str = None
+) -> str:
+    """
+    Create a new flag for an existing challenge. When creating flags from challenges,
+    see also :meth:`r8.Challenge.log_and_create_flag`.
+
+    Args:
+        challenge: Challenge for which the flag is valid.
+        max_submissions: Maximum number of times the flag can be redeemed.
+        flag: If given, use this as the flag string. Otherwise, generate random flag.
+    """
+    if flag is None:
+        flag = "__flag__{" + secrets.token_hex(16) + "}"
+    with r8.db:
+        r8.db.execute(
+            "INSERT OR REPLACE INTO flags (fid, cid, max_submissions) VALUES (?,?,?)",
+            (flag, challenge, max_submissions)
+        )
+    return flag
 
 
 class Signer:
@@ -149,139 +379,6 @@ def run_sql(query: str, parameters=None, *, rows: int = 10) -> None:
         print("Statement did not return data.")
 
 
-def media(src, desc, visible: bool = True):
-    """
-    HTML for bootstrap media element
-    https://getbootstrap.com/docs/4.0/layout/media-object/
-    """
-    return textwrap.dedent(f"""
-        <div class="media">
-            <img class="mr-3" style="max-width: 128px; max-height: 128px;" src="{src if visible else "/challenge.png"}">
-            <div class="align-self-center media-body">{desc}</div>
-        </div>
-        """)
-
-
-def spoiler(help_text: str, button_text="🕵️ Show Hint") -> str:
-    """
-    HTML for spoiler element in challenge descriptions
-    """
-    div_id = secrets.token_hex(5)
-    return f"""
-            <div>
-            <div id="{div_id}-help" class="d-none">
-                <hr/>
-                {help_text}
-            </div>
-            <div id="{div_id}-button" class="btn btn-outline-info btn-sm">{button_text}</div>
-            <script>
-            document.getElementById("{div_id}-button").addEventListener("click", function(){{
-                document.getElementById("{div_id}-button").classList.add("d-none");
-                document.getElementById("{div_id}-help").classList.remove("d-none");
-            }});
-            </script>
-            </div>
-            """
-
-
-def url_for(path: str, absolute: bool = False, user: Optional[str] = None) -> str:
-    """
-    Construct a URL for the CTF System.
-    If absolute is true, construct an absolute URL including the origin.
-    If user is passed, add an authentication token to the URL.
-    """
-    if user:
-        token = r8.util.auth_sign.sign(user.encode()).decode()
-        if "?" in path:
-            path += f"&token={token}"
-        else:
-            path += f"?token={token}"
-    if absolute:
-        path = path.lstrip("/")
-        path = f"{r8.settings['origin']}/{path}"
-    return path
-
-
-def get_host() -> str:
-    """
-    Return the hostname of the CTF system
-    """
-    scheme, host, *_ = r8.settings['origin'].split(":")
-    return host.lstrip("/")
-
-
-def create_flag(
-    challenge: str,
-    max_submissions: int = 1,
-    flag: str = None
-) -> str:
-    """
-    Create a new flag for an existing challenge.
-    """
-    if flag is None:
-        flag = "__flag__{" + secrets.token_hex(16) + "}"
-    with r8.db:
-        r8.db.execute(
-            "INSERT OR REPLACE INTO flags (fid, cid, max_submissions) VALUES (?,?,?)",
-            (flag, challenge, max_submissions)
-        )
-    return flag
-
-
-def get_team(user: str) -> Optional[str]:
-    with r8.db:
-        row = r8.db.execute("""SELECT tid FROM teams WHERE uid = ?""", (user,)).fetchone()
-        if row:
-            return row[0]
-        return None
-
-
-def has_solved(user: str, challenge: str) -> bool:
-    with r8.db:
-        return r8.db.execute("""
-            SELECT COUNT(*)
-            FROM challenges
-            NATURAL JOIN flags
-            INNER JOIN submissions ON (
-                flags.fid = submissions.fid
-                AND (
-                    submissions.uid = ? OR
-                    team = 1 AND submissions.uid IN (SELECT uid FROM teams WHERE tid = (SELECT tid FROM teams WHERE uid = ?))
-                )
-            )
-            WHERE challenges.cid = ?
-        """, (user, user, challenge)).fetchone()[0]
-
-
-THasIP = Union[str, tuple, asyncio.StreamWriter, asyncio.BaseTransport, web.Request]
-
-
-def log(
-    ip: THasIP,
-    type: str,
-    data: Optional[str] = None,
-    *,
-    cid: Optional[str] = None,
-    uid: Optional[str] = None,
-) -> int:
-    """
-    Create a log entry.
-
-    For convenience reasons, ip can also be an address tuple, a aiohttp.web.Reqest, or an asyncio.StreamWriter.
-    """
-    if isinstance(ip, web.Request):
-        ip = ip.headers.get("X-Forwarded-For", ip.transport)
-    if isinstance(ip, (asyncio.StreamWriter, asyncio.BaseTransport)):
-        ip = ip.get_extra_info("peername")
-    if isinstance(ip, tuple):
-        ip = ip[0]
-    with r8.db:
-        return r8.db.execute(
-            "INSERT INTO events (ip, type, data, cid, uid) VALUES (?, ?, ?, ?, ?)",
-            (ip, type, data, cid, uid)
-        ).lastrowid
-
-
 ph = argon2.PasswordHasher()
 
 
@@ -291,76 +388,6 @@ def hash_password(s: str) -> str:
 
 def verify_hash(hash: str, password: str) -> bool:
     return ph.verify(hash, password)
-
-
-def format_address(address: Tuple[str, int]) -> str:
-    host, port = address
-    if not host:
-        host = "0.0.0.0"
-    return f"{host}:{port}"
-
-
-def connection_timeout(f):
-    """Timeout a connection after 60 seconds."""
-
-    @functools.wraps(f)
-    async def wrapper(*args, **kwds):
-        try:
-            await asyncio.wait_for(f(*args, **kwds), 60)
-        except asyncio.TimeoutError:
-            writer = args[-1]
-            writer.write("\nconnection timed out.\n".encode())
-            await writer.drain()
-            writer.close()
-
-    return wrapper
-
-
-def tolerate_connection_error(f):
-    """Silently catch all ConnectionErrors."""
-
-    @functools.wraps(f)
-    async def wrapper(*args, **kwds):
-        try:
-            return await f(*args, **kwds)
-        except ConnectionError:
-            pass
-
-    return wrapper
-
-
-def challenge_form_js(cid: str) -> str:
-    return """
-        <script>{ // make sure to add a block here so that `let` is scoped.
-        let form = document.currentScript.previousElementSibling;
-        let resp = form.querySelector(".response")
-        form.addEventListener("submit", (e) => {
-            e.preventDefault();
-            let post = {};
-            (new FormData(form)).forEach(function(v,k){
-                post[k] = v;
-            });
-            fetchApi(
-                "/api/challenges/%s",
-                {method: "POST", body: JSON.stringify(post)}
-            ).then(json => {
-                resp.textContent = json['message'];
-            }).catch(e => {
-                resp.textContent = "Error: " + e;
-            })
-        });
-        }</script>
-    """ % cid
-
-
-def challenge_invoke_button(cid: str, text: str) -> str:
-    return f"""
-        <form class="form-inline">
-            <button class="btn btn-primary m-1">{text}</button>
-            <div class="response m-1"></div>
-        </form>
-        {challenge_form_js(cid)}
-    """
 
 
 _control_char_trans = {
@@ -376,6 +403,9 @@ def console_escape(text: str):
 
 
 def correct_flag(flag: str) -> str:
+    """
+    Fixup slightly misformatted flag input.
+    """
     filtered = flag.replace(" ", "").lower()
     match = re.search(r"[0-9a-f]{32}", filtered)
     if match:

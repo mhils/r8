@@ -6,7 +6,7 @@ import re
 import time
 import traceback
 from pathlib import Path
-from typing import Dict, Optional, Type, List, Set, Tuple, Union
+from typing import Dict, Optional, Type, List, Tuple, Union
 
 import pkg_resources
 from aiohttp import web
@@ -19,14 +19,16 @@ class Challenge:
     """The challenge id, sometimes referred to as cid."""
 
     static_dir: Optional[Path] = None
-    """Folder to serve static files from. Defaults to __file__/static"""
+    """
+    Directory that includes static files for the challenge.
+    Will be served from :meth:`handle_get_request`.
+    """
 
     def __init__(self, cid: str) -> None:
         self.id = cid
         if not self.static_dir:
             self.static_dir = Path(inspect.getfile(type(self))).parent.absolute() / "static"
 
-    # Overridable methods.
     @property
     @abc.abstractmethod
     def title(self) -> str:
@@ -40,43 +42,76 @@ class Challenge:
         """
         return ""
 
+    async def visible(self, user: str) -> bool:
+        """
+        Determine if the challenge is visible for a given user.
+        Defaults to `True`.
+        """
+        return True
+
+    @property
+    def active(self) -> bool:
+        """`True` if the challenge is currently active, `False` otherwise."""
+        t_start, t_stop = self._active_times()
+        return t_start <= time.time() <= t_stop
+
+    @functools.lru_cache()
+    def _active_times(self) -> Tuple[int, int]:
+        with r8.db:
+            return r8.db.execute("""
+                SELECT CAST(strftime('%s', t_start) AS INT), CAST(strftime('%s', t_stop) AS INT) FROM challenges WHERE cid = ?
+            """, (self.id,)).fetchone()
+
+    @property
+    def args(self) -> str:
+        """
+        The raw string passed to the challenge as an argument between parentheses.
+        For example, given a cid of `"Challenge(foo bar)"`, this would be `"foo bar"`.
+        """
+        if "(" in self.id:
+            return self.id.split("(", 1)[1].rsplit(")", 1)[0]
+        else:
+            return ""
+
     async def start(self) -> None:
-        """Start the challenge, e.g. by starting a server."""
+        """
+        Called when the challenge is started,
+        can be used to e.g. start additional servers.
+
+        Note that challenge instances are always started immediately when running r8,
+        independent of when the challenge will be active. This makes sure that there
+        are no surprising startup errors.
+        """
         pass
 
     async def stop(self) -> None:
-        """Stop the challenge; we are shutting down or the challenge time is up."""
+        """
+        Called when the challenge is stopped.
+
+        Note that challenge instances will not be stopped on the challenge deadline,
+        only flag generation and submission will be halted. This allows in-class
+        demonstrations after the deadline.
+        """
         pass
 
-    async def visible(self, user: str) -> bool:
-        """Determine if the challenge is visible for a given user."""
-        return True
+    def echo(self, message: str) -> None:
+        """Print to console with the challenge's namespace added in front."""
+        r8.echo(self.id, message)
 
-    def api_url(self, path: str, absolute: bool = False, user: Optional[str] = None) -> str:
-        if not isinstance(absolute, bool):
-            raise RuntimeError("api_url signature has changed.")
-        if path and not path.startswith("/"):
-            path = "/" + path  # don't use .lstrip() to make sure that "" returns in no trailing "/"
-        return r8.util.url_for(f"/api/challenges/{self.id}{path}", absolute, user)
+    def log(
+        self,
+        ip: r8.util.THasIP,
+        type: str,
+        data: Optional[str] = None,
+        *,
+        uid: Optional[str] = None
+    ) -> None:
+        """
+        Log an event for the current challenge.
+        See :func:`r8.log`.
+        """
+        r8.log(ip, type, data, uid=uid, cid=self.id)
 
-    async def handle_get_request(self, user: str, request: web.Request) -> Union[str, web.StreamResponse]:
-        """GET Requests to /api/challenges/cid land here."""
-        if self.static_dir:
-            filename = re.sub(
-                "[^a-zA-Z0-9_.-]",
-                "",
-                request.match_info["path"]
-            )
-            filepath = self.static_dir / filename
-            if filepath.is_file():
-                return web.FileResponse(filepath)
-        return web.HTTPNotFound()
-
-    async def handle_post_request(self, user: str, request: web.Request) -> Union[str, web.StreamResponse]:
-        """POST Requests to /api/challenges/cid land here."""
-        return web.HTTPNotFound()
-
-    # Utility methods
     def log_and_create_flag(
         self,
         ip: r8.util.THasIP,
@@ -89,10 +124,15 @@ class Challenge:
         """
         Create a new flag that can be redeemed for this challenge and log its creation.
 
-        If the challenge is currently inactive, an error message will be returned instead.
+        If the challenge is currently inactive, `__flag__{challenge inactive}` will be returned instead.
 
         If flag creation should not be logged (e.g. because it's done by the challenge
-        automatically on startup), use r8.util.create_flag directly.
+        automatically on startup), use :func:`r8.util.create_flag` directly.
+
+        Args:
+            ip: IP address which caused this flag to be created. Used for logging only.
+            user: User who caused this flag to be created. Used for logging only.
+            challenge: If given, override the challenge for which this flag is valid.
         """
         if not self.active:
             self.log(ip, "flag-inactive", uid=user)
@@ -105,66 +145,76 @@ class Challenge:
         r8.log(ip, "flag-create", flag, uid=user, cid=challenge)
         return flag
 
-    @property
-    def active(self) -> bool:
-        t_start, t_stop = self._active_times()
-        return t_start <= time.time() <= t_stop
-
-    @functools.lru_cache()
-    def _active_times(self) -> Tuple[int, int]:
-        with r8.db:
-            return r8.db.execute("""
-                SELECT CAST(strftime('%s', t_start) AS INT), CAST(strftime('%s', t_stop) AS INT) FROM challenges WHERE cid = ?
-            """, (self.id,)).fetchone()
-
-    def log(
-        self,
-        ip: r8.util.THasIP,
-        type: str,
-        data: Optional[str] = None,
-        *,
-        uid: Optional[str] = None
-    ) -> None:
-        """Log an event for the current challenge."""
-        r8.log(ip, type, data, uid=uid, cid=self.id)
-
-    def echo(self, message: str) -> None:
-        """Print to console with the challenge's namespace added in front."""
-        r8.echo(self.id, message)
-
-    @property
-    def args(self) -> str:
+    def api_url(self, path: str, absolute: bool = False, user: Optional[str] = None) -> str:
         """
-        The raw string passed to the challenge as an argument between parentheses.
-        For example, given a cid of "Challenge(foo bar)", .args would be "foo bar".
-        """
-        if "(" in self.id:
-            return self.id.split("(", 1)[1].rsplit(")", 1)[0]
-        else:
-            return ""
+        Construct a URL pointing to this challenge's API.
 
-    def get_data(self, key: str) -> Optional[str]:
+        Args:
+            path: The request path relative to the API endpoint.
+            absolute: If True, an absolute URL is constructed.
+            user: If given, an authentication token will be included in the URL, making it possible to access the resource without additional authentication.
+        """
+        if not isinstance(absolute, bool):
+            raise RuntimeError("api_url signature has changed.")
+        if path and not path.startswith("/"):
+            path = "/" + path  # don't use .lstrip() to make sure that "" returns in no trailing "/"
+        return r8.util.url_for(f"/api/challenges/{self.id}{path}", absolute, user)
+
+    async def handle_get_request(self, user: str, request: web.Request) -> Union[
+        str, web.StreamResponse]:
+        """
+        HTTP GET requests to `/api/challenges/cid/*` land here.
+        Serves static resources from :attr:`static_dir` by default.
+
+        The request path can be accessed using `request.match_info["path"]`.
+        """
+        if self.static_dir:
+            filename = re.sub(
+                "[^a-zA-Z0-9_.-]",
+                "",
+                request.match_info["path"]
+            )
+            filepath = self.static_dir / filename
+            if filepath.is_file():
+                return web.FileResponse(filepath)
+        return web.HTTPNotFound()
+
+    async def handle_post_request(self, user: str, request: web.Request) \
+        -> Union[str, web.StreamResponse]:
+        """
+        HTTP POST requests to `/api/challenges/cid/*` land here. Serves 404s by default.
+
+        The request path can be accessed using `request.match_info["path"]`.
+        """
+        return web.HTTPNotFound()
+
+    def get_data(self, key: str, *, cid: Optional[str] = None) -> Optional[str]:
         """
         Get persistent challenge data for a specific key.
+
+        Args:
+            cid: If given, override the challenge for which data should be accessed.
         """
-        # Could be extended to support key: Optional[str] and then return a list.
         with r8.db:
             return (r8.db.execute("""
                 SELECT value FROM data WHERE cid = ? AND key = ?
-            """, (self.id, key)).fetchone() or [None])[0]
+            """, (cid or self.id, key)).fetchone() or [None])[0]
 
-    def set_data(self, key: str, value: str):
+    def set_data(self, key: str, value: str, *, cid: Optional[str] = None):
         """
         Set persistent challenge data for a specific key.
+
+        Args:
+            cid: If given, override the challenge for which data should be modified.
         """
         with r8.db:
             r8.db.execute(
                 """INSERT OR REPLACE INTO data (cid, key, value) VALUES (?,?,?)""",
-                (self.id, key, value)
+                (cid or self.id, key, value)
             )
 
     def __init_subclass__(cls, **kwargs):
-        challenges.add_class(cls)  # register challenge plugin
+        challenges.add_class(cls)  # register challenge with r8 on init.
 
 
 def get_challenges() -> List[str]:

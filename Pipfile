@@ -4,6 +4,8 @@ url = "https://pypi.org/simple"
 verify_ssl = true
 
 [dev-packages]
+sphinx = "*"
+sphinxcontrib-trio = "*"
 
 [packages]
 r8 = {editable = true,path = "."}
