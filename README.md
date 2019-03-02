@@ -101,11 +101,13 @@ The *Hello World* challenge is now visible to users! 🎉
 
 ## Creating new challenges
 
+The API Documentation for challenge development can be found at https://mhils.github.io/r8/.
+
 It is recommended to use [r8-example](https://github.com/mhils/r8-example) as a template
 and place challenges in a new separate repository. See `r8.builtin_challenges` and `r8_example` 
 for challenge examples.
 
-# Development
+# Architecture
 
 r8 consists of the following parts:
   1. The core **`r8` application** written in Python, which manages the currently active challenges. 
