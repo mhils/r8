@@ -1,3 +1,4 @@
+import json
 from functools import wraps
 from pathlib import Path
 from typing import Callable, Any, Union
@@ -140,12 +141,13 @@ def make_app(static_dir: Union[Path, str]) -> web.Application:
 runner: web.AppRunner = None
 
 
-async def start(address=("", 8000)):
+async def start():
     global runner
     r8.echo("r8", "Starting server...")
     app = make_app(r8.settings["static_dir"])
     runner = web.AppRunner(app)
     await runner.setup()
+    address = json.loads(r8.settings["listen_address"])
     site = web.TCPSite(runner, *address)
     await site.start()
     r8.echo("r8", f"Running at {r8.util.format_address(address)}.")
