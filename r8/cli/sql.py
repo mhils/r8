@@ -102,11 +102,7 @@ def sql_init(origin, static_dir, listen_address, database) -> None:
 @util.database_rows
 @click.argument("query", nargs=-1, required=True)
 def sql_stmt(rows, query):
-    """
-    Run a single SQL query on the database.
-    There are no safeguards in place here:
-    If you drop the table, the table is dropped.
-    """
+    """Run a single SQL query on the database."""
     util.run_sql(" ".join(query), rows=rows)
 
 
@@ -121,7 +117,6 @@ def sql_stmt(rows, query):
 def sql_file(input, debug):
     """
     Run a SQL file on the database.
-    There are no safeguards in place here: If you drop the table, the table is dropped.
     Foreign key constraints are deferred until transactions are commited, i.e. the database
     can be in an inconsistent state in between.
     """

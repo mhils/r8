@@ -1,9 +1,5 @@
 <svg viewBox="0 -20 128 148" xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink">
-	<!-- 
-		https://github.com/googlei18n/noto-emoji/blob/master/svg/emoji_u1f3f0.svg + flag 
-		PNG Conversion:
-		convert -density 400 -resize x128 -background transparent challenge.svg challenge.png
-	-->
+	<!-- https://github.com/googlei18n/noto-emoji/blob/master/svg/emoji_u1f3f0.svg + flag -->
 	<path
        style="fill:#ed434b"
        d="m 64,-16 h 22 l -4.5,6.5 4.5,6.5 H 64 Z"

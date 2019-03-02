@@ -50,10 +50,15 @@ def has_solved(user: str, challenge: str) -> bool:
 def media(src, desc, visible: bool = True):
     """
     HTML boilerplate for a bootstrap media element. Commonly used to display challenge icons.
+
+    Args:
+        src: Path to image.
+        desc: Media body.
+        visible: If `False`, a generic challenge icon will be shown instead.
     """
     return textwrap.dedent(f"""
         <div class="media">
-            <img class="mr-3" style="max-width: 128px; max-height: 128px;" src="{src if visible else "/challenge.png"}">
+            <img class="mr-3" style="max-width: 128px; max-height: 128px;" src="{src if visible else "/challenge.svg"}">
             <div class="align-self-center media-body">{desc}</div>
         </div>
         """)
@@ -108,13 +113,13 @@ def challenge_form_js(cid: str) -> str:
     """ % cid
 
 
-def challenge_invoke_button(cid: str, text: str) -> str:
+def challenge_invoke_button(cid: str, button_text: str) -> str:
     """
     "Trigger" button for challenges. Clicking it invokes the challenge's HTTP POST handler.
     """
     return f"""
         <form class="form-inline">
-            <button class="btn btn-primary m-1">{text}</button>
+            <button class="btn btn-primary m-1">{button_text}</button>
             <div class="response m-1"></div>
         </form>
         {challenge_form_js(cid)}
@@ -332,8 +337,8 @@ def with_database(echo=False):
 
 
 def backup_db(f):
-    @click.option("--backup/--no-backup", default=True,
-                  help="Backup database to ~/.r8 before execution")
+    @click.option("--backup/--no-backup", default=True, show_default=True,
+                  help="Backup database to ~/.r8 before execution.")
     @wraps(f)
     def wrapper(backup, **kwds):
         if backup:

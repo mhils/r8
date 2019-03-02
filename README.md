@@ -107,7 +107,7 @@ It is recommended to use [r8-example](https://github.com/mhils/r8-example) as a 
 and place challenges in a new separate repository. See `r8.builtin_challenges` and `r8_example` 
 for challenge examples.
 
-# Architecture
+## Architecture
 
 r8 consists of the following parts:
   1. The core **`r8` application** written in Python, which manages the currently active challenges. 
@@ -123,3 +123,11 @@ r8 consists of the following parts:
 
 To speed up development, the server can be automatically reloaded on changes using [modd](https://github.com/cortesi/modd).
 
+## Deployment
+
+For production use, it is recommended to place it behind a TLS-terminating reverse 
+proxy such as nginx. A couple of auxiliary examples are provided in the [./misc](./misc) folder:
+
+ - `crontab`: crontab example to make daily backups.
+ - `nginx.conf`: nginx configuration example for a HTTPS-only deployment.
+ - `r8.service`: systemd service file example.
