@@ -1,0 +1,19 @@
+server {
+    server_name example.network;
+
+    location / {
+        proxy_set_header X-Forwarded-For $remote_addr;
+        proxy_pass http://localhost:8000;
+    }
+
+    listen [::]:443 ssl ipv6only=on;
+    listen 443 ssl;
+
+    ssl_certificate /etc/letsencrypt/live/example.network/fullchain.pem; # managed by Certbot
+    ssl_certificate_key /etc/letsencrypt/live/example.network/privkey.pem; # managed by Certbot
+}
+server {
+    listen 80 default_server;
+    listen [::]:80 default_server;
+    return 301 https://$host$request_uri;
+}
