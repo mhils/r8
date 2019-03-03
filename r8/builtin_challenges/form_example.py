@@ -8,7 +8,7 @@ class FormExample(r8.Challenge):
 
     async def description(self, user: str, solved: bool):
         return r8.util.media(
-            self.api_url("form_example.svg"),
+            None,
             """
             <h6>What's your favorite IP address?</h6>
             <form>

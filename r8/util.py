@@ -47,7 +47,7 @@ def has_solved(user: str, challenge: str) -> bool:
         """, (user, user, challenge)).fetchone()[0]
 
 
-def media(src, desc, visible: bool = True):
+def media(src: Optional[str], desc: str, visible: bool = True):
     """
     HTML boilerplate for a bootstrap media element. Commonly used to display challenge icons.
 
@@ -58,7 +58,7 @@ def media(src, desc, visible: bool = True):
     """
     return textwrap.dedent(f"""
         <div class="media">
-            <img class="mr-3" style="max-width: 128px; max-height: 128px;" src="{src if visible else "/challenge.svg"}">
+            <img class="mr-3" style="max-width: 128px; max-height: 128px;" src="{src if src and visible else "/challenge.svg"}">
             <div class="align-self-center media-body">{desc}</div>
         </div>
         """)
