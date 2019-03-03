@@ -4,7 +4,17 @@
 <strong>r8 - /ɹeɪt/</strong>
 </p>
 
-r8 is a ctf-style autograding system. 
+r8 is a simple [jeopardy-style](https://ctftime.org/ctf-wtf/) CTF system. What sets it apart from other platforms?
+
+1. r8 is intentionally simple. It won't send emails, support multi-server deployments, 
+or provide an LDAP integration.
+2. r8 is designed to support university courses. It is usually deployed for an entire semester, 
+includes logging capabilities to detect cheating, and can also be (ab)used to record class attendance 
+as some curricula require.
+3. r8 is written in modern Python 3. This generally makes it easy to spawn additional network 
+services or interface with other tools and languages.
+
+r8 is successfully being used for teaching at the University of California, Berkeley and the University of Innsbruck, Austria.
 
 # Quick Start
 
