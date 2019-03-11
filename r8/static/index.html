@@ -212,8 +212,7 @@
                         {!this.state.error && this.state.success &&
                         <button
                             className="btn btn-success btn-lg">
-                            <strong>Congratulations!</strong> {this.state.success} is solved.
-                        </button>
+                            <strong>Congratulations!</strong> You solved <i>{this.state.success}</i>.</button>
                         }
                         {!this.state.error && !this.state.success &&
                         <button className="btn btn-dark btn-lg">Submit Flag</button>
@@ -239,13 +238,13 @@
         let time;
         if (challenge.solved) {
             className += " card-solved";
-            time = `Gelöst: ${fmtDate(challenge.solved)}`;
+            time = `Solved: ${fmtDate(challenge.solved)}`;
         } else if (expired) {
             className += " card-expired";
-            time = `Abgelaufen: ${fmtDate(challenge.stop)}`;
+            time = `Expired: ${fmtDate(challenge.stop)}`;
         } else {
             className += " card-active";
-            time = `Frist: ${fmtDate(challenge.stop)}`;
+            time = `Deadline: ${fmtDate(challenge.stop)}`;
         }
 
         return <div className={className}>
