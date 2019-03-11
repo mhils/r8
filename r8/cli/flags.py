@@ -35,7 +35,7 @@ def limit_flag(flag, max):
     with r8.db:
         exists = r8.db.execute("SELECT COUNT(*) FROM flags WHERE fid = ?", (flag,)).fetchone()[0]
         if not exists:
-            return r8.echo("r8","Error: Flag does not exist.", err=True)
+            return r8.echo("r8", "Error: Flag does not exist.", err=True)
         if max is None:
             max = r8.db.execute("SELECT COUNT(*) FROM submissions WHERE fid = ?", (flag,)).fetchone()[0]
         r8.db.execute("UPDATE flags SET max_submissions = ? WHERE fid = ?", (max, flag))
@@ -77,4 +77,46 @@ def list_flags(user, flag, force):
     except ValueError as e:
         r8.echo("r8", str(e), err=True)
     else:
-        r8.echo("r8", f"Solved {cid}.")
+        r8.echo("r8", f"Solved {cid} for {user}.")
+
+
+@cli.command("revoke")
+@util.with_database()
+@util.backup_db
+@click.argument("flag")
+@click.argument("user", required=False)
+def revoke_flag(flag, user):
+    """Revoke a flag submission [for a given user]."""
+    with r8.db:
+        submissions = [
+            x[0] for x in
+            r8.db.execute("SELECT uid FROM submissions WHERE fid=?", (flag,)).fetchall()
+        ]
+        if not submissions:
+            return r8.echo("r8", f"Error: No submissions for {flag}.", err=True)
+        if user:
+            if user in submissions:
+                r8.db.execute("DELETE FROM submissions WHERE fid = ? AND uid = ?", (flag, user))
+                r8.echo("r8", f"Submission revoked.")
+            else:
+                r8.echo("r8", f"Error: {user} did not submit {flag}.", err=True)
+        else:
+            click.confirm(f"Deleting all submission for {flag}. Continue?", abort=True)
+            r8.db.execute("DELETE FROM submissions WHERE fid = ?", (flag,))
+            r8.echo("r8", f"Submissions have been revoked for the following users: {', '.join(submissions)}")
+
+
+@cli.command("delete")
+@util.with_database()
+@click.argument("flag")
+def revoke_flag(flag):
+    """Delete an unsubmitted flag."""
+    with r8.db:
+        exists = r8.db.execute("SELECT COUNT(*) FROM flags WHERE fid = ?", (flag,)).fetchone()[0]
+        if not exists:
+            return r8.echo("r8", "Error: Flag does not exist.", err=True)
+        submissions = r8.db.execute("SELECT COUNT(*) FROM submissions WHERE fid = ?", (flag,)).fetchone()[0]
+        if submissions:
+            return r8.echo("r8", "Error: Cannot delete a flag that is in use. Revoke all submissions first.", err=True)
+        r8.db.execute("DELETE FROM flags WHERE fid = ?", (flag,))
+    r8.echo("r8", f"Successfully deleted {flag}.")

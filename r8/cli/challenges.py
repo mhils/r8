@@ -29,7 +29,7 @@ def list_challenges(rows, query):
         LEFT JOIN submissions USING (fid)
         {" ".join(query)}
         GROUP BY cid
-        ORDER BY t_start DESC
+        ORDER BY challenges.rowid
         """, rows=rows)
 
 
