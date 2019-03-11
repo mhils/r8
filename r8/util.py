@@ -317,7 +317,8 @@ def with_database(echo=False):
             "--database",
             type=click.Path(exists=True),
             envvar="R8_DATABASE",
-            default="r8.db"
+            default="r8.db",
+            help="SQLite database to use. Also sourced from $R8_DATABASE.",
         )
         @wraps(f)
         def wrapper(database, **kwds):
