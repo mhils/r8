@@ -522,6 +522,7 @@ async def get_challenges(user: str):
             if x["solved"] or await r8.challenges[x["cid"]].visible(user)
         ]
         for challenge in results:
+            challenge["team"] = bool(challenge["team"])
             inst = r8.challenges[challenge["cid"]]
             try:
                 challenge["title"] = str(inst.title)
