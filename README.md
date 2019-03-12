@@ -33,7 +33,7 @@ pipenv shell
 ```
 
 Create r8's SQLite database in the current directory. 
-We also need to let r8 know under which origin it will be hosted at this step:
+We also need to let r8 know under which origin it will be hosted (on which hostname/URL the web interface will be served) at this step:
 
 ```shell
 r8 sql init --origin http://localhost:8000
