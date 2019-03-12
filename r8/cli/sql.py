@@ -24,7 +24,7 @@ def cli():
               default=str(Path(__file__).parent.parent / "static"))
 @click.option("--listen-address",
               help="Address r8 should listen on.", show_default=True,
-              default='["",8000]')
+              default='["127.0.0.1",8000]')
 @click.option("--database", type=click.Path(), envvar="R8_DATABASE", default="r8.db")
 def sql_init(origin, static_dir, listen_address, database) -> None:
     """Initialize database."""
