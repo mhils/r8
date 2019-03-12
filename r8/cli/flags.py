@@ -101,7 +101,7 @@ def revoke_flag(flag, user):
             else:
                 r8.echo("r8", f"Error: {user} did not submit {flag}.", err=True)
         else:
-            click.confirm(f"Deleting all submission for {flag}. Continue?", abort=True)
+            click.confirm(f"Deleting all {len(submissions)} submission for {flag}. Continue?", abort=True)
             r8.db.execute("DELETE FROM submissions WHERE fid = ?", (flag,))
             r8.echo("r8", f"Submissions have been revoked for the following users: {', '.join(submissions)}")
 
