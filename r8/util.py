@@ -492,23 +492,32 @@ async def get_challenges(user: str):
     """Get challenges to display for a specific user"""
     with r8.db:
         cursor = r8.db.execute("""
-          SELECT 
-            challenges.cid AS cid, 
-            cast(strftime('%s',t_start) AS INTEGER) AS start, 
-            cast(strftime('%s',t_stop) AS INTEGER) AS stop, 
-            max(cast(strftime('%s',submissions.timestamp) AS INTEGER)) AS solved,
-            team
+            SELECT
+                challenges.cid AS cid,
+                CAST(strftime('%s',t_start) AS INTEGER) AS start,
+                CAST(strftime('%s',t_stop) AS INTEGER) AS stop,
+                IFNULL(solved,0) as solved,
+                IFNULL(solves,0) as solves,
+                team
             FROM challenges
-          LEFT JOIN flags ON flags.cid = challenges.cid
-          LEFT JOIN submissions ON (
-            flags.fid = submissions.fid 
-            AND (
-            submissions.uid = ? OR
-            team = 1 AND submissions.uid IN (SELECT uid FROM teams WHERE tid = (SELECT tid FROM teams WHERE uid = ?))
+            NATURAL LEFT JOIN (
+                SELECT cid, MAX(CAST(strftime('%s',submissions.timestamp) AS INTEGER)) AS solved
+                FROM submissions
+                NATURAL JOIN flags
+                NATURAL JOIN challenges
+                WHERE (
+                    uid = ? OR
+                    team = 1 AND submissions.uid IN (SELECT uid FROM teams WHERE tid = (SELECT tid FROM teams WHERE uid = ?))
+                )
+                GROUP BY cid
             )
-          )
-          WHERE t_start < datetime('now')  -- hide not yet active challenges
-          GROUP BY challenges.cid
+            NATURAL LEFT JOIN (
+                SELECT cid, COUNT(*) AS solves
+                FROM submissions
+                NATURAL JOIN flags
+                GROUP BY cid
+            )
+            WHERE t_start < datetime('now')  -- hide not yet active challenges
         """, (user, user))
         column_names = tuple(x[0] for x in cursor.description)
         results = [
