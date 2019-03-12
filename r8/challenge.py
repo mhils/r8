@@ -217,20 +217,6 @@ class Challenge:
         challenges.add_class(cls)  # register challenge with r8 on init.
 
 
-class StaticChallenge(r8.Challenge):
-    """
-    A challenge with a single static flag. This is useful to create easter egg challenges
-    for example, where the flag is hidden somewhere else.
-    """
-    flag: ClassVar[str]
-
-    def __init__(self, *args, **kwargs):
-        super().__init__(*args, **kwargs)
-        if not self.flag:
-            raise RuntimeError(f"No flag attribute for {type(self).__name__}.")
-        r8.util.create_flag(self.id, 999999, self.flag)
-
-
 def get_challenges() -> List[str]:
     with r8.db:
         cursor = r8.db.execute("SELECT cid FROM challenges")
@@ -315,3 +301,17 @@ class _Challenges:
 
 challenges = _Challenges()
 """singleton object that tracks and manages all challenges."""
+
+
+class StaticChallenge(Challenge):
+    """
+    A challenge with a single static flag. This is useful to create easter egg challenges
+    for example, where the flag is hidden somewhere else.
+    """
+    flag: ClassVar[str]
+
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        if not self.flag:
+            raise RuntimeError(f"No flag attribute for {type(self).__name__}.")
+        r8.util.create_flag(self.id, 999999, self.flag)
