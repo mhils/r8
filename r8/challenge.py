@@ -25,7 +25,7 @@ class Challenge:
     """
 
     tags: ClassVar[List[str]] = []
-    """Tags for the challenge."""
+    """Tags for the challenge. This can be used to signal task category of difficulty."""
 
     def __init__(self, cid: str) -> None:
         self.id = cid

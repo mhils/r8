@@ -38,8 +38,14 @@
 <em class="property">class </em><code class="descclassname">r8.</code><code class="descname">Challenge</code><span class="sig-paren">(</span><em>cid: str</em><span class="sig-paren">)</span><a class="headerlink" href="#r8.Challenge" title="Permalink to this definition">¶</a></dt>
 <dd><h3>Challenge Display</h3><dl class="attribute">
 <dt id="r8.Challenge.title">
-<code class="descname">title</code><em class="property"> = &quot;Hello World&quot;</em><a class="headerlink" href="#r8.Challenge.title" title="Permalink to this definition">¶</a></dt>
+<code class="descname">title</code><em class="property"> : str = &quot;Hello World&quot;</em><a class="headerlink" href="#r8.Challenge.title" title="Permalink to this definition">¶</a></dt>
 <dd><p>The challenge name visible to the user.</p>
+</dd></dl>
+
+<dl class="attribute">
+<dt id="r8.Challenge.tags">
+<code class="descname">tags</code><em class="property"> : List[str] = []</em><a class="headerlink" href="#r8.Challenge.tags" title="Permalink to this definition">¶</a></dt>
+<dd><p>Tags for the challenge. This can be used to signal task category of difficulty.</p>
 </dd></dl>
 
 <dl class="method">
@@ -215,9 +221,8 @@ Serves static resources from <a class="reference internal" href="#r8.Challenge.s
 <h3>Challenge Description Helpers<a class="headerlink" href="#challenge-description-helpers" title="Permalink to this headline">¶</a></h3>
 <dl class="function">
 <dt id="r8.util.media">
-<code class="descclassname">r8.util.</code><code class="descname">media</code><span class="sig-paren">(</span><em>src</em>, <em>desc</em>, <em>visible: bool = True</em><span class="sig-paren">)</span><a class="headerlink" href="#r8.util.media" title="Permalink to this definition">¶</a></dt>
-<dd><blockquote>
-<div>HTML boilerplate for a bootstrap media element. Commonly used to display challenge icons.</div></blockquote>
+<code class="descclassname">r8.util.</code><code class="descname">media</code><span class="sig-paren">(</span><em>src: Optional[str], desc: str, visible: bool = True</em><span class="sig-paren">)</span><a class="headerlink" href="#r8.util.media" title="Permalink to this definition">¶</a></dt>
+<dd><p>HTML boilerplate for a bootstrap media element. Commonly used to display challenge icons.</p>
 <table class="docutils field-list" frame="void" rules="none">
 <col class="field-name" />
 <col class="field-body" />
@@ -247,7 +252,7 @@ Serves static resources from <a class="reference internal" href="#r8.Challenge.s
 
 <dl class="function">
 <dt id="r8.util.challenge_invoke_button">
-<code class="descclassname">r8.util.</code><code class="descname">challenge_invoke_button</code><span class="sig-paren">(</span><em>cid: str</em>, <em>text: str</em><span class="sig-paren">)</span> &#x2192; str<a class="headerlink" href="#r8.util.challenge_invoke_button" title="Permalink to this definition">¶</a></dt>
+<code class="descclassname">r8.util.</code><code class="descname">challenge_invoke_button</code><span class="sig-paren">(</span><em>cid: str</em>, <em>button_text: str</em><span class="sig-paren">)</span> &#x2192; str<a class="headerlink" href="#r8.util.challenge_invoke_button" title="Permalink to this definition">¶</a></dt>
 <dd><p>“Trigger” button for challenges. Clicking it invokes the challenge’s HTTP POST handler.</p>
 </dd></dl>
 

@@ -8,7 +8,9 @@ r8 API Reference
         <h3>Challenge Display</h3>
 
     .. autoattribute:: title
-        :annotation: = "Hello World"
+        :annotation: : str = "Hello World"
+    .. autoattribute:: tags
+        :annotation: : List[str] = []
     .. automethod:: description
     .. automethod:: visible
 
