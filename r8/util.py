@@ -528,8 +528,17 @@ async def get_challenges(user: str):
                 challenge["title"] = str(inst.title)
             except Exception:
                 challenge["title"] = "Title Error"
+                challenge["tags"] = []
                 challenge["description"] = f"<pre>{html.escape(traceback.format_exc())}</pre>"
                 continue
+
+            try:
+                challenge["tags"] = [str(x) for x in inst.tags]
+            except Exception:
+                challenge["tags"] = []
+                challenge["description"] = f"<pre>{html.escape(traceback.format_exc())}</pre>"
+                continue
+
             try:
                 challenge["description"] = await inst.description(user, bool(challenge["solved"]))
             except Exception:

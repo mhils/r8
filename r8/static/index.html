@@ -232,6 +232,16 @@
         }
     }
 
+    function Tag({name}) {
+        let className = "badge mr-1 badge-";
+        className += {
+            easy: "success",
+            medium: "warning",
+            hard: "danger",
+        }[name] || "secondary";
+        return <span className={className}>{name}</span>;
+    }
+
     function Challenge({ challenge }) {
         const expired = Date.now() / 1000 > challenge.stop;
         let className = "card mb-2";
@@ -247,6 +257,15 @@
             time = `Deadline: ${fmtDate(challenge.stop)}`;
         }
 
+        let tags;
+        if(challenge.tags.length > 0){
+            tags = <div className="card-footer">
+                {challenge.tags.map(t => <Tag key={t} name={t}/>)}
+            </div>
+        } else {
+            tags = null;
+        }
+
         return <div className={className}>
             <div className="card-body">
                 <h5 className="card-title">{challenge.title}</h5>
@@ -254,6 +273,7 @@
                 <div className="card-text"
                      ref={setDangerousHtml.bind(null, challenge.description)}/>
             </div>
+            {tags}
         </div>;
     }
 

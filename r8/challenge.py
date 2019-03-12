@@ -24,6 +24,9 @@ class Challenge:
     Will be served from :meth:`handle_get_request`.
     """
 
+    tags: ClassVar[List[str]] = []
+    """Tags for the challenge."""
+
     def __init__(self, cid: str) -> None:
         self.id = cid
         if not self.static_dir:
