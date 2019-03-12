@@ -47,7 +47,7 @@
         let req = {
             username: username.trim(),
             password: password.trim()
-        }
+        };
         return fetchApi("/api/login", {
             method: "POST",
             body: JSON.stringify(req)
@@ -70,7 +70,7 @@
         range.selectNodeContents(el);
         range.deleteContents();
         el.appendChild(range.createContextualFragment(html));
-    }
+    };
 
 
     function Nav({ user, onLogout }) {
@@ -165,7 +165,7 @@
                 flag: "",  // maybe this one? __flag__{30b1bef89d542fe722551d0d3e575a72}
                 error: false,
                 success: false,
-            }
+            };
             this.onSubmit = this.onSubmit.bind(this);
             this.onChange = this.onChange.bind(this);
         }
@@ -275,7 +275,7 @@
             .sort((a, b) => b.solved - a.solved);
         let active = challenges
             .filter(c => !c.solved && Date.now() / 1000 <= c.stop)
-            .sort((a, b) => a.stop - b.stop)
+            .sort((a, b) => a.stop - b.stop);
         let expired = challenges
             .filter(c => !c.solved && Date.now() / 1000 > c.stop)
             .sort((a, b) => a.stop - b.stop);
@@ -344,7 +344,7 @@
         fetchStatus() {
             fetchApi("/api/challenges")
                 .then(status => {
-                    console.debug("status", status)
+                    console.debug("status", status);
                     this.setState({
                         uiState: "dashboard",
                         challenges: status.challenges,
