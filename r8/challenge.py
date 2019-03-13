@@ -302,7 +302,7 @@ class _Challenges:
                 r8.echo(cid, "Stopped.")
 
 
-challenges = _Challenges()
+challenges: _Challenges = _Challenges()
 """singleton object that tracks and manages all challenges."""
 
 
@@ -318,3 +318,7 @@ class StaticChallenge(Challenge):
         if not self.flag:
             raise RuntimeError(f"No flag attribute for {type(self).__name__}.")
         r8.util.create_flag(self.id, 999999, self.flag)
+
+
+# As this is loaded outside of all regular entrypoints, remove it from the available classes.
+challenges._classes.pop("StaticChallenge")
