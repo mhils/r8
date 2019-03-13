@@ -9,8 +9,9 @@ from r8 import util
 @click.command("events")
 @util.with_database()
 @util.database_rows
+@click.option("--watch/--no-watch", default=True)
 @click.argument("query", nargs=-1)
-def cli(rows, query):
+def cli(rows, watch, query):
     """
     Live view of events.
 
@@ -48,4 +49,6 @@ def cli(rows, query):
             seen += len(new)
             for e in new:
                 print_event(e)
+            if not watch:
+                break
             time.sleep(0.5)

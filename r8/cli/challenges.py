@@ -11,11 +11,11 @@ def cli():
     pass
 
 
-@cli.command("list")
+@cli.command()
 @util.with_database()
 @util.database_rows
 @click.argument("query", nargs=-1)
-def list_challenges(rows, query):
+def list(rows, query):
     """
     Print the state of all created challenges.
 

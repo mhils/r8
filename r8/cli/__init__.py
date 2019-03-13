@@ -10,7 +10,7 @@ from r8.cli.sql import cli as sql_cli
 from r8.cli.users import cli as users_cli
 
 
-@click.group()
+@click.group("r8")
 def main():
     """r8 - /ɹeɪt/ - ctf autograding system"""
     pass

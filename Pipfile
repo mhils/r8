@@ -6,6 +6,7 @@ verify_ssl = true
 [dev-packages]
 sphinx = "*"
 sphinxcontrib-trio = "*"
+pytest = "*"
 
 [packages]
 r8 = {editable = true,path = "."}

@@ -15,7 +15,7 @@ def cli():
 @click.argument("challenge")
 @click.argument("name", required=False)
 @click.option("--max", type=int, default=999999, help="Maximum number of submissions.")
-def create_flag(challenge, name, max):
+def create(challenge, name, max):
     """Manually create a new flag."""
     flag = util.create_flag(challenge, max, name)
     print(f"Created: {flag} (valid for {max} submissions)")
@@ -25,7 +25,7 @@ def create_flag(challenge, name, max):
 @util.with_database()
 @click.argument("flag")
 @click.argument("max", type=int, required=False)
-def limit_flag(flag, max):
+def limit(flag, max):
     """
     Set maximum number of submissions for a flag.
 
@@ -35,7 +35,7 @@ def limit_flag(flag, max):
     with r8.db:
         exists = r8.db.execute("SELECT COUNT(*) FROM flags WHERE fid = ?", (flag,)).fetchone()[0]
         if not exists:
-            return r8.echo("r8", "Error: Flag does not exist.", err=True)
+            raise click.UsageError("Flag does not exist.")
         if max is None:
             max = r8.db.execute("SELECT COUNT(*) FROM submissions WHERE fid = ?", (flag,)).fetchone()[0]
         r8.db.execute("UPDATE flags SET max_submissions = ? WHERE fid = ?", (max, flag))
@@ -46,7 +46,7 @@ def limit_flag(flag, max):
 @util.with_database()
 @util.database_rows
 @click.argument("challenge", required=False)
-def list_flags(rows, challenge):
+def list(rows, challenge):
     """Print all flags [for a given challenge]."""
     with r8.db:
         if challenge:
@@ -65,27 +65,27 @@ def list_flags(rows, challenge):
         """, parameters, rows=rows)
 
 
-@cli.command("submit")
+@cli.command()
 @util.with_database()
-@click.argument("user")
 @click.argument("flag")
+@click.argument("user")
 @click.option("--force", "-f", is_flag=True)
-def list_flags(user, flag, force):
+def submit(flag, user, force):
     """Submit a flag for a user."""
     try:
         cid = r8.util.submit_flag(flag, user, "127.0.0.1", force)
     except ValueError as e:
-        r8.echo("r8", str(e), err=True)
+        raise click.UsageError(str(e))
     else:
         r8.echo("r8", f"Solved {cid} for {user}.")
 
 
-@cli.command("revoke")
+@cli.command()
 @util.with_database()
 @util.backup_db
 @click.argument("flag")
 @click.argument("user", required=False)
-def revoke_flag(flag, user):
+def revoke(flag, user):
     """Revoke a flag submission [for a given user]."""
     with r8.db:
         submissions = [
@@ -93,30 +93,30 @@ def revoke_flag(flag, user):
             r8.db.execute("SELECT uid FROM submissions WHERE fid=?", (flag,)).fetchall()
         ]
         if not submissions:
-            return r8.echo("r8", f"Error: No submissions for {flag}.", err=True)
+            raise click.UsageError(f"No submissions for {flag}.")
         if user:
             if user in submissions:
                 r8.db.execute("DELETE FROM submissions WHERE fid = ? AND uid = ?", (flag, user))
                 r8.echo("r8", f"Submission revoked.")
             else:
-                r8.echo("r8", f"Error: {user} did not submit {flag}.", err=True)
+                raise click.UsageError(f"Error: {user} did not submit {flag}.")
         else:
             click.confirm(f"Deleting all {len(submissions)} submission for {flag}. Continue?", abort=True)
             r8.db.execute("DELETE FROM submissions WHERE fid = ?", (flag,))
             r8.echo("r8", f"Submissions have been revoked for the following users: {', '.join(submissions)}")
 
 
-@cli.command("delete")
+@cli.command()
 @util.with_database()
 @click.argument("flag")
-def revoke_flag(flag):
+def delete(flag):
     """Delete an unsubmitted flag."""
     with r8.db:
         exists = r8.db.execute("SELECT COUNT(*) FROM flags WHERE fid = ?", (flag,)).fetchone()[0]
         if not exists:
-            return r8.echo("r8", "Error: Flag does not exist.", err=True)
+            raise click.UsageError("Flag does not exist.")
         submissions = r8.db.execute("SELECT COUNT(*) FROM submissions WHERE fid = ?", (flag,)).fetchone()[0]
         if submissions:
-            return r8.echo("r8", "Error: Cannot delete a flag that is in use. Revoke all submissions first.", err=True)
+            raise click.UsageError("Cannot delete a flag that is in use. Revoke all submissions first.")
         r8.db.execute("DELETE FROM flags WHERE fid = ?", (flag,))
     r8.echo("r8", f"Successfully deleted {flag}.")
