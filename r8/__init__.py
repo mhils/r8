@@ -5,7 +5,8 @@ import sqlite3
 import typing
 
 from r8 import util
-from r8.challenge import Challenge, StaticChallenge, challenges
+from r8.challenge import Challenge, challenges
+from r8.builtin_challenges.basic import StaticChallenge
 from r8.util import log, echo
 
 db: sqlite3.Connection
