@@ -9,6 +9,8 @@ from r8 import cars
 from r8 import server
 from r8 import util
 
+_log_sql = print
+
 
 @click.command("run")
 @click.option('--debug', is_flag=True)
@@ -22,12 +24,7 @@ def cli(debug) -> None:
     if debug:
         # TODO: We may want to do r8.settings["debug"] = debug at some point,
         # but for now we don't need it and don't introduce additional complexity.
-        def log_sql(msg):
-            if msg.startswith("SELECT cid FROM challenges"):
-                return
-            print(msg)
-
-        r8.db.set_trace_callback(log_sql)
+        r8.db.set_trace_callback(lambda msg: _log_sql(msg))
         loop.set_debug(True)
 
     r8.challenges.load()

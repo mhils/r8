@@ -1,27 +1,5 @@
-body {
-    background-color: #fafafa;
-}
-
-@keyframes rotating {
-    from {
-        transform: rotate(0deg);
-    }
-    to {
-        transform: rotate(360deg);
-    }
-}
-
-.rotating {
-    animation: rotating 2s linear infinite;
-}
-
-#flag-submission {
-    text-align: center;
+.bg-blue {
     background: linear-gradient(to bottom, #345d9f 0%, #4D5CA4 100%);
-}
-
-#flag-submission input {
-    text-align: center;
 }
 
 .card-expired {
@@ -32,15 +10,4 @@ body {
 .card-solved {
     background-color: #55ff5522;
     border-color: #28a745;
-}
-
-
-.logo{
-    vertical-align: top;
-    display: inline-block;
-    width: 30px;
-    height: 30px;
-    margin-right: 6px;
-    background-image: url("../logo.svg");
-    background-size: cover;
 }

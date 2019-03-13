@@ -75,6 +75,7 @@ async def get_challenges(user: str, request: web.Request):
     challenges = await r8.util.get_challenges(user)
     return web.json_response({
         "user": user,
+        "team": r8.util.get_team(user),
         "challenges": challenges,
     })
 

@@ -9,7 +9,7 @@
     <link rel="stylesheet" href="/css/bootstrap.css">
     <link rel="stylesheet" href="/css/style.css">
 </head>
-<body>
+<body class="bg-light">
 <div id="root"></div>
 <footer class="text-center mb-2">
     <a href="https://github.com/mhils/r8"
@@ -27,7 +27,7 @@
     // Grunt, Gulp, Webpack, Browserify, create-react-app, etc. are just not worth it.
     // in-browser compilation will do.
 
-    function fetchApi(url, options={}) {
+    function fetchApi(url, options = {}) {
         options["credentials"] = "same-origin";
         return fetch(url, options)
             .catch(err => {
@@ -55,9 +55,8 @@
     }
 
     function logout() {
-        return fetchApi("/api/logout", { method: "POST" });
+        return fetchApi("/api/logout", {method: "POST"});
     }
-
 
     /**
      * Like React's dangerouslySetInnerHTML, but also with JS evaluation.
@@ -72,8 +71,16 @@
         el.appendChild(range.createContextualFragment(html));
     };
 
+    function Logo() {
+        return <svg className="mr-1" width="30" height="30" fill="#046C9A" viewBox="0 0 64 64">
+            <path
+                d="M19.008,56.058H16.67V12.593c1-0.782,1.644-1.999,1.644-3.367c0-2.36-1.913-4.274-4.274-4.274S9.766,6.865,9.766,9.226   c0,1.368,0.644,2.585,1.644,3.367v43.465h-2.76c-1.068,0-1.976,0.908-1.976,2.029v0.961h14.31v-0.961   C20.984,56.966,20.129,56.058,19.008,56.058z"/>
+            <path
+                d="M19.042,15.752v29.582c12.794,6.294,25.486-10.943,38.284-1.479V14.267C44.528,4.91,31.836,22.149,19.042,15.752z"/>
+        </svg>;
+    }
 
-    function Nav({ user, onLogout }) {
+    function Nav({user, team, onLogout}) {
         function doLogout() {
             logout().then(onLogout);
         }
@@ -81,13 +88,13 @@
         return <nav className="navbar sticky-top navbar-light bg-light">
             <div className="container">
                 <a className="navbar-brand" href="#">
-                    <div className="logo"/>
+                    <Logo/>
                     Capture The Flag
                 </a>
                 <span className="navbar-text">
                 {user &&
                 <button className="btn btn-sm btn-outline-dark"
-                        onClick={doLogout}>Logout {user}</button>
+                        onClick={doLogout}>Logout {user}{team && ` (Team ${team})`}</button>
                 }
                 </span>
             </div>
@@ -150,7 +157,7 @@
                 login(this.state.username, this.state.password)
                     .then(
                         this.props.onLogin,
-                        err => this.setState({ error: err })
+                        err => this.setState({error: err})
                     );
             });
 
@@ -177,15 +184,15 @@
             }
             fetchApi("/api/submit", {
                 method: "POST",
-                body: JSON.stringify({ flag: this.state.flag.trim() })
+                body: JSON.stringify({flag: this.state.flag.trim()})
             }).then(json => {
                 this.props.onSolve(json.challenges);
-                this.setState({ success: json.solved, error: false, flag: "" }, () => {
-                    setTimeout(() => this.setState({ success: false }), 10000)
+                this.setState({success: json.solved, error: false, flag: ""}, () => {
+                    setTimeout(() => this.setState({success: false}), 10000)
                 })
             }).catch(error => {
-                this.setState({ error, success: false, flag: "" }, () => {
-                    setTimeout(() => this.setState({ error: false }), 1000)
+                this.setState({error, success: false, flag: ""}, () => {
+                    setTimeout(() => this.setState({error: false}), 1000)
                 })
             })
         }
@@ -197,10 +204,10 @@
         }
 
         render() {
-            return <section id="flag-submission">
+            return <section className="text-center bg-blue">
                 <form className="container p-5" onSubmit={this.onSubmit}>
                     <div className="form-group">
-                        <input name="flag" type="text" className="form-control"
+                        <input name="flag" type="text" className="form-control text-center"
                                placeholder="__flag__{...}" value={this.state.flag}
                                onChange={this.onChange} autoComplete="off"/>
                     </div>
@@ -242,7 +249,7 @@
         return <span className={className}>{name}</span>;
     }
 
-    function Challenge({ challenge }) {
+    function Challenge({challenge}) {
         const expired = Date.now() / 1000 > challenge.stop;
         let className = "card mb-2";
         let time;
@@ -258,7 +265,7 @@
         }
 
         let tags;
-        if(challenge.tags.length > 0){
+        if (challenge.tags.length > 0) {
             tags = <div className="card-footer">
                 {challenge.tags.map(t => <Tag key={t} name={t}/>)}
             </div>
@@ -277,7 +284,7 @@
         </div>;
     }
 
-    function ChallengeList({ title, challenges }) {
+    function ChallengeList({title, challenges}) {
         if (challenges.length === 0) {
             return <React.Fragment/>;
         }
@@ -289,7 +296,7 @@
         </React.Fragment>;
     }
 
-    function Dashboard({ challenges, onSolve }) {
+    function Dashboard({challenges, onSolve}) {
         let solved = challenges
             .filter(c => c.solved)
             .sort((a, b) => b.solved - a.solved);
@@ -315,6 +322,7 @@
             this.state = {
                 uiState: "fetching",
                 user: false,
+                team: false,
                 challenges: []
             };
             this.onLogin = this.onLogin.bind(this);
@@ -333,7 +341,9 @@
             let body;
             switch (this.state.uiState) {
                 case "fetching":
-                    body = <div className="text-center rotating">⌛</div>;
+                    body = <div className="d-flex justify-content-center m-5">
+                        <div className="spinner-border"/>
+                    </div>;
                     break;
                 case "login":
                     body = <Login onLogin={this.onLogin}/>;
@@ -344,21 +354,21 @@
             }
 
             return <React.Fragment>
-                <Nav user={this.state.user} onLogout={this.onLogout}/>
+                <Nav user={this.state.user} team={this.state.team} onLogout={this.onLogout}/>
                 {body}
             </React.Fragment>;
         }
 
         onLogin() {
-            this.setState({ uiState: "fetching" }, this.fetchStatus);
+            this.setState({uiState: "fetching"}, this.fetchStatus);
         }
 
         onLogout() {
-            this.setState({ uiState: "login", challenges: [] });
+            this.setState({uiState: "login", challenges: [], user: false, team: false});
         }
 
         onSolve(challenges) {
-            this.setState({ challenges });
+            this.setState({challenges});
         }
 
         fetchStatus() {
@@ -369,11 +379,12 @@
                         uiState: "dashboard",
                         challenges: status.challenges,
                         user: status.user,
+                        team: status.team,
                     })
                 })
                 .catch(error => {
                     console.error(error);
-                    this.setState({ uiState: "login" })
+                    this.setState({uiState: "login"})
                 })
         }
     }
