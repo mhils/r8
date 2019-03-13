@@ -38,7 +38,7 @@ def list_available_challenges():
     """
     List all available challenges.
     """
-    # assert not r8.challenges._classes
+    assert not r8.challenges._classes
     for entry_point in pkg_resources.iter_entry_points('r8.challenges'):
         print(f"{entry_point.module_name}:")
         entry_point.load()
