@@ -431,7 +431,6 @@ def submit_flag(
     Raises:
         ValueError, if there is an input error.
     """
-    flag = correct_flag(flag)
     with r8.db:
         user_exists = r8.db.execute("""
           SELECT 1 FROM users
@@ -441,11 +440,11 @@ def submit_flag(
             r8.log(ip, "flag-err-unknown", flag)
             raise ValueError("Unknown user.")
 
-        cid = (r8.db.execute("""
-          SELECT cid FROM flags 
+        flag, cid = (r8.db.execute("""
+          SELECT fid, cid FROM flags
           NATURAL INNER JOIN challenges
-          WHERE fid = ? 
-        """, (flag,)).fetchone() or [None])[0]
+          WHERE fid = ? OR fid = ?
+        """, (flag, correct_flag(flag))).fetchone() or [flag, None])
         if not cid:
             r8.log(ip, "flag-err-unknown", flag, uid=user)
             raise ValueError("Unknown Flag ¯\\_(ツ)_/¯")
