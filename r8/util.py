@@ -9,7 +9,7 @@ import textwrap
 import traceback
 from functools import wraps
 from pathlib import Path
-from typing import Optional, Tuple, TypeVar
+from typing import Optional, Tuple, TypeVar, List
 
 import argon2
 import click
@@ -28,6 +28,15 @@ def get_team(user: str) -> Optional[str]:
             return row[0]
         return None
 
+
+@functools.lru_cache()
+def get_teams() -> List[str]:
+    """Get a list of all teams"""
+    with r8.db:
+        return [
+            x[0] for x in
+            r8.db.execute("SELECT DISTINCT tid FROM teams").fetchall()
+        ]
 
 def has_solved(user: str, challenge: str) -> bool:
     """Check if a user has solved a challenge."""
