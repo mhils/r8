@@ -20,6 +20,7 @@ from aiohttp import web
 import r8
 
 
+@functools.lru_cache(maxsize=None)
 def get_team(user: str) -> Optional[str]:
     """Get a given user's team."""
     with r8.db:
@@ -37,6 +38,7 @@ def get_teams() -> List[str]:
             x[0] for x in
             r8.db.execute("SELECT DISTINCT tid FROM teams").fetchall()
         ]
+
 
 def has_solved(user: str, challenge: str) -> bool:
     """Check if a user has solved a challenge."""
@@ -101,10 +103,16 @@ def challenge_form_js(cid: str) -> str:
     """
     return """
         <script>{ // make sure to add a block here so that `let` is scoped.
+        let spinner = '<div class="spinner-border"></div>';
         let form = document.currentScript.previousElementSibling;
-        let response = form.querySelector(".response")
+        let response = form.querySelector(".response");
+        let submitButton = form.querySelector('button[type="submit"]');
         form.addEventListener("submit", (e) => {
             e.preventDefault();
+            if(response.innerHTML === spinner)
+                return;
+            submitButton.disabled = true;
+            response.innerHTML = spinner;
             let post = {};
             (new FormData(form)).forEach(function(v,k){
                 post[k] = v;
@@ -116,7 +124,9 @@ def challenge_form_js(cid: str) -> str:
                 response.textContent = json['message'];
             }).catch(e => {
                 response.textContent = "Error: " + e;
-            })
+            }).finally(function(){
+                submitButton.disabled = false;
+            });
         });
         }</script>
     """ % cid
@@ -128,7 +138,7 @@ def challenge_invoke_button(cid: str, button_text: str) -> str:
     """
     return f"""
         <form class="form-inline">
-            <button class="btn btn-primary m-1">{button_text}</button>
+            <button type="submit" class="btn btn-primary m-1">{button_text}</button>
             <div class="response m-1"></div>
         </form>
         {challenge_form_js(cid)}

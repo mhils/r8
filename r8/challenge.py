@@ -97,9 +97,9 @@ class Challenge:
         """
         pass
 
-    def echo(self, message: str) -> None:
+    def echo(self, message: str, err: bool = False) -> None:
         """Print to console with the challenge's namespace added in front."""
-        r8.echo(self.id, message)
+        r8.echo(self.id, message, err)
 
     def log(
         self,
