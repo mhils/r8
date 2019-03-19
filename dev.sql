@@ -14,6 +14,7 @@ INSERT INTO challenges (cid, team, t_start, t_stop) VALUES
   ('Attendance(01.01.2042)', 0, datetime('2042-01-01 00:00:00'), datetime('2042-01-01 14:00:00')),
   -- Other examples
   ('TcpServer', 1, datetime('now'), datetime('now','+1 month')),
+  ('WebServer', 1, datetime('now'), datetime('now','+1 month')),
   ('FormExample', 1, datetime('now'), datetime('now','+1 month')),
   ('DockerHelloWorld', 1, datetime('now'), datetime('now','+1 month')),
   ('FromFolder(../r8/misc/folder-example)', 1, datetime('now'), datetime('now','+1 month','start of day'))

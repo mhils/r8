@@ -27,10 +27,15 @@ class Challenge:
     tags: ClassVar[List[str]] = []
     """Tags for the challenge. This can be used to signal task category of difficulty."""
 
+    flag: ClassVar[str] = None
+    """If set, a static flag with the given value will be created on startup."""
+
     def __init__(self, cid: str) -> None:
         self.id = cid
         if not self.static_dir:
             self.static_dir = Path(inspect.getfile(type(self))).parent.absolute() / "static"
+        if self.flag:
+            r8.util.create_flag(self.id, 999999, self.flag)
 
     @property
     @abc.abstractmethod
@@ -304,21 +309,3 @@ class _Challenges:
 
 challenges: _Challenges = _Challenges()
 """singleton object that tracks and manages all challenges."""
-
-
-class StaticChallenge(Challenge):
-    """
-    A challenge with a single static flag. This is useful to create easter egg challenges
-    for example, where the flag is hidden somewhere else.
-    """
-    flag: ClassVar[str]
-
-    def __init__(self, *args, **kwargs):
-        super().__init__(*args, **kwargs)
-        if not self.flag:
-            raise RuntimeError(f"No flag attribute for {type(self).__name__}.")
-        r8.util.create_flag(self.id, 999999, self.flag)
-
-
-# As this is loaded outside of all regular entrypoints, remove it from the available classes.
-challenges._classes.pop("StaticChallenge")

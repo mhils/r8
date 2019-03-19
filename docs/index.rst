@@ -11,6 +11,8 @@ r8 API Reference
         :annotation: : str = "Hello World"
     .. autoattribute:: tags
         :annotation: : List[str] = []
+    .. autoattribute:: flag
+        :annotation: : str = "__flag__{...}"
     .. automethod:: description
     .. automethod:: visible
 

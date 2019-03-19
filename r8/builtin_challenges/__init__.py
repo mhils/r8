@@ -5,6 +5,7 @@ from . import (
     form_example,
     from_folder,
     tcp_server,
+    web_server,
 )
 __all__ = [
     "basic",
@@ -12,4 +13,5 @@ __all__ = [
     "form_example",
     "from_folder",
     "tcp_server",
+    "web_server",
 ]

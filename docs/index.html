@@ -48,6 +48,12 @@
 <dd><p>Tags for the challenge. This can be used to signal task category of difficulty.</p>
 </dd></dl>
 
+<dl class="attribute">
+<dt id="r8.Challenge.flag">
+<code class="descname">flag</code><em class="property"> : str = &quot;__flag__{...}&quot;</em><a class="headerlink" href="#r8.Challenge.flag" title="Permalink to this definition">¶</a></dt>
+<dd><p>If set, a static flag for this challenge will be created on startup.</p>
+</dd></dl>
+
 <dl class="method">
 <dt id="r8.Challenge.description">
 <em class="property">await </em><code class="descname">description</code><span class="sig-paren">(</span><em>user: str</em>, <em>solved: bool</em><span class="sig-paren">)</span> &#x2192; str<a class="headerlink" href="#r8.Challenge.description" title="Permalink to this definition">¶</a></dt>
@@ -96,7 +102,7 @@ demonstrations after the deadline.</p>
 
 <h3>Logging and Flag Creation</h3><dl class="method">
 <dt id="r8.Challenge.echo">
-<code class="descname">echo</code><span class="sig-paren">(</span><em>message: str</em><span class="sig-paren">)</span> &#x2192; None<a class="headerlink" href="#r8.Challenge.echo" title="Permalink to this definition">¶</a></dt>
+<code class="descname">echo</code><span class="sig-paren">(</span><em>message: str</em>, <em>err: bool = False</em><span class="sig-paren">)</span> &#x2192; None<a class="headerlink" href="#r8.Challenge.echo" title="Permalink to this definition">¶</a></dt>
 <dd><p>Print to console with the challenge’s namespace added in front.</p>
 </dd></dl>
 
@@ -207,7 +213,7 @@ Serves static resources from <a class="reference internal" href="#r8.Challenge.s
 <h2>Utilities<a class="headerlink" href="#utilities" title="Permalink to this headline">¶</a></h2>
 <dl class="function">
 <dt id="r8.util.get_team">
-<code class="descclassname">r8.util.</code><code class="descname">get_team</code><span class="sig-paren">(</span><em>user: str</em><span class="sig-paren">)</span> &#x2192; Optional[str]<a class="headerlink" href="#r8.util.get_team" title="Permalink to this definition">¶</a></dt>
+<code class="descclassname">r8.util.</code><code class="descname">get_team</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#r8.util.get_team" title="Permalink to this definition">¶</a></dt>
 <dd><p>Get a given user’s team.</p>
 </dd></dl>
 
