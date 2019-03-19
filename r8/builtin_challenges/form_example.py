@@ -12,8 +12,8 @@ class FormExample(r8.Challenge):
             """
             <h6>What's your favorite IP address?</h6>
             <form>
-                <input name="ip" type="text" placeholder="0.0.0.0"/>
-                <button>Submit</button>
+                <input class="form-control mb-1" name="ip" type="text" placeholder="0.0.0.0"/>
+                <button class="btn btn-primary mb-1">Submit</button>
                 <div class="response"></div>
             </form>
             """ + r8.util.challenge_form_js(self.id)

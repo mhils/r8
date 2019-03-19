@@ -103,16 +103,16 @@ def challenge_form_js(cid: str) -> str:
     """
     return """
         <script>{ // make sure to add a block here so that `let` is scoped.
-        let spinner = '<div class="spinner-border"></div>';
+        let spinner = '<div class="spinner-border spinner-border-sm"></div>';
         let form = document.currentScript.previousElementSibling;
         let response = form.querySelector(".response");
-        let submitButton = form.querySelector('button[type="submit"]');
+        response.innerHTML = "&nbsp;";
+        let submitButton = form.querySelectorAll('button[type="submit"]');
         form.addEventListener("submit", (e) => {
             e.preventDefault();
-            if(response.innerHTML === spinner)
-                return;
-            submitButton.disabled = true;
+            submitButton.forEach(x => x.disabled = true);
             response.innerHTML = spinner;
+            response.classList.remove("text-danger");
             let post = {};
             (new FormData(form)).forEach(function(v,k){
                 post[k] = v;
@@ -123,9 +123,10 @@ def challenge_form_js(cid: str) -> str:
             ).then(json => {
                 response.textContent = json['message'];
             }).catch(e => {
-                response.textContent = "Error: " + e;
+                response.classList.add("text-danger");
+                response.textContent = e;
             }).finally(function(){
-                submitButton.disabled = false;
+                submitButton.forEach(x => x.disabled = false);
             });
         });
         }</script>
@@ -139,7 +140,7 @@ def challenge_invoke_button(cid: str, button_text: str) -> str:
     return f"""
         <form class="form-inline">
             <button type="submit" class="btn btn-primary m-1">{button_text}</button>
-            <div class="response m-1"></div>
+            <div class="response m-1">&nbsp;</div>
         </form>
         {challenge_form_js(cid)}
     """
