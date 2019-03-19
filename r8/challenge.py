@@ -177,10 +177,11 @@ class Challenge:
         The request path can be accessed using `request.match_info["path"]`.
         """
         if self.static_dir:
+            path = request.match_info["path"].lstrip("/") or "index.html"
             filename = re.sub(
                 "[^a-zA-Z0-9_.-]",
                 "",
-                request.match_info["path"]
+                path
             )
             filepath = self.static_dir / filename
             if filepath.is_file():

@@ -60,12 +60,16 @@ class DockerChallenge(r8.Challenge):
             pass
 
     async def _exec(self, *cmd) -> Tuple[asyncio.subprocess.Process, bytes, bytes]:
-        proc = await asyncio.create_subprocess_exec(
-            *cmd,
-            stdout=asyncio.subprocess.PIPE,
-            stderr=asyncio.subprocess.PIPE
-        )
-        stdout, stderr = await proc.communicate()
+        spin = asyncio.ensure_future(self.spin())
+        try:
+            proc = await asyncio.create_subprocess_exec(
+                *cmd,
+                stdout=asyncio.subprocess.PIPE,
+                stderr=asyncio.subprocess.PIPE
+            )
+            stdout, stderr = await proc.communicate()
+        finally:
+            spin.cancel()
         if self.debug:
             self.echo(
                 f"\"{' '.join(shlex.quote(x) for x in cmd)}\" returned {proc.returncode}:" +
@@ -81,13 +85,11 @@ class DockerChallenge(r8.Challenge):
         await super().start()
         if self.dockerfile:
             self.echo(f"Docker: Building {self.docker_tag}...")
-            spin = asyncio.ensure_future(self.spin())
             await self._exec(
                 "docker", "build",
                 "-t", self.docker_tag,
                 str(self.dockerfile.absolute())
             )
-            spin.cancel()
             self.echo(f"Docker: {self.docker_tag} built.")
         await self._exec("docker", "inspect", self.docker_tag)
 
@@ -95,7 +97,6 @@ class DockerChallenge(r8.Challenge):
         """`docker run` without rate limits"""
         self.echo(f"Docker: run {' '.join(args)}")
         name = "r8_" + secrets.token_hex(8)
-        spin = asyncio.ensure_future(self.spin())
         start = time.time()
 
         cmd = [
@@ -130,9 +131,7 @@ class DockerChallenge(r8.Challenge):
             raise DockerError("Process timed out.", cmd)
         else:
             self.echo(f"Docker: finished (time elapsed: {round(time.time() - start, 2)}s)")
-            return stdout.decode()
-        finally:
-            spin.cancel()
+            return stdout.strip().decode()
 
     async def docker_run(self, user: str, *args) -> str:
         if user in self.active_users:
