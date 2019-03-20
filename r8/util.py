@@ -265,7 +265,8 @@ def log(
         ip = ip.get_extra_info("peername")
     if isinstance(ip, tuple):
         ip = ip[0]
-    data = data[:1024]
+    if data:
+        data = data[:1024]
     with r8.db:
         return r8.db.execute(
             "INSERT INTO events (ip, type, data, cid, uid) VALUES (?, ?, ?, ?, ?)",
