@@ -1,4 +1,5 @@
 import json
+import urllib.parse
 from functools import wraps
 from pathlib import Path
 from typing import Callable, Any, Union
@@ -106,7 +107,10 @@ async def handle_challenge_request(user: str, request: web.Request):
         resp = await inst.handle_get_request(user, request)
     else:
         path = (request.match_info["path"] + " ").lstrip()
-        data = path + await request.text()
+        text = await request.text()
+        if request.content_type == 'application/x-www-form-urlencoded':
+            text = urllib.parse.unquote(text)
+        data = path + text
         # We want this to appear before any challenge-specific logging...
         rowid = r8.log(request, "handle-request", data, uid=user, cid=inst.id)
         resp = await inst.handle_post_request(user, request)
