@@ -110,6 +110,7 @@ class DockerChallenge(r8.Challenge):
             "--cpu-shares", "2",
             "--blkio-weight", "10",
             "--cap-drop", "all",
+            "--user", "nobody",
             self.docker_tag, *args
         ]
 
