@@ -63,7 +63,7 @@ def init(origin, static_dir, listen_address, database) -> None:
             data TEXT,
             cid TEXT,
             uid TEXT,
-            FOREIGN KEY (cid) REFERENCES challenges(cid),
+            FOREIGN KEY (cid) REFERENCES challenges(cid) ON DELETE CASCADE,
             FOREIGN KEY (uid) REFERENCES users(uid)
         );
         CREATE TABLE teams (
