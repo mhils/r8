@@ -40,6 +40,16 @@ def get_teams() -> List[str]:
         ]
 
 
+@functools.lru_cache()
+def get_users() -> List[str]:
+    """Get a list of all teams"""
+    with r8.db:
+        return [
+            x[0] for x in
+            r8.db.execute("SELECT uid FROM users").fetchall()
+        ]
+
+
 def has_solved(user: str, challenge: str) -> bool:
     """Check if a user has solved a challenge."""
     with r8.db:
