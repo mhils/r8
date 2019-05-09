@@ -22,6 +22,6 @@ class FormExample(r8.Challenge):
     async def handle_post_request(self, user: str, request: web.Request):
         json = await request.json()
         if json.get("ip", "") == "127.0.0.1":
-            return web.json_response({"message": self.log_and_create_flag(request, user)})
+            return self.log_and_create_flag(request, user)
         else:
             return web.HTTPBadRequest(reason="There are better ones.")

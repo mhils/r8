@@ -26,7 +26,6 @@ class DockerHelloWorld(r8.challenge_mixins.DockerChallenge):
     async def handle_post_request(self, user: str, request: web.Request):
         json = await request.json()
         try:
-            resp = await self.docker_run(user, *shlex.split(json.get("command", "")))
+            return await self.docker_run(user, *shlex.split(json.get("command", "")))
         except r8.challenge_mixins.DockerError as e:
             raise web.HTTPInternalServerError(reason=str(e))
-        return web.json_response({"message": resp})

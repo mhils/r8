@@ -83,7 +83,7 @@ TCP Server Challenge Helpers
 Low-Level Helpers
 -----------------
 
-.. seealso:: For challenge development, it is recommende to use the equivalent methods
+.. seealso:: For challenge development, it is recommended to use the equivalent methods
     exposed by the challenge class instead:
     :meth:`r8.Challenge.echo`, :meth:`r8.Challenge.log` and :meth:`r8.Challenge.log_and_create_flag`.
 .. autofunction:: r8.echo
