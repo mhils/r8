@@ -42,7 +42,7 @@ r8 sql init --origin http://localhost:8000
 r8 is typically configured with a plain SQL file. Let's add some demo challenges and users:
 
 ```shell
-r8 sql file dev.sql
+r8 sql file config.sql
 ```
 
 We can now start r8:
@@ -56,7 +56,7 @@ You can now browse to <http://localhost:8000/> and log in as `user1` with passwo
 ## Next Steps
 
  1. `r8` has a comprehensive command line interface. Check out `r8 --help`, `r8 users --help`, etc.
- 2. Take a look at `dev.sql` to learn how r8 can be configured.
+ 2. Take a look at `config.sql` to learn how r8 can be configured.
  3. Install additional challenges and create new ones (see next section).
 
 ## Installing additional challenges
@@ -94,7 +94,7 @@ r8 challenges list-available
 ```
 
 To make the challenge available to users, we also need to instantiate it by adding it to the database. 
-Go back to the SQL configuration file (`dev.sql` in the example above) and add the following:
+Go back to the SQL configuration file (`config.sql` in the example above) and add the following:
 ```sql
 INSERT INTO challenges (cid, team, t_start, t_stop) VALUES
   ('HelloWorld', 0, datetime('now'), datetime('now','+1 month'));
@@ -102,7 +102,7 @@ INSERT INTO challenges (cid, team, t_start, t_stop) VALUES
 
 Finally, we can apply our configuration changes and run r8 again:
 ```shell
-r8 sql file dev.sql
+r8 sql file config.sql
 r8 run
 ```
 
