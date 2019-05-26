@@ -46,7 +46,7 @@ def init(origin, static_dir, listen_address, database) -> None:
             fid TEXT PRIMARY KEY NOT NULL,
             cid TEXT NOT NULL,
             max_submissions INTEGER NOT NULL,
-            FOREIGN KEY (cid) REFERENCES challenges(cid)
+            FOREIGN KEY (cid) REFERENCES challenges(cid) ON DELETE CASCADE
         );
         CREATE TABLE submissions (
             uid TEXT NOT NULL,
@@ -62,9 +62,7 @@ def init(origin, static_dir, listen_address, database) -> None:
             type TEXT NOT NULL,
             data TEXT,
             cid TEXT,
-            uid TEXT,
-            FOREIGN KEY (cid) REFERENCES challenges(cid),
-            FOREIGN KEY (uid) REFERENCES users(uid)
+            uid TEXT
         );
         CREATE TABLE teams (
             uid TEXT PRIMARY KEY NOT NULL,
