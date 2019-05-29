@@ -11,6 +11,44 @@ from aiohttp import web
 import r8
 
 
+async def register(request: web.Request):
+    """very very simply self-registration functionality that abuses teams for nicknames."""
+    logindata = await request.json()
+    try:
+        user = logindata["username"]
+        password = logindata["password"]
+        nickname = logindata["nickname"]
+    except KeyError:
+        r8.log(request, "register-invalid", "incomplete request")
+        return web.HTTPBadRequest(reason="All fields are required.")
+    with r8.db:
+        user_exists = r8.db.execute(
+            "SELECT 1 FROM users WHERE uid = ?",
+            (user,)
+        ).fetchone()
+        team_exists = r8.db.execute(
+            "SELECT 1 FROM teams WHERE tid = ?",
+            (nickname,)
+        ).fetchone()
+    if user_exists:
+        r8.log(request, "register-invalid", "username exists")
+        return web.HTTPBadRequest(reason="There already exists an account with this email.")
+    if team_exists:
+        r8.log(request, "register-invalid", "team exists")
+        return web.HTTPBadRequest(reason="There already exists a team with that name.")
+    with r8.db:
+        r8.db.execute(
+            "INSERT INTO users(uid, password) VALUES (?,?)",
+            (user, r8.util.hash_password(password))
+        )
+        r8.db.execute(
+            "INSERT INTO teams(uid, tid) VALUES (?,?)",
+            (user, nickname)
+        )
+    r8.log(request, "register-success", uid=user)
+    return await login(request)
+
+
 async def login(request: web.Request):
     logindata = await request.json()
     try:
@@ -138,6 +176,8 @@ def make_app(static_dir: Union[Path, str]) -> web.Application:
         return web.FileResponse(static_dir / 'index.html')
 
     app = web.Application()
+    if r8.settings.get("register"):
+        app.router.add_post('/api/register', register)
     app.router.add_post('/api/login', login)
     app.router.add_post('/api/logout', logout)
     app.router.add_post('/api/submit', submit_flag)
