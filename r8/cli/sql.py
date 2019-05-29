@@ -46,7 +46,7 @@ def init(origin, static_dir, listen_address, database) -> None:
             fid TEXT PRIMARY KEY NOT NULL,
             cid TEXT NOT NULL,
             max_submissions INTEGER NOT NULL,
-            FOREIGN KEY (cid) REFERENCES challenges(cid) ON DELETE CASCADE
+            FOREIGN KEY (cid) REFERENCES challenges(cid)
         );
         CREATE TABLE submissions (
             uid TEXT NOT NULL,
