@@ -30,7 +30,6 @@ def get_team(user: str) -> Optional[str]:
         return None
 
 
-@functools.lru_cache()
 def get_teams() -> List[str]:
     """Get a list of all teams"""
     with r8.db:
@@ -40,7 +39,6 @@ def get_teams() -> List[str]:
         ]
 
 
-@functools.lru_cache()
 def get_users() -> List[str]:
     """Get a list of all teams"""
     with r8.db:
