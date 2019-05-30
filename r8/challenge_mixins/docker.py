@@ -68,6 +68,8 @@ class DockerChallenge(r8.Challenge):
                 stderr=asyncio.subprocess.PIPE
             )
             stdout, stderr = await proc.communicate()
+        except ValueError as e:
+            raise DockerError(str(e), cmd) from e
         finally:
             spin.cancel()
         if self.debug:
