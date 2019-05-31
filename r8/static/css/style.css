@@ -2,6 +2,10 @@
     background: linear-gradient(to bottom, #345d9f 0%, #4D5CA4 100%);
 }
 
+.card-body {
+    overflow: auto;
+}
+
 .card-expired {
     background-color: #f0808030;
     border-color: #dc3545;
