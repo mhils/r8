@@ -4,6 +4,7 @@ from typing import List
 
 import click
 
+import r8
 from r8 import util
 
 
@@ -13,13 +14,13 @@ def cli():
     pass
 
 
-@cli.command("generate")
+@cli.command()
 @click.option("-n", default=1, help="Number of passwords")
 @click.option("--length", default=3, help="Number of words per password.")
 @click.option("--max-len", default=15, help="Max length of parts.")
 @click.option("--hash/--no-hash", default=True, help="Include hash")
 @click.pass_context
-def generate_password(ctx: click.Context, n, length, max_len, hash):
+def generate(ctx: click.Context, n, length, max_len, hash):
     """Generate a memorable password."""
     here = Path(__file__).parent
 
@@ -52,3 +53,18 @@ def generate_password(ctx: click.Context, n, length, max_len, hash):
 def hash_password(password):
     """Hash a password."""
     print(util.hash_password(password))
+
+
+@cli.command()
+@util.with_database()
+@click.argument("user")
+@click.password_option()
+def update(user, password):
+    """Update a user's password."""
+    password = util.hash_password(password)
+    with r8.db:
+        exists = r8.db.execute("SELECT COUNT(*) FROM users WHERE uid = ?", (user,)).fetchone()[0]
+        if not exists:
+            raise click.UsageError("User does not exist.")
+        r8.db.execute("UPDATE users SET password = ? WHERE uid = ?", (password, user))
+    r8.echo("r8", f"Password updated.")
