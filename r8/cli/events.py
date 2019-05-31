@@ -92,9 +92,9 @@ def cli(rows, watch, teams, query):
             {query}
             ORDER BY rowid
             LIMIT 100 OFFSET {seen}""").fetchall()
-            seen += len(new)
-            for e in new:
-                print_event(*e)
-            if not watch:
-                break
-            time.sleep(0.5)
+        seen += len(new)
+        for e in new:
+            print_event(*e)
+        if not watch:
+            break
+        time.sleep(0.5)

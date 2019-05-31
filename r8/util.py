@@ -388,7 +388,7 @@ def sqlite3_connect(filename):
     """
     Wrapper around sqlite3.connect that enables convenience features.
     """
-    db = sqlite3.connect(filename)
+    db = sqlite3.connect(filename, 10)
     db.execute("PRAGMA foreign_keys = ON")
     return db
 
@@ -555,30 +555,30 @@ async def get_challenges(user: str):
                 for key, value in zip(column_names, row)
             } for row in cursor.fetchall()
         ]
-        results = [
-            x for x in results
-            if x["solved"] or await r8.challenges[x["cid"]].visible(user)
-        ]
-        for challenge in results:
-            challenge["team"] = bool(challenge["team"])
-            inst = r8.challenges[challenge["cid"]]
-            try:
-                challenge["title"] = str(inst.title)
-            except Exception:
-                challenge["title"] = "Title Error"
-                challenge["tags"] = []
-                challenge["description"] = f"<pre>{html.escape(traceback.format_exc())}</pre>"
-                continue
+    results = [
+        x for x in results
+        if x["solved"] or await r8.challenges[x["cid"]].visible(user)
+    ]
+    for challenge in results:
+        challenge["team"] = bool(challenge["team"])
+        inst = r8.challenges[challenge["cid"]]
+        try:
+            challenge["title"] = str(inst.title)
+        except Exception:
+            challenge["title"] = "Title Error"
+            challenge["tags"] = []
+            challenge["description"] = f"<pre>{html.escape(traceback.format_exc())}</pre>"
+            continue
 
-            try:
-                challenge["tags"] = [str(x) for x in inst.tags]
-            except Exception:
-                challenge["tags"] = []
-                challenge["description"] = f"<pre>{html.escape(traceback.format_exc())}</pre>"
-                continue
+        try:
+            challenge["tags"] = [str(x) for x in inst.tags]
+        except Exception:
+            challenge["tags"] = []
+            challenge["description"] = f"<pre>{html.escape(traceback.format_exc())}</pre>"
+            continue
 
-            try:
-                challenge["description"] = await inst.description(user, bool(challenge["solved"]))
-            except Exception:
-                challenge["description"] = f"<pre>{html.escape(traceback.format_exc())}</pre>"
-        return results
+        try:
+            challenge["description"] = await inst.description(user, bool(challenge["solved"]))
+        except Exception:
+            challenge["description"] = f"<pre>{html.escape(traceback.format_exc())}</pre>"
+    return results

@@ -48,14 +48,13 @@ def limit(flag, max):
 @click.argument("challenge", required=False)
 def list(rows, challenge):
     """Print all flags [for a given challenge]."""
+    if challenge:
+        where = "WHERE cid = ?"
+        parameters = (challenge,)
+    else:
+        where = ""
+        parameters = None
     with r8.db:
-        if challenge:
-            where = "WHERE cid = ?"
-            parameters = (challenge,)
-        else:
-            where = ""
-            parameters = None
-
         util.run_sql(f"""
         SELECT cid, fid, COUNT(uid) AS submissions, max_submissions FROM flags
         LEFT JOIN submissions USING(fid)
