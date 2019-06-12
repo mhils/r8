@@ -1,8 +1,8 @@
 import asyncio
+import os
 import signal
 
 import click
-import os
 
 import r8
 from r8 import cars

@@ -1,9 +1,8 @@
-import functools
 import json
 import urllib.parse
 from functools import wraps
 from pathlib import Path
-from typing import Callable, Any, Union, Optional
+from typing import Any, Callable, Union
 
 import argon2
 import itsdangerous

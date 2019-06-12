@@ -1,9 +1,9 @@
 import abc
 import urllib.parse
-from typing import Tuple, Union, Callable
+from typing import Callable, Tuple, Union
 
 from aiohttp import web
-from aiohttp.web import middleware, StaticResource
+from aiohttp.web import StaticResource, middleware
 
 import r8
 

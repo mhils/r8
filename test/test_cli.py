@@ -1,10 +1,9 @@
-import shlex
-import subprocess
 from pathlib import Path
 
 import pytest
-import r8.cli
 from click.testing import CliRunner
+
+import r8.cli
 
 here: Path = Path(__file__).parent
 
@@ -67,3 +66,13 @@ def test_sql(r8cli):
 def test_users(r8cli):
     r8cli("users")
     r8cli("users -T --teams --format csv")
+
+
+def test_teams(r8cli):
+    r8cli("teams list")
+    with pytest.raises(RuntimeError, match='Old team does not exist'):
+        r8cli("teams rename unknown unknown")
+    with pytest.raises(RuntimeError, match='New team name does already exist'):
+        r8cli("teams rename team1 team2")
+    r8cli("teams rename team2 new-teamname")
+    assert "new-teamname" in r8cli("teams list").output

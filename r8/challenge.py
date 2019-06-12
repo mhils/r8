@@ -6,7 +6,7 @@ import re
 import time
 import traceback
 from pathlib import Path
-from typing import Dict, Optional, Type, List, Tuple, Union, ClassVar
+from typing import ClassVar, Dict, List, Optional, Tuple, Type, Union
 
 import pkg_resources
 from aiohttp import web

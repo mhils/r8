@@ -9,7 +9,7 @@ import textwrap
 import traceback
 from functools import wraps
 from pathlib import Path
-from typing import Optional, Tuple, TypeVar, List
+from typing import List, Optional, Tuple, TypeVar
 
 import argon2
 import click

@@ -6,7 +6,7 @@ import typing
 
 from r8 import util
 from r8.challenge import Challenge, challenges
-from r8.util import log, echo
+from r8.util import echo, log
 
 db: sqlite3.Connection
 settings: typing.Dict[str, str] = {}
