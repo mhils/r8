@@ -57,9 +57,9 @@ def cli(user, challenge, t, format, teams):
         if cid in solved and uid in user_index:
             solved[cid][user_index[uid]] = SOLVED
 
-    if t and teams:
+    if not t and teams:
         header = "Team"
-    elif t and not teams:
+    elif not t and not teams:
         header = "User"
     else:
         header = "Challenge"
@@ -71,7 +71,7 @@ def cli(user, challenge, t, format, teams):
     if format == "table":
         for row in table_contents:
             row[0] = row[0][:22]
-    if t:
+    if not t:
         table_contents = list(zip(*table_contents))
 
     if format == "table":

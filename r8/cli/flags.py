@@ -10,7 +10,7 @@ def cli():
     pass
 
 
-@cli.command("create")
+@cli.command()
 @util.with_database()
 @click.argument("challenge")
 @click.argument("name", required=False)
@@ -21,7 +21,7 @@ def create(challenge, name, max):
     print(f"Created: {flag} (valid for {max} submissions)")
 
 
-@cli.command("limit")
+@cli.command()
 @util.with_database()
 @click.argument("flag")
 @click.argument("max", type=int, required=False)
@@ -42,7 +42,7 @@ def limit(flag, max):
     print(f"{flag} restricted to {max} submissions")
 
 
-@cli.command("list")
+@cli.command()
 @util.with_database()
 @util.database_rows
 @click.argument("challenge", required=False)
@@ -54,14 +54,13 @@ def list(rows, challenge):
     else:
         where = ""
         parameters = None
-    with r8.db:
-        util.run_sql(f"""
-        SELECT cid, fid, COUNT(uid) AS submissions, max_submissions FROM flags
-        LEFT JOIN submissions USING(fid)
-        {where}
-        GROUP BY fid
-        ORDER BY cid, submissions DESC
-        """, parameters, rows=rows)
+    util.run_sql(f"""
+    SELECT cid, fid, COUNT(uid) AS submissions, max_submissions FROM flags
+    LEFT JOIN submissions USING(fid)
+    {where}
+    GROUP BY fid
+    ORDER BY cid, submissions DESC
+    """, parameters, rows=rows)
 
 
 @cli.command()

@@ -22,15 +22,14 @@ def list(rows, query):
     Accepts an optional query argument to limit the selection,
     e.g. "WHERE cid LIKE 'Attendance%'".
     """
-    with r8.db:
-        util.run_sql(f"""
-        SELECT cid, COUNT(uid) AS solved, t_start, t_stop, team FROM challenges
-        LEFT JOIN flags USING (cid)
-        LEFT JOIN submissions USING (fid)
-        {" ".join(query)}
-        GROUP BY cid
-        ORDER BY challenges.rowid
-        """, rows=rows)
+    util.run_sql(f"""
+    SELECT cid, COUNT(uid) AS solved, t_start, t_stop, team FROM challenges
+    LEFT JOIN flags USING (cid)
+    LEFT JOIN submissions USING (fid)
+    {" ".join(query)}
+    GROUP BY cid
+    ORDER BY challenges.rowid
+    """, rows=rows)
 
 
 @cli.command("list-available")

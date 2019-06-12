@@ -63,7 +63,7 @@ class Challenge:
         t_start, t_stop = self._active_times()
         return t_start <= time.time() <= t_stop
 
-    @functools.lru_cache()
+    @functools.lru_cache(maxsize=None)
     def _active_times(self) -> Tuple[int, int]:
         with r8.db:
             return r8.db.execute("""

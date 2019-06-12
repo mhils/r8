@@ -20,7 +20,6 @@ from aiohttp import web
 import r8
 
 
-@functools.lru_cache(maxsize=None)
 def get_team(user: str) -> Optional[str]:
     """Get a given user's team."""
     with r8.db:
