@@ -229,7 +229,7 @@ class Challenge:
 def get_challenges() -> List[str]:
     with r8.db:
         cursor = r8.db.execute("SELECT cid FROM challenges")
-    return [row[0] for row in cursor.fetchall()]
+        return [row[0] for row in cursor.fetchall()]
 
 
 def class_name(cid: str) -> str:

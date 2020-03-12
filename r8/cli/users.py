@@ -1,3 +1,5 @@
+import collections
+
 import click
 import texttable
 
@@ -7,40 +9,51 @@ from r8 import util
 
 @click.command("users")
 @util.with_database()
-@click.option("--user", multiple=True, help="Only display users/teams that start with the given string. Can be passed multiple times.")
-@click.option("--challenge", multiple=True, help="Only display challenges that start with the given string. Can be passed multiple times.")
+@click.option("--user", multiple=True,
+              help="Only display users/teams that start with the given string. Can be passed multiple times.")
+@click.option("--challenge", multiple=True,
+              help="Only display challenges that start with the given string. Can be passed multiple times.")
 @click.option("-T", is_flag=True, help="Transpose table.")
 @click.option("--format", type=click.Choice(['table', 'csv']), default="table")
 @click.option("--teams", is_flag=True, help="Group users by teams.")
-def cli(user, challenge, t, format, teams):
+@click.option("--no-team-solves", is_flag=True, help="Include team solves.")
+def cli(user, challenge, t, format, teams, no_team_solves):
     """View users and their progress."""
-    if teams:
-        challenges_stmt = "SELECT cid FROM challenges WHERE t_start < datetime('now') AND team = 1 ORDER BY ROWID ASC"
-        users_stmt = "SELECT DISTINCT tid FROM teams ORDER BY ROWID ASC"
-        submissions_stmt = "SELECT tid, cid FROM submissions NATURAL JOIN flags NATURAL JOIN teams"
-    else:
-        challenges_stmt = "SELECT cid FROM challenges WHERE t_start < datetime('now') ORDER BY ROWID ASC"
-        users_stmt = "SELECT uid FROM users ORDER BY ROWID ASC"
-        submissions_stmt = "SELECT uid, cid FROM submissions NATURAL JOIN flags"
-
     with r8.db:
-        challenges = r8.db.execute(challenges_stmt).fetchall()
-        challenges = [
-            x[0] for x in challenges
-            if not challenge or any(x[0].startswith(c) for c in challenge)
+        all_challenges = r8.db.execute(
+            "SELECT cid, team FROM challenges WHERE t_start < datetime('now') ORDER BY ROWID ASC"
+        ).fetchall()
+        user_info = r8.db.execute(
+            "SELECT uid, tid FROM users NATURAL LEFT JOIN teams ORDER BY users.ROWID ASC"
+        ).fetchall()
+        submissions = r8.db.execute(
+            "SELECT uid, tid, cid FROM submissions NATURAL JOIN flags NATURAL LEFT JOIN teams"
+        ).fetchall()
+
+    entries = []
+    team_users = collections.defaultdict(list)
+    for uid, tid in user_info:
+        if teams:
+            entries.append(tid)
+        else:
+            entries.append(uid)
+        team_users[tid].append(uid)
+    if user:
+        entries = [
+            x for x in entries
+            if any(x.startswith(u) for u in user)
         ]
-
-        users = r8.db.execute(users_stmt).fetchall()
-        users = [
-            x[0] for x in users
-            if not user or any(x[0].startswith(u) for u in user)
-        ]
-
-        submissions = r8.db.execute(submissions_stmt).fetchall()
-
-    user_index = {
-        x: i for i, x in enumerate(users)
+    entry_index = {
+        x: i for i, x in enumerate(entries)
     }
+
+    challenges = {}
+    for cid, team in all_challenges:
+        if teams and not team:
+            continue
+        if challenge and not any(cid.startswith(c) for c in challenge):
+            continue
+        challenges[cid] = team
 
     if format == "table":
         SOLVED = "OK"
@@ -50,12 +63,26 @@ def cli(user, challenge, t, format, teams):
         NOT_SOLVED = "FALSE"
 
     solved = {
-        cid: [NOT_SOLVED] * len(users)
+        cid: [NOT_SOLVED] * len(entries)
         for cid in challenges
     }
-    for uid, cid in submissions:
-        if cid in solved and uid in user_index:
-            solved[cid][user_index[uid]] = SOLVED
+    if teams:
+        for _, tid, cid in submissions:
+            if cid in challenges and tid in entry_index:
+                solved[cid][entry_index[tid]] = SOLVED
+    elif no_team_solves:
+        for uid, _, cid in submissions:
+            if cid in challenges and uid in entry_index:
+                solved[cid][entry_index[uid]] = SOLVED
+    else:
+        for uid, tid, cid in submissions:
+            if cid in challenges:
+                if challenges[cid]:
+                    for uid in team_users[tid]:
+                        if uid in entry_index:
+                            solved[cid][entry_index[uid]] = SOLVED
+                elif uid in entry_index:
+                    solved[cid][entry_index[uid]] = SOLVED
 
     if not t and teams:
         header = "Team"
@@ -65,8 +92,8 @@ def cli(user, challenge, t, format, teams):
         header = "Challenge"
 
     table_contents = (
-        [[header] + users] +
-        [[cid] + solved for cid, solved in solved.items()]
+            [[header] + entries] +
+            [[cid] + solved for cid, solved in solved.items()]
     )
     if format == "table":
         for row in table_contents:
