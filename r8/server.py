@@ -1,13 +1,14 @@
 import urllib.parse
 from functools import wraps
-from typing import Any, Callable, List, Union
+from typing import Any, Callable
 
 import aiohttp_jinja2
 import argon2
 import itsdangerous
 import jinja2
-import r8
 from aiohttp import web
+
+import r8
 
 
 async def register(request: web.Request):
@@ -168,16 +169,18 @@ async def handle_challenge_request(user: str, request: web.Request):
     return resp
 
 
-def make_app(static_dir: Union[str, List[str]]) -> web.Application:
-    @aiohttp_jinja2.template('index.html')
-    async def index(_):
-        return {"r8": r8}
+@aiohttp_jinja2.template('index.html')
+async def index(_):
+    return {"r8": r8}
 
-    async def static(request: web.Request):
-        return r8.util.serve_static(static_dir, request.match_info["path"])
 
+async def static(request: web.Request):
+    return r8.util.serve_static(r8.settings["static_dir"], request.match_info["path"])
+
+
+def make_app() -> web.Application:
     app = web.Application()
-    aiohttp_jinja2.setup(app, loader=jinja2.FileSystemLoader(static_dir))
+    aiohttp_jinja2.setup(app, loader=jinja2.FileSystemLoader(r8.settings["static_dir"]))
 
     if r8.settings.get("register"):
         app.router.add_post('/api/register', register)
@@ -192,19 +195,19 @@ def make_app(static_dir: Union[str, List[str]]) -> web.Application:
     return app
 
 
-runner: web.AppRunner = None
+runner: web.AppRunner
 
 
 async def start():
     global runner
     r8.echo("r8", "Starting server...")
-    app = make_app(r8.settings["static_dir"])
+    app = make_app()
     runner = web.AppRunner(app)
     await runner.setup()
-    address = r8.settings["listen_address"]
-    site = web.TCPSite(runner, *address)
+    site = web.TCPSite(runner, r8.settings["host"], r8.settings["port"])
     await site.start()
-    r8.echo("r8", f"Running at {r8.util.format_address(address)}.")
+    address = r8.util.format_address((r8.settings["host"], r8.settings["port"]))
+    r8.echo("r8", f"Running at {address}.")
     return runner
 
 
