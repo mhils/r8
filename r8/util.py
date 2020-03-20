@@ -10,11 +10,12 @@ import textwrap
 import traceback
 from functools import wraps
 from pathlib import Path
-from typing import List, Optional, Tuple, TypeVar
+from typing import Iterable, List, Optional, Tuple, TypeVar, Union
 
 import argon2
 import click
 import itsdangerous
+import r8
 import texttable
 from aiohttp import web
 
@@ -257,12 +258,12 @@ THasIP = TypeVar("THasIP", str, tuple, asyncio.StreamWriter, asyncio.BaseTranspo
 
 
 def log(
-    ip: THasIP,
-    type: str,
-    data: Optional[str] = None,
-    *,
-    cid: Optional[str] = None,
-    uid: Optional[str] = None,
+        ip: THasIP,
+        type: str,
+        data: Optional[str] = None,
+        *,
+        cid: Optional[str] = None,
+        uid: Optional[str] = None,
 ) -> int:
     """
     Create a log entry.
@@ -290,9 +291,9 @@ def log(
 
 
 def create_flag(
-    challenge: str,
-    max_submissions: int = 1,
-    flag: str = None
+        challenge: str,
+        max_submissions: int = 1,
+        flag: str = None
 ) -> str:
     """
     Create a new flag for an existing challenge. When creating flags from challenges,
@@ -460,10 +461,10 @@ def correct_flag(flag: str) -> str:
 
 
 def submit_flag(
-    flag: str,
-    user: str,
-    ip: THasIP,
-    force: bool = False
+        flag: str,
+        user: str,
+        ip: THasIP,
+        force: bool = False
 ) -> str:
     """
     Returns:
@@ -571,7 +572,7 @@ async def get_challenges(user: str):
     ]
     for challenge in results:
         challenge["team"] = bool(challenge["team"])
-        inst = r8.challenges[challenge["cid"]]
+        inst: r8.Challenge = r8.challenges[challenge["cid"]]
         try:
             challenge["title"] = str(inst.title)
         except Exception:
@@ -592,3 +593,29 @@ async def get_challenges(user: str):
         except Exception:
             challenge["description"] = f"<pre>{html.escape(traceback.format_exc())}</pre>"
     return results
+
+
+def serve_static(static_dir: Union[str, Path, Iterable[Union[Path, str]]], insecure_path: str) -> web.StreamResponse:
+    if isinstance(static_dir, (Path, str)):
+        static_dir = [static_dir]
+    search_paths: List[Path] = [Path(x).resolve() for x in static_dir]
+
+    path = insecure_path.lstrip("/") or "index.html"
+    filename = re.sub(
+        r"[^a-zA-Z0-9_./-]",
+        "",
+        path
+    )
+
+    if ".." in filename or "//" in filename or filename.startswith("/"):
+        return web.HTTPBadRequest()
+    for sp in search_paths:
+        filepath = (sp / filename).resolve()
+        try:
+            # guard against directory traversal: this raises if filepath is not a subpath of sp.
+            filepath.relative_to(sp)
+        except ValueError:
+            return web.HTTPBadRequest()
+        if filepath.is_file():
+            return web.FileResponse(filepath)
+    return web.HTTPNotFound()

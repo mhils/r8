@@ -1,14 +1,13 @@
-import json
 import urllib.parse
 from functools import wraps
-from pathlib import Path
-from typing import Any, Callable, Union
+from typing import Any, Callable, List, Union
 
+import aiohttp_jinja2
 import argon2
 import itsdangerous
-from aiohttp import web
-
+import jinja2
 import r8
+from aiohttp import web
 
 
 async def register(request: web.Request):
@@ -169,13 +168,17 @@ async def handle_challenge_request(user: str, request: web.Request):
     return resp
 
 
-def make_app(static_dir: Union[Path, str]) -> web.Application:
-    static_dir = Path(static_dir)
-
+def make_app(static_dir: Union[str, List[str]]) -> web.Application:
+    @aiohttp_jinja2.template('index.html')
     async def index(_):
-        return web.FileResponse(static_dir / 'index.html')
+        return {"r8": r8}
+
+    async def static(request: web.Request):
+        return r8.util.serve_static(static_dir, request.match_info["path"])
 
     app = web.Application()
+    aiohttp_jinja2.setup(app, loader=jinja2.FileSystemLoader(static_dir))
+
     if r8.settings.get("register"):
         app.router.add_post('/api/register', register)
     app.router.add_post('/api/login', login)
@@ -185,7 +188,7 @@ def make_app(static_dir: Union[Path, str]) -> web.Application:
     app.router.add_get('/api/challenges/{cid}{path:(/.*)?}', handle_challenge_request)
     app.router.add_post('/api/challenges/{cid}{path:(/.*)?}', handle_challenge_request)
     app.router.add_get('/', index)
-    app.router.add_static('/', path=static_dir)
+    app.router.add_get('/{path:(.+)}', static)
     return app
 
 

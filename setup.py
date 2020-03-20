@@ -48,12 +48,13 @@ setup(
         "texttable",
         "argon2_cffi",
         "aiohttp",
+        "aiohttp_jinja2",
         "aiodns",
         "itsdangerous",
     ],
     extras_require={
         'faster': [
-            "cchardet",
+            "aiohttp[speedups]",
         ],
     }
 )

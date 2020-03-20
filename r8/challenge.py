@@ -32,7 +32,7 @@ class Challenge:
 
     def __init__(self, cid: str) -> None:
         self.id = cid
-        if not self.static_dir:
+        if self.static_dir is None:
             self.static_dir = Path(inspect.getfile(type(self))).parent.absolute() / "static"
         if self.flag:
             r8.util.create_flag(self.id, 999999, self.flag)
@@ -177,16 +177,9 @@ class Challenge:
         The request path can be accessed using `request.match_info["path"]`.
         """
         if self.static_dir:
-            path = request.match_info["path"].lstrip("/") or "index.html"
-            filename = re.sub(
-                "[^a-zA-Z0-9_.-]",
-                "",
-                path
-            )
-            filepath = self.static_dir / filename
-            if filepath.is_file():
-                return web.FileResponse(filepath)
-        return web.HTTPNotFound()
+            return r8.util.serve_static(self.static_dir, request.match_info["path"])
+        else:
+            return web.HTTPNotFound()
 
     async def handle_post_request(self, user: str, request: web.Request) \
         -> Union[str, web.StreamResponse]:

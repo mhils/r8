@@ -1,0 +1,517 @@
+<!doctype html>
+<html lang="en">
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
+
+    <title>{% block title %}Capture The Flag{% endblock %}</title>
+
+    <link rel="stylesheet" href="css/bootstrap.css">
+    <link rel="stylesheet" href="css/style.css">
+</head>
+<body class="bg-light">
+<div id="root"></div>
+{% block footer %}
+{% endblock %}
+<script src="js/polyfills.js"></script>
+<script src="js/react.js"></script>
+<script src="js/react-dom.js"></script>
+<script src="js/babel.js"></script>
+<script type="text/babel">
+    // Grunt, Gulp, Webpack, Browserify, create-react-app, etc. are just not worth it.
+    // in-browser compilation will do.
+
+    function fetchApi(url, options = {}) {
+        options["credentials"] = "same-origin";
+        return fetch(url, options)
+            .catch(err => {
+                throw "Network error."
+            })
+            .then(r => r.text())
+            .then(text => {
+                try {
+                    return JSON.parse(text);
+                } catch (e) {
+                    throw text;
+                }
+            })
+    }
+
+    function login(username, password) {
+        let req = {
+            username: username.trim(),
+            password: password.trim()
+        };
+        return fetchApi("/api/login", {
+            method: "POST",
+            body: JSON.stringify(req)
+        });
+    }
+
+    function logout() {
+        return fetchApi("/api/logout", {method: "POST"});
+    }
+
+    /**
+     * Like React's dangerouslySetInnerHTML, but also with JS evaluation.
+     * Usage:
+     *   <div ref={setDangerousHtml.bind(null, html)}/>
+     */
+    const setDangerousHtml = (html, el) => {
+        if (el === null) return;
+        const range = document.createRange();
+        range.selectNodeContents(el);
+        range.deleteContents();
+        el.appendChild(range.createContextualFragment(html));
+    };
+
+
+    {% set scoring = "Scoreboard" in r8.challenges %}
+    {% if scoring %}
+        let alpha = {{ r8.challenges["Scoreboard"].current_scoreboard.alpha }},
+            beta = {{ r8.challenges["Scoreboard"].current_scoreboard.beta }};
+
+        function score(solves) {
+            if (solves === 0)
+                return 500;
+            else
+                return Math.round(470 / (1 + (alpha * (solves - 1)) ** beta)) + 30;
+        }
+    {% endif %}
+
+    {% block logo %}
+        function Logo() {
+            let color = () => `hsl(${Math.floor(Math.random() * 255)}, 100%, 60%)`;
+            return <svg className="mr-1" width="40" height="40" fill={color()} onClick={(e) => {
+                e.currentTarget.setAttribute("fill", color())
+            }} viewBox="0 0 100 110">
+                <path d="M28.1,30.2v13.5h3.1V30.2c0-0.2,0.1-0.3,0.3-0.3h5v-3.1h-5C29.6,26.8,28.1,28.3,28.1,30.2z"/>
+                <path
+                    d="M5,5v90h90V5H5z M71.3,82.3h-4.5V55.6H31.2c-3,0-5.4-2.4-5.4-5.4V29.9c0-3,2.4-5.4,5.4-5.4h35.6v0h4.5V82.3z"/>
+            </svg>;
+        }
+    {% endblock %}
+
+    class Countdown extends React.Component {
+        constructor(props) {
+            super(props);
+            this.state = this.getRemaining();
+        }
+
+        componentDidMount() {
+            this.interval = setInterval(() => {
+                this.setState(this.getRemaining);
+            }, 1000);
+        }
+
+        componentWillUnmount() {
+            clearInterval(this.interval);
+        }
+
+        getRemaining() {
+            let t = Date.parse(this.props.target) - Date.parse(new Date()),
+                seconds = Math.floor((t / 1000) % 60),
+                minutes = Math.floor((t / 1000 / 60) % 60),
+                hours = Math.floor((t / (1000 * 60 * 60)) % 24),
+                days = Math.floor(t / (1000 * 60 * 60 * 24));
+            return {
+                'total': t,
+                'days': days,
+                'hours': hours,
+                'minutes': minutes,
+                'seconds': seconds
+            };
+        }
+
+        render() {
+            if (this.state.total < 0) {
+                return <span>🏁 time is up!</span>;
+            }
+            const style = {color: this.state.total < 60000 ? "red" : "inherit"};
+            return <span style={style}> ⏱{' '}
+                {(this.state.days * 24 + this.state.hours).toString().padStart(2, "0")}
+                :
+                {this.state.minutes.toString().padStart(2, "0")}
+                :
+                {this.state.seconds.toString().padStart(2, "0")}
+            </span>
+        }
+    }
+
+
+    function Nav({user, team, onLogout}) {
+        function doLogout() {
+            logout().then(onLogout);
+        }
+
+        return <nav className="navbar sticky-top navbar-dark bg-dark">
+            <div className="container">
+                <a className="navbar-brand overflow-auto" href="#">
+                    <Logo/>
+                    {{ self.title() }}
+                </a>
+                {% if r8.settings.start and r8.settings.end %}
+                    <span className="navbar-text">
+                    <Countdown target={countdown_target}/>
+                </span>
+                {% endif %}
+                <span className="navbar-text">
+                {user &&
+                <button className="btn btn-sm btn-outline-secondary"
+                        onClick={doLogout}>Logout {user}{team && ` (${team})`}</button>
+                }
+                </span>
+            </div>
+        </nav>
+    }
+
+    class Register extends React.Component {
+        constructor(props) {
+            super(props);
+            this.state = {
+                username: "",
+                password: "",
+                nickname: "",
+                error: false
+            };
+            this.onChange = this.onChange.bind(this);
+            this.onSubmit = this.onSubmit.bind(this);
+        }
+
+        render() {
+            return <form className="col-md-5 col-lg-4 text-center" onSubmit={this.onSubmit}>
+
+                <div className="form-group">
+                    <input name="username" type="email" placeholder="foo@example.com"
+                           className="form-control" value={this.state.username}
+                           required autoComplete="username"
+                           onChange={this.onChange}/>
+                </div>
+                <div className="form-group">
+                    <input name="nickname" type="text" placeholder="Display Name (public)"
+                           className="form-control" value={this.state.nickname}
+                           required autoComplete="nickname"
+                           onChange={this.onChange}/>
+                </div>
+                <div className="form-group">
+                    <input name="password" type="password" placeholder="Password"
+                           className="form-control" value={this.state.password}
+                           required autoComplete="new-password"
+                           onChange={this.onChange}/>
+                </div>
+                <div className="form-group">
+                    <button className="btn btn-success btn-lg px-5">Register</button>
+                </div>
+                {this.state.error &&
+                <div className="alert alert-danger" role="alert">
+                    {this.state.error}
+                </div>
+                }
+            </form>;
+        }
+
+        onChange(e) {
+            this.setState({
+                [e.target.name]: e.target.value
+            });
+        }
+
+        onSubmit(e) {
+            e.preventDefault();
+            this.setState({
+                error: false
+            }, () => {
+                let req = {
+                    username: this.state.username.trim(),
+                    password: this.state.password.trim(),
+                    nickname: this.state.nickname.trim(),
+                };
+                fetchApi("/api/register", {
+                    method: "POST",
+                    body: JSON.stringify(req)
+                }).then(
+                    this.props.onLogin,
+                    err => this.setState({error: err})
+                );
+            });
+        }
+    }
+
+    class Login extends React.Component {
+        constructor(props) {
+            super(props);
+            this.state = {
+                username: "",
+                password: "",
+                error: false,
+            }
+            ;
+            this.onChange = this.onChange.bind(this);
+            this.onSubmit = this.onSubmit.bind(this);
+        }
+
+        render() {
+            return <form className="col-md-5 col-lg-4 text-center align-self-center" onSubmit={this.onSubmit}>
+                <div className="form-group">
+                    <input name="username" type="text" placeholder="Username"
+                           className="form-control" value={this.state.username}
+                           autoComplete="username" required
+                           onChange={this.onChange}/>
+                </div>
+                <div className="form-group">
+                    <input name="password" type="password" placeholder="Password"
+                           className="form-control" value={this.state.password}
+                           autoComplete="current-password" required
+                           onChange={this.onChange}/>
+                </div>
+                <div className="form-group">
+                    <button className="btn btn-primary btn-lg px-5">Login</button>
+                </div>
+                {this.state.error &&
+                <div className="alert alert-danger" role="alert">
+                    {this.state.error}
+                </div>
+                }
+            </form>;
+        }
+
+        onChange(e) {
+            this.setState({
+                [e.target.name]: e.target.value
+            });
+        }
+
+        onSubmit(e) {
+            e.preventDefault();
+            this.setState({
+                error: false
+            }, () => {
+                login(this.state.username, this.state.password)
+                    .then(
+                        this.props.onLogin,
+                        err => this.setState({error: err})
+                    );
+            });
+
+        }
+    }
+
+    class Submit extends React.Component {
+        constructor(props) {
+            super(props);
+
+            this.state = {
+                flag: "",  // maybe this one? __flag__{30b1bef89d542fe722551d0d3e575a72}
+                error: false,
+                success: false,
+            };
+            this.onSubmit = this.onSubmit.bind(this);
+            this.onChange = this.onChange.bind(this);
+        }
+
+        onSubmit(e) {
+            e.preventDefault();
+            if (this.state.flag.trim() === "") {
+                return;
+            }
+            fetchApi("/api/submit", {
+                method: "POST",
+                body: JSON.stringify({flag: this.state.flag.trim()})
+            }).then(json => {
+                this.props.onSolve(json.challenges);
+                this.setState({success: json.solved, error: false, flag: ""}, () => {
+                    setTimeout(() => this.setState({success: false}), 10000)
+                })
+            }).catch(error => {
+                this.setState({error, success: false, flag: ""}, () => {
+                    setTimeout(() => this.setState({error: false}), 1000)
+                })
+            })
+        }
+
+        onChange(e) {
+            this.setState({
+                [e.target.name]: e.target.value
+            });
+        }
+
+        render() {
+            return <section className="text-center bg-dark">
+                <form className="container p-5" onSubmit={this.onSubmit}>
+                    <div className="form-group">
+                        <input name="flag" type="text" className="form-control text-center"
+                               placeholder="__flag__{...}" value={this.state.flag}
+                               onChange={this.onChange} autoComplete="off"/>
+                    </div>
+                    <div className="form-group">
+                        {this.state.error &&
+                        <button
+                            className="btn btn-danger btn-lg">{this.state.error}</button>
+                        }
+                        {!this.state.error && this.state.success &&
+                        <button
+                            className="btn btn-success btn-lg">
+                            <strong>Congratulations!</strong> You solved <i>{this.state.success}</i>.</button>
+                        }
+                        {!this.state.error && !this.state.success &&
+                        <button className="btn btn-warning btn-lg">Submit Flag</button>
+                        }
+                    </div>
+                </form>
+            </section>;
+        }
+    }
+
+    function fmtDate(unixtime) {
+        let date = new Date(unixtime * 1000);
+        if (date.getFullYear() > 3000) {
+            return "–";
+        } else {
+            return date.toLocaleString().replace(/(\d*:\d*):\d*/, "$1");
+        }
+    }
+
+    function Tag({name}) {
+        let className = "badge mr-1 badge-";
+        className += {
+            easy: "success",
+            medium: "warning",
+            hard: "danger",
+        }[name] || "secondary";
+        return <span className={className}>{name}</span>;
+    }
+
+    function Challenge({challenge}) {
+        const expired = Date.now() / 1000 > challenge.stop;
+        let className = "card mb-2";
+        let time;
+        if (challenge.solved) {
+            className += " card-solved";
+            time = `Solved: ${fmtDate(challenge.solved)}`;
+        } else if (expired) {
+            className += " card-expired";
+            time = `Expired: ${fmtDate(challenge.stop)}`;
+        } else {
+            className += " card-active";
+            time = `Deadline: ${fmtDate(challenge.stop)}`;
+        }
+
+        return <div className={className}>
+            <div className="card-body">
+                <h5 className="card-title">{challenge.title}</h5>
+                <h6 className="card-subtitle text-muted mb-2">{time}</h6>
+                <div className="card-text"
+                     ref={setDangerousHtml.bind(null, challenge.description)}/>
+            </div>
+            <div className="card-footer">
+                {challenge.tags.map(t => <Tag key={t} name={t}/>)}
+                {% if scoring %}
+                    <span className="float-right"><span
+                        title="Base Points">💠 {score(challenge.solves)}</span> ({challenge.solves} solves)</span>
+                {% endif %}
+            </div>
+        </div>;
+    }
+
+    function Scoreboard() {
+        return <div className="container position-relative">
+            <a id="scoretable-link" className="btn btn-secondary btn-sm m-2"
+               href="/api/challenges/Scoreboard/scoretable.html">show details</a>
+            <iframe id="scoreboard" src={`/api/challenges/Scoreboard/`} scrolling="no"/>
+        </div>;
+    }
+
+    function Dashboard({challenges, onSolve}) {
+        return <React.Fragment>
+            {% if r8.challenges["Scoreboard"] %}
+                <Scoreboard/>
+            {% endif %}
+            <Submit onSolve={onSolve}/>
+            <section className="container pb-3">
+                <h2 className="text-center m-5">Challenges</h2>
+                {challenges.map(x => <Challenge key={x.cid} challenge={x}/>)}
+            </section>
+        </React.Fragment>
+    }
+
+    class Main extends React.Component {
+        constructor(props) {
+            super(props);
+            this.state = {
+                uiState: "fetching",
+                user: false,
+                team: false,
+                challenges: []
+            };
+            this.onLogin = this.onLogin.bind(this);
+            this.onLogout = this.onLogout.bind(this);
+            this.onSolve = this.onSolve.bind(this);
+            this.fetchStatus = this.fetchStatus.bind(this);
+        }
+
+        componentDidMount() {
+            if (this.state.uiState === "fetching") {
+                this.fetchStatus()
+            }
+        }
+
+        render() {
+            let body;
+            switch (this.state.uiState) {
+                case "fetching":
+                    body = <div className="d-flex justify-content-center m-5">
+                        <div className="spinner-border"/>
+                    </div>;
+                    break;
+                case "login":
+                    body = <div className="container p-5">
+                        <div className="row p-5 justify-content-md-center">
+                            <Login onLogin={this.onLogin}/>
+                        </div>
+                    </div>;
+                    break;
+                case "dashboard":
+                    body = <Dashboard challenges={this.state.challenges} onSolve={this.onSolve}/>;
+                    break;
+            }
+
+            return <React.Fragment>
+                <Nav user={this.state.user} team={this.state.team} onLogout={this.onLogout}/>
+                {body}
+            </React.Fragment>;
+        }
+
+        onLogin() {
+            this.setState({uiState: "fetching"}, this.fetchStatus);
+        }
+
+        onLogout() {
+            this.setState({uiState: "login", challenges: [], user: false, team: false});
+        }
+
+        onSolve(challenges) {
+            this.setState({challenges});
+        }
+
+        fetchStatus() {
+            fetchApi("/api/challenges")
+                .then(status => {
+                    console.debug("status", status);
+                    this.setState({
+                        uiState: "dashboard",
+                        challenges: status.challenges,
+                        user: status.user,
+                        team: status.team,
+                    })
+                })
+                .catch(error => {
+                    console.error(error);
+                    this.setState({uiState: "login"})
+                })
+        }
+    }
+
+    ReactDOM.render(<Main/>, document.getElementById('root'));
+</script>
+</body>
+</html>
