@@ -19,7 +19,7 @@ r8 is successfully being used for teaching at the University of California, Berk
 
 In short, install r8 as a Python package using your preferred way. We recommend the following:
 
-Make sure you have Python 3.7 or above. Clone the repository, create a Python virtual environment 
+Make sure you have Python 3.8 or above. Clone the repository, create a Python virtual environment 
 into which we install all dependencies, and finally install r8:
 
 ```shell
@@ -112,7 +112,7 @@ r8 consists of the following parts:
   1. The core **`r8` application** written in Python, which manages the currently active challenges. 
      It provides a command-line API for administration (`r8.cli`), a REST API for users (`r8.server`), 
      and a Python API for challenges (`r8.Challenge`).
-  2. **CTF challenges** implemented in Python 3.7+. All challenges need to inherit from `r8.Challenge` 
+  2. **CTF challenges** implemented in Python 3.8+. All challenges need to inherit from `r8.Challenge` 
      and must be registered using entrypoints so that they are imported on start. 
      See `r8.builtin_challenges` and `r8_example` for challenge examples and each repo's `setup.py` for entrypoint declaration.
   3. An SQLite **database** that contains information on users, groups, challenge scheduling, and flags.
