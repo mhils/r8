@@ -52,10 +52,10 @@ def test_password(r8cli):
 
 
 def test_settings(r8cli):
-    r8cli("settings set foo 42")
-    assert "42" in r8cli("settings view").output
+    r8cli("settings set foo 123456")
+    assert "123456" in r8cli("settings view").output
     r8cli("settings delete foo")
-    assert "42" not in r8cli("settings view").output
+    assert "123456" not in r8cli("settings view").output
 
 
 def test_sql(r8cli):
