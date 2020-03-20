@@ -198,7 +198,7 @@ async def start():
     app = make_app(r8.settings["static_dir"])
     runner = web.AppRunner(app)
     await runner.setup()
-    address = json.loads(r8.settings["listen_address"])
+    address = r8.settings["listen_address"]
     site = web.TCPSite(runner, *address)
     await site.start()
     r8.echo("r8", f"Running at {r8.util.format_address(address)}.")

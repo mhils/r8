@@ -2,6 +2,7 @@ import asyncio
 import datetime
 import functools
 import html
+import json
 import re
 import secrets
 import sqlite3
@@ -362,10 +363,13 @@ def with_database(echo=False):
                 r8.echo("r8", f"Loading database ({database})...")
             r8.db = sqlite3_connect(database)
             with r8.db:
-                r8.settings = {
-                    k: v for (k, v) in
-                    r8.db.execute("SELECT key, value FROM settings").fetchall()
-                }
+                r8.settings = {}
+                for k, v in r8.db.execute("SELECT key, value FROM settings").fetchall():
+                    try:
+                        val = json.loads(v)
+                    except ValueError as e:
+                        raise ValueError(f"Setting {k} is not JSON-deserializable: {v!r}") from e
+                    r8.settings[k] = val
             return f(**kwds)
 
         return wrapper

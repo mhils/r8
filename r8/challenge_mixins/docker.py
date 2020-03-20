@@ -32,9 +32,9 @@ class DockerChallenge(r8.Challenge):
     dockerfile: ClassVar[Optional[Path]] = None
     docker_tag: ClassVar[Optional[str]] = None
 
-    max_concurrent: ClassVar[asyncio.Semaphore] = asyncio.Semaphore(int(r8.settings.get("docker.max_concurrent", 5)))
-    timeout = int(r8.settings.get("docker.timeout", 10))
-    debug = r8.settings.get("docker.debug", "false").lower() == "true"
+    max_concurrent: ClassVar[asyncio.Semaphore] = asyncio.Semaphore(r8.settings.get("docker_max_concurrent", 5))
+    timeout = r8.settings.get("docker_timeout", 10)
+    debug = r8.settings.get("docker_debug", False)
     active_users: ClassVar[Set[str]] = set()
 
     def __init__(self, *args, **kwargs):

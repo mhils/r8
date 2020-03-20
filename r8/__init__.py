@@ -9,7 +9,7 @@ from r8.challenge import Challenge, challenges
 from r8.util import echo, log
 
 db: sqlite3.Connection
-settings: typing.Dict[str, str] = {}
+settings: typing.Dict[str, typing.Any] = {}
 
 __all__ = ["Challenge", "challenges", "db", "util", "log", "echo"]
 

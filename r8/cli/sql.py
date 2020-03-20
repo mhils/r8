@@ -1,10 +1,10 @@
+import json
 import os
 import secrets
 import sqlite3
 from pathlib import Path
 
 import click
-
 import r8
 from r8 import util
 
@@ -81,14 +81,15 @@ def init(origin, static_dir, listen_address, database) -> None:
             value TEXT NOT NULL
         );
     """)
+    listen_address = json.loads(listen_address)
     conn.executemany(
         "INSERT INTO settings (key, value) VALUES (?,?)",
-        [
+        [(k, json.dumps(v)) for k, v in [
             ("secret", secrets.token_hex(32)),
             ("static_dir", static_dir),
             ("origin", origin.rstrip("/")),
             ("listen_address", listen_address),
-        ]
+        ]]
     )
     conn.commit()
     r8.echo("r8", f"{database} initialized!")

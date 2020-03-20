@@ -1,3 +1,5 @@
+import json
+
 import click
 
 import r8
@@ -23,6 +25,11 @@ def view():
 @util.with_database()
 def set(key, value):
     """Update a setting"""
+    try:
+        value = json.loads(value)
+    except json.JSONDecodeError:
+        pass # if the value is not valid JSON, we just treat it as a string.
+    value = json.dumps(value)
     with r8.db:
         r8.db.execute("INSERT OR REPLACE INTO settings (key, value) VALUES (?,?)", (key, value))
     util.run_sql(f"SELECT * FROM settings")
