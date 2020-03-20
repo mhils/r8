@@ -53,8 +53,13 @@ setup(
         "itsdangerous",
     ],
     extras_require={
-        'faster': [
+        "faster": [
             "aiohttp[speedups]",
         ],
+        "dev": [
+            "sphinx",
+            "sphinxcontrib-trio",
+            "pytest",
+        ]
     }
 )

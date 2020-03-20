@@ -17,19 +17,21 @@ r8 is successfully being used for teaching at the University of California, Berk
 
 # Quick Start
 
-Clone the repository and install r8. We need Python 3.7 or above and [pipenv](https://docs.pipenv.org/):
+In short, install r8 as a Python package using your preferred way. We recommend the following:
+
+Make sure you have Python 3.7 or above. Clone the repository, create a Python virtual environment 
+into which we install all dependencies, and finally install r8:
 
 ```shell
+python3 -m venv venv
 git clone https://github.com/mhils/r8.git
-cd r8
-pipenv install
+venv/bin/pip install -e r8
 ```
 
-Enter the pipenv environment. 
-This always needs to be done to make the `r8` command available:
+Activate the virtual environment. This always needs to be done to make the `r8` command available:
 
 ```shell
-pipenv shell
+source venv/bin/activate
 ```
 
 Create r8's SQLite database in the current directory. 
@@ -61,25 +63,13 @@ You can now browse to <http://localhost:8000/> and log in as `user1` with passwo
 
 ## Installing additional challenges
 
-We likely want to install additional challenges, for example from the [r8-example](https://github.com/mhils/r8-example) repository.
-
-First, let's make sure that we have activated the r8 virtualenv created by pipenv:
-
-```shell
-cd r8
-pipenv shell
-```
-
-
-r8 challenges are always placed in Python packages. To make challenges available to r8, 
-we need to install the corresponding package into our Python environment. Let's get the example
-repository and add it:
+We likely want to install additional challenges, for example from the [r8-example](https://github.com/mhils/r8-example) 
+repository. To make challenges available to r8, we need to install the corresponding Python package into our Python 
+environment. Let's get the example repository and add it:
 
 ```shell
-cd ..
 git clone https://github.com/mhils/r8-example.git
-cd r8-example
-pip install -e .  # install package in editable mode.
+venv/bin/pip install -e r8-example
 ```
 
 We can now verify that r8 has picked up the new challenges:
@@ -134,7 +124,7 @@ To speed up development, the server can be automatically reloaded on changes usi
 
 ## Deployment
 
-For production use, it is recommended to place it behind a TLS-terminating reverse 
+For production use, it is recommended to run r8 on a throwaway VM behind a TLS-terminating reverse 
 proxy such as nginx. A couple of auxiliary configuration examples are provided in the [./misc](./misc) folder:
 
  - `crontab`: cronjob to make daily backups.

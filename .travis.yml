@@ -1,8 +1,6 @@
-dist: xenial
 language: python
-python: 3.7
+python: 3.8
 cache: pip
 install:
-  - pip install pipenv
-  - pipenv install --dev
-script: pipenv run -- py.test test
+  - pip install -r requirements.txt pytest
+script: pytest
