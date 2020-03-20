@@ -120,4 +120,4 @@ def cli(user, challenge, t, format, teams, no_team_solves):
         )
     else:
         for row in table_contents:
-            print(", ".join(x.replace(",", ";") for x in row))
+            print(", ".join((x or "").replace(",", ";") for x in row))
