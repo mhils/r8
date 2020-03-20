@@ -19,7 +19,7 @@ import r8
 import texttable
 from aiohttp import web
 
-import r8
+from r8 import scoring
 
 
 def get_team(user: str) -> Optional[str]:
@@ -592,6 +592,13 @@ async def get_challenges(user: str):
             challenge["description"] = await inst.description(user, bool(challenge["solved"]))
         except Exception:
             challenge["description"] = f"<pre>{html.escape(traceback.format_exc())}</pre>"
+
+        if inst.points is not None:
+            challenge["points"] = inst.points
+        else:
+            challenge["points"] = scoring.challenge_score(challenge["solves"])
+        challenge["first_solve_bonus"] = scoring.first_solve_bonus(challenge["solves"])
+
     return results
 
 

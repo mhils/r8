@@ -14,7 +14,7 @@ def log_nonstatic(request: web.Request) -> bool:
 
 class WebServerChallenge(r8.Challenge):
     runner: web.AppRunner = None
-    log_web_requests: Union[bool, Callable[[web.Request], bool]] = log_nonstatic
+    log_web_requests: Union[bool, Callable[[web.Request], bool]] = lambda self, x: log_nonstatic(x)
 
     @property
     @abc.abstractmethod

@@ -30,6 +30,9 @@ class Challenge:
     flag: ClassVar[str] = None
     """If set, a static flag with the given value will be created on startup."""
 
+    points: Optional[int] = None
+    """Number of (hardcoded) points awarded for this challenge."""
+
     def __init__(self, cid: str) -> None:
         self.id = cid
         if self.static_dir is None:
