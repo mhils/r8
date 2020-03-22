@@ -42,14 +42,14 @@
             username: username.trim(),
             password: password.trim()
         };
-        return fetchApi("/api/login", {
+        return fetchApi("/api/auth/login", {
             method: "POST",
             body: JSON.stringify(req)
         });
     }
 
     function logout() {
-        return fetchApi("/api/logout", {method: "POST"});
+        return fetchApi("/api/auth/logout", {method: "POST"});
     }
 
     /**
@@ -64,20 +64,6 @@
         range.deleteContents();
         el.appendChild(range.createContextualFragment(html));
     };
-
-
-    {% set scoring = "Scoreboard" in r8.challenges %}
-    {% if scoring %}
-        let alpha = {{ r8.challenges["Scoreboard"].current_scoreboard.alpha }},
-            beta = {{ r8.challenges["Scoreboard"].current_scoreboard.beta }};
-
-        function score(solves) {
-            if (solves === 0)
-                return 500;
-            else
-                return Math.round(470 / (1 + (alpha * (solves - 1)) ** beta)) + 30;
-        }
-    {% endif %}
 
     {% block logo %}
         function Logo() {
@@ -151,6 +137,7 @@
                     {{ self.title() }}
                 </a>
                 {% if r8.settings.start and r8.settings.end %}
+                    # FIXME
                     <span className="navbar-text">
                     <Countdown target={countdown_target}/>
                 </span>
@@ -226,7 +213,7 @@
                     password: this.state.password.trim(),
                     nickname: this.state.nickname.trim(),
                 };
-                fetchApi("/api/register", {
+                fetchApi("/api/auth/register", {
                     method: "POST",
                     body: JSON.stringify(req)
                 }).then(
@@ -314,7 +301,7 @@
             if (this.state.flag.trim() === "") {
                 return;
             }
-            fetchApi("/api/submit", {
+            fetchApi("/api/challenges/submit", {
                 method: "POST",
                 body: JSON.stringify({flag: this.state.flag.trim()})
             }).then(json => {
@@ -385,15 +372,26 @@
         const expired = Date.now() / 1000 > challenge.stop;
         let className = "card mb-2";
         let time;
-        if (challenge.solved) {
+        if (challenge.solve_time) {
             className += " card-solved";
-            time = `Solved: ${fmtDate(challenge.solved)}`;
+            time = `Solved: ${fmtDate(challenge.solve_time)}`;
         } else if (expired) {
             className += " card-expired";
             time = `Expired: ${fmtDate(challenge.stop)}`;
         } else {
             className += " card-active";
             time = `Deadline: ${fmtDate(challenge.stop)}`;
+        }
+        let first_solve_bonus = null;
+        if (challenge.first_solve_bonus) {
+            if (challenge.solve_time) {
+                first_solve_bonus = <span title={`Awarded first solve bonus as #${challenge.solve_rank}.`}>+{challenge.first_solve_bonus}</span>
+            } else {
+                first_solve_bonus =
+                    <span title={`First Solve Bonus ${challenge.solves} solves so far)`} className="ml-1">🔥 {challenge.first_solve_bonus}</span>;
+            }
+        } else {
+            first_solve_bonus = <span className="ml-1">({challenge.solves} solve{challenge.solves !== 1 ? 's' : ''})</span>;
         }
 
         return <div className={className}>
@@ -405,9 +403,11 @@
             </div>
             <div className="card-footer">
                 {challenge.tags.map(t => <Tag key={t} name={t}/>)}
-                {% if scoring %}
-                    <span className="float-right"><span
-                        title="Base Points">💠 {score(challenge.solves)}</span> ({challenge.solves} solves)</span>
+                {% if r8.settings.scoring %}
+                    <span className="float-right">
+                        <span title="Base Points">💠 {challenge.points}</span>
+                        {first_solve_bonus}
+                    </span>
                 {% endif %}
             </div>
         </div>;
@@ -416,16 +416,14 @@
     function Scoreboard() {
         return <div className="container position-relative">
             <a id="scoretable-link" className="btn btn-secondary btn-sm m-2"
-               href="/api/challenges/Scoreboard/scoretable.html">show details</a>
-            <iframe id="scoreboard" src={`/api/challenges/Scoreboard/`} scrolling="no"/>
+               href="scoretable.html">show details</a>
+            <iframe id="scoreboard" src="scoreboard.html" scrolling="no"/>
         </div>;
     }
 
     function Dashboard({challenges, onSolve}) {
         return <React.Fragment>
-            {% if r8.challenges["Scoreboard"] %}
-                <Scoreboard/>
-            {% endif %}
+            {% if r8.settings.scoring %}<Scoreboard/>{% endif %}
             <Submit onSolve={onSolve}/>
             <section className="container pb-3">
                 <h2 className="text-center m-5">Challenges</h2>
@@ -494,7 +492,7 @@
         }
 
         fetchStatus() {
-            fetchApi("/api/challenges")
+            fetchApi("/api/challenges/")
                 .then(status => {
                     console.debug("status", status);
                     this.setState({

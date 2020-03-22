@@ -1,0 +1,126 @@
+<!doctype html>
+<html lang="en">
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
+
+    <title>Scoreboard</title>
+
+    <link rel="stylesheet" href="css/bootstrap.css">
+    <link rel="stylesheet" href="css/scoretable.css">
+</head>
+<body>
+<div id="root" class="container-fluid"></div>
+<script src="js/polyfills.js"></script>
+<script src="js/babel.js"></script>
+<script src="js/react.js"></script>
+<script src="js/react-dom.js"></script>
+<script type="text/babel">
+    function fetchApi(url, options = {}) {
+        options["credentials"] = "same-origin";
+        return fetch(url, options)
+            .catch(err => {
+                throw "Network error."
+            })
+            .then(r => r.text())
+            .then(text => {
+                try {
+                    return JSON.parse(text);
+                } catch (e) {
+                    throw text;
+                }
+            })
+    }
+
+    function ScoretableHeader({state}) {
+        let challenges = state.challenges.map(challenge => {
+            let title = `${challenge.title} (${Object.values(state.solves[challenge.cid]).length} solves, ${challenge.points} points)`;
+            return <th key={challenge.cid}>
+                <div title={title}><span>{challenge.title}</span></div>
+            </th>
+        });
+        return <thead>
+        <tr>
+            <th colSpan="2">
+            </th>
+            {challenges}
+            <th/>
+        </tr>
+        </thead>;
+    }
+
+    function ScoretableBody({state}) {
+        let lastScores = state.scoreboards[state.scoreboards.length - 1].scores;
+        console.log(state);
+        let teams = state.teams
+            .sort((a, b) => (lastScores[b] || 0) - (lastScores[a] || 0))
+            .map((tid, i) => {
+                let challenges = state.challenges.map(
+                    challenge => <td key={challenge.cid}
+                               className={state.solves[challenge.cid][tid] ? "scoretable-solved" : "scoretable-unsolved"}>🏴</td>
+                );
+                return <tr key={tid}>
+                    <td className="scoretable-rank">{i + 1}</td>
+                    <td className="scoretable-name">{tid}</td>
+                    {challenges}
+                    <td className="scoretable-score">{Math.ceil(lastScores[tid]) || ""}</td>
+                </tr>
+            });
+        return <tbody>{teams}</tbody>;
+    }
+
+    function Scoretable({state}) {
+        return <table id="scoretable"
+                      className="table table-striped table-bordered table-sm table-hover">
+            <ScoretableHeader state={state}/>
+            <ScoretableBody state={state}/>
+        </table>;
+
+    }
+
+    class Main extends React.Component {
+        constructor(props) {
+            super(props);
+            this.state = {};
+        }
+
+        componentDidMount() {
+            fetchApi("/api/scoreboard/state")
+                .then(state => {
+                    // make solve lookup faster.
+                    let solves = {};
+                    for (const challenge of state.challenges) {
+                        solves[challenge.cid] = {};
+                    }
+                    Object.entries(state.solves).forEach(([cid, tids]) => {
+                        tids.forEach((tid) => {
+                            solves[cid][tid] = true;
+                        })
+                    });
+                    state.solves = solves;
+
+                    console.debug("state", state);
+                    return this.setState(state);
+                })
+                .catch(error => {
+                    console.error(error);
+                    alert(error);
+                })
+        }
+
+        render() {
+            if (!this.state.teams) {
+                return <div className="text-center rotating">⌛</div>;
+            }
+
+            return <React.Fragment>
+                <h1>Team Scores</h1>
+                <Scoretable state={this.state}/>
+            </React.Fragment>;
+        }
+    }
+
+    ReactDOM.render(<Main/>, document.getElementById('root'));
+</script>
+</body>
+</html>

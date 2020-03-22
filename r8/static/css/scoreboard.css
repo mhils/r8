@@ -1,0 +1,33 @@
+html, body {
+    height: 100%;
+    width: 100%;
+    margin: 0;
+    padding: 0;
+}
+body {
+    display: flex;
+    background: transparent;
+}
+#scoreboard {
+    line-height: 1 !important;
+    width: 80%;
+    height: 100%;
+}
+#leaderboard {
+    padding: 1rem;
+    overflow: auto;
+    width: 20%;
+}
+#leaderboard h1 {
+    font-size: 1.5rem;
+    margin-bottom: 0;
+}
+
+.dygraph-xlabel {
+    font-size: 18px;
+}
+
+.dygraph-title {
+    font-size: 36px;
+    line-height: 70px;
+}

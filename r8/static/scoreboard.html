@@ -1,0 +1,136 @@
+<!doctype html>
+<html lang="en">
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
+
+    <title>Scoreboard</title>
+
+    <link rel="stylesheet" href="css/bootstrap.css">
+    <link rel="stylesheet" href="css/dygraph.css">
+    <link rel="stylesheet" href="css/scoreboard.css">
+</head>
+<body>
+<div id="scoreboard"></div>
+<div id="leaderboard"></div>
+<script src="js/polyfills.js"></script>
+<script src="js/babel.js"></script>
+<script src="js/dygraph.js"></script>
+<script src="js/smooth-plotter.js"></script>
+<script type="text/babel">
+    function fetchApi(url, options = {}) {
+        options["credentials"] = "same-origin";
+        return fetch(url, options)
+            .catch(err => {
+                throw "Network error."
+            })
+            .then(r => r.text())
+            .then(text => {
+                try {
+                    return JSON.parse(text);
+                } catch (e) {
+                    throw text;
+                }
+            })
+    }
+
+    function legendFormatter(data) {
+        if (data.x === undefined) {
+            data.xHTML = "<h1>Current Ranking</h1>";
+            data.series.forEach((s, i) => {
+                s.yHTML = this.getValue(this.numRows() - 1, i + 1) || 0;
+            });
+        } else {
+            data.xHTML = `<h1>${data.xHTML}</h1>`; // ${this.getLabels()[0]}:
+        }
+        data.series.sort((a, b) => b.yHTML - a.yHTML);
+
+        let html = data.xHTML;
+        data.series.forEach(function (series) {
+            var labeledData = `${series.labelHTML} (${Math.ceil(series.yHTML)})`;
+            if (series.isHighlighted) {
+                labeledData = `<strong>${labeledData}</strong>`;
+            }
+            html += `<br>${series.dashHTML} ${labeledData}`;
+        });
+        return html;
+    }
+
+
+    fetchApi("/api/scoreboard/state").then(data => {
+        let x, i, j;
+        let {scoreboards, teams} = data;
+        let knownTeams = new Set(teams);
+
+        for (x of scoreboards) {
+            x.timestamp = new Date(x.timestamp * 1000);
+        }
+
+        console.log(data);
+
+        function transformData(scoreboards) {
+            return scoreboards.map((x) => {
+                let ret = new Array(teams.length + 1);
+                ret[0] = x.timestamp;
+                for (let i = 0; i < teams.length; i++) {
+                    ret[i + 1] = x.scores[teams[i]] || 0;
+                }
+                return ret;
+            })
+        }
+
+        smoothPlotter.smoothing = 0.35;
+        window.dy = new Dygraph(
+            document.getElementById("scoreboard"),
+            transformData(scoreboards),
+            {
+                title: "Scoreboard",
+                xlabel: "Time",
+                ylabel: "Score",
+                legend: "always",
+                legendFormatter: legendFormatter,
+                //labelsKMB: true,
+                labelsDiv: document.getElementById("leaderboard"),
+                axes: {
+                    x: {
+                        drawGrid: false,
+                    },
+                },
+                labels: ['Time', ...teams],
+                highlightCircleSize: 2,
+                strokeBorderWidth: 1,
+                plotter: smoothPlotter,
+                xLabelHeight: 25,
+                titleHeight: 70,
+                highlightSeriesOpts: {
+                    strokeWidth: 3,
+                    highlightCircleSize: 5
+                }
+            });
+
+        window.ws = new WebSocket(location.origin.replace(/^http/, "ws") + "/api/scoreboard/updates");
+        window.ws.onopen = () => console.log("WebSocket connection opened.");
+        window.ws.onerror = (e) => {
+            console.error(e);
+            window.setTimeout(() => location.reload(), 5000);
+        };
+        window.ws.onmessage = function (e) {
+            console.log("websocket update", e);
+            let new_scoreboard = JSON.parse(e.data);
+            new_scoreboard.timestamp = new Date(new_scoreboard.timestamp * 1000);
+            scoreboards.push(new_scoreboard);
+            for (let team of Object.keys(new_scoreboard.scores)) {
+                if (knownTeams.has(team))
+                    continue;
+                knownTeams.add(team);
+                teams.push(team);
+            }
+            window.dy.updateOptions({
+                labels: ['Time', ...teams],
+                'file': transformData(scoreboards)
+            });
+        };
+    })//.catch((e) => console.error(e) && window.alert(e));
+</script>
+</body>
+</html>

@@ -50,6 +50,7 @@ setup(
         "aiohttp_jinja2",
         "aiodns",
         "itsdangerous",
+        "blinker",
     ],
     extras_require={
         "faster": [

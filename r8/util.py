@@ -12,13 +12,15 @@ from functools import wraps
 from pathlib import Path
 from typing import Iterable, List, Optional, Tuple, TypeVar, Union
 
+import aiohttp
 import argon2
+import blinker
 import click
 import itsdangerous
-import r8
 import texttable
 from aiohttp import web
 
+import r8
 from r8 import scoring
 
 
@@ -460,6 +462,9 @@ def correct_flag(flag: str) -> str:
     return flag
 
 
+on_submit = blinker.Signal()
+
+
 def submit_flag(
         flag: str,
         user: str,
@@ -525,6 +530,7 @@ def submit_flag(
         r8.db.execute("""
           INSERT INTO submissions (uid, fid) VALUES (?, ?)
         """, (user, flag))
+        on_submit.send(user=user, challenge=cid)
     return cid
 
 
@@ -532,16 +538,14 @@ async def get_challenges(user: str):
     """Get challenges to display for a specific user"""
     with r8.db:
         cursor = r8.db.execute("""
-            SELECT
-                challenges.cid AS cid,
-                CAST(strftime('%s',t_start) AS INTEGER) AS start,
-                CAST(strftime('%s',t_stop) AS INTEGER) AS stop,
-                IFNULL(solved,0) as solved,
-                IFNULL(solves,0) as solves,
-                team
-            FROM challenges
-            NATURAL LEFT JOIN (
-                SELECT cid, MAX(CAST(strftime('%s',submissions.timestamp) AS INTEGER)) AS solved
+            WITH solves AS (
+                SELECT cid, COUNT(*) AS solves
+                FROM submissions
+                NATURAL JOIN flags
+                GROUP BY cid
+            ),
+            solve_time AS (
+                SELECT cid, MAX(timestamp) AS solve_time
                 FROM submissions
                 NATURAL JOIN flags
                 NATURAL JOIN challenges
@@ -550,13 +554,29 @@ async def get_challenges(user: str):
                     team = 1 AND submissions.uid IN (SELECT uid FROM teams WHERE tid = (SELECT tid FROM teams WHERE uid = ?))
                 )
                 GROUP BY cid
-            )
-            NATURAL LEFT JOIN (
-                SELECT cid, COUNT(*) AS solves
+            ),
+            -- this should really be done with a window function (row_number() OVER (PARTITION BY cid ORDER BY timestamp)),
+            -- but that only works in SQLite 3.25, which will only be available in Ubuntu 20.04+.
+            solve_rank AS (
+                SELECT cid, COUNT(*) AS solve_rank
                 FROM submissions
                 NATURAL JOIN flags
+                NATURAL JOIN solve_time
+                WHERE timestamp <= solve_time
                 GROUP BY cid
             )
+            SELECT
+                cid,
+                CAST(strftime('%s',t_start) AS INTEGER) AS start,
+                CAST(strftime('%s',t_stop) AS INTEGER) AS stop,
+                CAST(strftime('%s',solve_time) AS INTEGER) AS solve_time,
+                solve_rank,
+                IFNULL(solves, 0) as solves,
+                team
+            FROM challenges
+            NATURAL LEFT JOIN solve_time
+            NATURAL LEFT JOIN solve_rank
+            NATURAL LEFT JOIN solves
             WHERE t_start < datetime('now')  -- hide not yet active challenges
         """, (user, user))
         column_names = tuple(x[0] for x in cursor.description)
@@ -568,7 +588,7 @@ async def get_challenges(user: str):
         ]
     results = [
         x for x in results
-        if x["solved"] or await r8.challenges[x["cid"]].visible(user)
+        if x["solve_time"] or await r8.challenges[x["cid"]].visible(user)
     ]
     for challenge in results:
         challenge["team"] = bool(challenge["team"])
@@ -589,15 +609,19 @@ async def get_challenges(user: str):
             continue
 
         try:
-            challenge["description"] = await inst.description(user, bool(challenge["solved"]))
+            challenge["description"] = await inst.description(user, bool(challenge["solve_time"]))
         except Exception:
             challenge["description"] = f"<pre>{html.escape(traceback.format_exc())}</pre>"
 
         if inst.points is not None:
             challenge["points"] = inst.points
         else:
-            challenge["points"] = scoring.challenge_score(challenge["solves"])
-        challenge["first_solve_bonus"] = scoring.first_solve_bonus(challenge["solves"])
+            challenge["points"] = scoring.challenge_points(challenge["solves"])
+
+        if challenge["solve_rank"]:
+            challenge["first_solve_bonus"] = scoring.first_solve_bonus(challenge["solve_rank"] - 1)
+        else:
+            challenge["first_solve_bonus"] = scoring.first_solve_bonus(challenge["solves"])
 
     return results
 

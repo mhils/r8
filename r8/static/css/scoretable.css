@@ -1,0 +1,57 @@
+h1 {
+    position: absolute;
+}
+body {
+    padding: 1rem;
+}
+
+.scoretable-unsolved {
+    opacity: 0.05;
+}
+
+#scoretable {
+    border: 0;
+}
+
+#scoretable th {
+    height: 120px;
+    width: 40px;
+    min-width: 40px;
+    padding: 0;
+    border: 0;
+}
+#scoretable th > div {
+    position: relative;
+    top: 0;
+    left: -60px;
+    height: 100%;
+    transform: skew(45deg, 0deg);
+    border-left: 1px solid #dddddd;
+    border-right: 1px solid #dddddd;
+    border-top: 1px solid #dddddd;
+}
+#scoretable th > div > span {
+    transform: skew(-45deg, 0deg) rotate(45deg);
+    position: absolute;
+    bottom: 46px;
+    left: -53px;
+    width: 144px;
+    text-overflow: ellipsis;
+    overflow: hidden;
+    white-space: nowrap;
+    text-align: left;
+    font-size: 1rem;
+    font-weight: normal;
+}
+
+.scoretable-rank, .scoretable-solved, .scoretable-unsolved {
+    text-align: center;
+}
+
+.scoretable-name {
+    min-width: 100px;
+}
+
+.scoretable-score {
+    text-align: right;
+}
