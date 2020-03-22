@@ -3,6 +3,7 @@ from r8.scoring import Scoreboard
 
 
 def test_scoreboard(monkeypatch):
+    monkeypatch.setitem(r8.settings, "scoring", True)
     monkeypatch.setitem(r8.settings, "scoring_alpha", 0.1)
     monkeypatch.setitem(r8.settings, "scoring_beta", 1.5)
     monkeypatch.setitem(r8.settings, "scoring_first_solve_bonus", 8)
@@ -32,6 +33,7 @@ def test_scoreboard(monkeypatch):
 
 
 def test_scoreboard_time(monkeypatch):
+    monkeypatch.setitem(r8.settings, "scoring", True)
     monkeypatch.setitem(r8.settings, "scoring_alpha", 1)
     monkeypatch.setitem(r8.settings, "scoring_beta", 1)
     monkeypatch.setitem(r8.settings, "scoring_first_solve_bonus", 0)
