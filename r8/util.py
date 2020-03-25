@@ -530,7 +530,7 @@ def submit_flag(
         r8.db.execute("""
           INSERT INTO submissions (uid, fid) VALUES (?, ?)
         """, (user, flag))
-        on_submit.send(user=user, challenge=cid)
+        on_submit.send(user=user, challenge=r8.challenges[cid])
     return cid
 
 
@@ -613,15 +613,12 @@ async def get_challenges(user: str):
         except Exception:
             challenge["description"] = f"<pre>{html.escape(traceback.format_exc())}</pre>"
 
-        if inst.points is not None:
-            challenge["points"] = inst.points
-        else:
-            challenge["points"] = scoring.challenge_points(challenge["solves"])
+        challenge["points"] = scoring.challenge_points(inst, challenge["solves"])
 
         if challenge["solve_rank"]:
-            challenge["first_solve_bonus"] = scoring.first_solve_bonus(challenge["solve_rank"] - 1)
+            challenge["first_solve_bonus"] = scoring.first_solve_bonus(inst, challenge["solve_rank"] - 1)
         else:
-            challenge["first_solve_bonus"] = scoring.first_solve_bonus(challenge["solves"])
+            challenge["first_solve_bonus"] = scoring.first_solve_bonus(inst, challenge["solves"])
 
     return results
 

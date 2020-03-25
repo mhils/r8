@@ -12,15 +12,19 @@ TChallengeId = str
 TUnixtime = float
 
 
-def first_solve_bonus(existing_solves: int) -> int:
+def first_solve_bonus(challenge: "r8.Challenge", existing_solves: int) -> int:
     if not r8.settings.get("scoring", False):
+        return 0
+    if challenge.points == 0:
         return 0
     return math.floor(r8.settings.get("scoring_first_solve_bonus", 0) / 2 ** existing_solves)
 
 
-def challenge_points(solves: int) -> int:
+def challenge_points(challenge: "r8.Challenge", solves: int) -> int:
     if not r8.settings.get("scoring", False):
         return 0
+    if challenge.points is not None:
+        return challenge.points
     if solves == 0:
         return 500
     alpha = r8.settings.get("scoring_alpha", 0.25)
@@ -42,15 +46,15 @@ class Scoreboard:
     def solve(
             self,
             team: TTeamId,
-            challenge: TChallengeId,
+            challenge: "r8.Challenge",
             timestamp: TUnixtime
     ) -> "Scoreboard":
-        if team in self.solves[challenge]:
-            raise ValueError(f"{challenge} already solved by {team}.")
+        if team in self.solves[challenge.id]:
+            raise ValueError(f"{challenge.id} already solved by {team}.")
 
-        existing_solves = len(self.solves[challenge])
-        old_score = challenge_points(existing_solves)
-        new_score = challenge_points(existing_solves + 1)
+        existing_solves = len(self.solves[challenge.id])
+        old_score = challenge_points(challenge, existing_solves)
+        new_score = challenge_points(challenge, existing_solves + 1)
         score_delta = old_score - new_score
 
         ret = copy.deepcopy(self)
@@ -59,10 +63,10 @@ class Scoreboard:
         # on equal scores, the oldest team to reach that score wins.
         ret.scores[team] = ceil(ret.scores[team]) - (int(timestamp) / 100_000_000_000)
         if new_score:
-            ret.scores[team] += first_solve_bonus(existing_solves)
-        for t in ret.solves[challenge]:
+            ret.scores[team] += first_solve_bonus(challenge, existing_solves)
+        for t in ret.solves[challenge.id]:
             ret.scores[t] -= score_delta
-        ret.solves[challenge].append(team)
+        ret.solves[challenge.id].append(team)
         return ret
 
     def __repr__(self):

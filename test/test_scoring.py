@@ -14,17 +14,17 @@ def test_scoreboard(monkeypatch):
     assert s.scores["bar"] == 0
     assert s.scores["baz"] == 0
 
-    s = s.solve("foo", "cid1", d)
+    s = s.solve("foo", r8.Challenge("cid1"), d)
     assert s.scores["foo"] == 508
     assert s.scores["bar"] == 0
     assert s.scores["baz"] == 0
 
-    s = s.solve("bar", "cid2", d)
+    s = s.solve("bar", r8.Challenge("cid2"), d)
     assert s.scores["foo"] == 508
     assert s.scores["bar"] == 508
     assert s.scores["baz"] == 0
 
-    s = s.solve("baz", "cid1", d)
+    s = s.solve("baz", r8.Challenge("cid1"), d)
     assert s.scores["foo"] == 494
     assert s.scores["bar"] == 508
     assert s.scores["baz"] == 490
@@ -47,17 +47,17 @@ def test_scoreboard_time(monkeypatch):
     assert s.scores["bar"] == 0
     assert s.scores["baz"] == 0
 
-    s = s.solve("foo", "cid1", t1)
+    s = s.solve("foo", r8.Challenge("cid1"), t1)
     assert s.scores["foo"] == 499.9876543211
     assert s.scores["bar"] == 0
     assert s.scores["baz"] == 0
 
-    s = s.solve("bar", "cid2", t2)
+    s = s.solve("bar", r8.Challenge("cid2"), t2)
     assert s.scores["foo"] == 499.9876543211
     assert s.scores["bar"] == 499.9876543210
     assert s.scores["baz"] == 0
 
-    s = s.solve("baz", "cid1", t3)
+    s = s.solve("baz", r8.Challenge("cid1"), t3)
     assert s.scores["foo"] == 264.9876543211
     assert s.scores["bar"] == 499.9876543210
     assert s.scores["baz"] == 264.9876543209

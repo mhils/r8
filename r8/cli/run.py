@@ -22,8 +22,6 @@ def cli(debug) -> None:
     loop = asyncio.get_event_loop()
 
     if debug:
-        # TODO: We may want to do r8.settings["debug"] = debug at some point,
-        # but for now we don't need it and don't introduce additional complexity.
         r8.db.set_trace_callback(lambda msg: _log_sql(msg))
         loop.set_debug(True)
 

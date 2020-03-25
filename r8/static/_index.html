@@ -137,9 +137,13 @@
                     {{ self.title() }}
                 </a>
                 {% if r8.settings.start and r8.settings.end %}
-                    # FIXME
+                    {% if time.time() < r8.settings.start %}
+                        {% set target = r8.settings.start %}
+                    {% else %}
+                        {% set target = r8.settings.end %}
+                    {% endif %}
                     <span className="navbar-text">
-                    <Countdown target={countdown_target}/>
+                    <Countdown target={new Date({{target*1000}})}/>
                 </span>
                 {% endif %}
                 <span className="navbar-text">
@@ -404,10 +408,12 @@
             <div className="card-footer">
                 {challenge.tags.map(t => <Tag key={t} name={t}/>)}
                 {% if r8.settings.scoring %}
+                    { !!challenge.points &&
                     <span className="float-right">
                         <span title="Base Points">💠 {challenge.points}</span>
                         {first_solve_bonus}
                     </span>
+                    }
                 {% endif %}
             </div>
         </div>;

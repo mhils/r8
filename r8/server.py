@@ -1,3 +1,5 @@
+import time
+
 import aiohttp_jinja2
 import jinja2
 from aiohttp import web
@@ -10,7 +12,7 @@ async def render_template(request):
     return aiohttp_jinja2.render_template(
         request.match_info["filename"] or "index.html",
         request,
-        {"r8": r8}
+        {"r8": r8, "time": time}
     )
 
 
