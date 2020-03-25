@@ -31,19 +31,17 @@ async def on_startup(app):
         "scoreboard",
         f"Processed {len(scoreboards) - 1} submission(s): {scoreboards[-1]}"
     )
+    r8.util.on_submit.connect(on_solve)
 
 
-def on_solve(sender, user, challenge):
+def on_solve(sender, user, cid):
     team = r8.util.get_team(user)
-    scoreboards.append(scoreboards[-1].solve(team, challenge, time.time()))
+    scoreboards.append(scoreboards[-1].solve(team, r8.challenges[cid], time.time()))
     for ws in ws_connections:
         try:
             asyncio.create_task(ws.send_json(scoreboards[-1].to_json()))
         except ConnectionError:
             pass
-
-
-r8.util.on_submit.connect(on_solve)
 
 
 async def on_shutdown(app):

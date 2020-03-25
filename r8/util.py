@@ -530,7 +530,7 @@ def submit_flag(
         r8.db.execute("""
           INSERT INTO submissions (uid, fid) VALUES (?, ?)
         """, (user, flag))
-        on_submit.send(user=user, challenge=r8.challenges[cid])
+        on_submit.send(user=user, cid=cid)
     return cid
 
 
