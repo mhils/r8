@@ -84,7 +84,7 @@
             this.state = {};
         }
 
-        componentDidMount() {
+        refresh() {
             fetchApi("/api/scoreboard/state")
                 .then(state => {
                     // make solve lookup faster.
@@ -108,6 +108,21 @@
                 })
         }
 
+        componentDidMount() {
+            this.refresh();
+            this.ws = new WebSocket(location.origin.replace(/^http/, "ws") + "/api/scoreboard/updates");
+            this.ws.onopen = () => console.log("WebSocket connection opened.");
+            this.ws.onerror = (e) => {
+                console.error(e);
+                window.setTimeout(() => location.reload(), 5000);
+            };
+            this.ws.onmessage = () => this.refresh();
+        }
+
+        componentWillUnmount() {
+            this.ws.close();
+        }
+
         render() {
             if (!this.state.teams) {
                 return <div className="text-center rotating">⌛</div>;
@@ -121,11 +136,6 @@
     }
 
     ReactDOM.render(<Main/>, document.getElementById('root'));
-
-    if(location.href.includes("refresh")){
-        window.setTimeout(() => location.reload(), 2000);
-    }
-
 </script>
 </body>
 </html>
