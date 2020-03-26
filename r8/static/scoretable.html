@@ -121,6 +121,11 @@
     }
 
     ReactDOM.render(<Main/>, document.getElementById('root'));
+
+    if(location.href.includes("refresh")){
+        window.setTimeout(() => location.reload(), 2000);
+    }
+
 </script>
 </body>
 </html>
