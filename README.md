@@ -44,7 +44,7 @@ r8 sql init --origin http://localhost:8000
 r8 is typically configured with a plain SQL file. Let's add some demo challenges and users:
 
 ```shell
-r8 sql file config.sql
+r8 sql file r8/config.sql
 ```
 
 We can now start r8:
