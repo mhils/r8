@@ -24,6 +24,8 @@ async def on_startup(app):
             ORDER BY TIMESTAMP
         """)
         for team, cid, timestamp in submissions:
+            if team.startswith("_"):
+                continue
             scoreboards.append(scoreboards[-1].solve(team, r8.challenges[cid], timestamp))
     if len(scoreboards) > 1:
         scoreboards[0].timestamp = min(scoreboards[0].timestamp, scoreboards[1].timestamp)
@@ -36,6 +38,8 @@ async def on_startup(app):
 
 def on_solve(sender, user, cid):
     team = r8.util.get_team(user)
+    if team.startswith("_"):
+        return
     scoreboards.append(scoreboards[-1].solve(team, r8.challenges[cid], time.time()))
     for ws in ws_connections:
         try:
@@ -60,7 +64,7 @@ async def get_state(user: str, request: web.Request):
     challenges = await r8.util.get_challenges(user)
 
     return web.json_response({
-        "teams": r8.util.get_teams(),  # only show active teams: list(scoreboards[-1].scores.keys()),
+        "teams": [t for t in r8.util.get_teams() if not t.startswith("_")],  # only show active teams: list(scoreboards[-1].scores.keys()),
         "challenges": challenges,
         "solves": {
             challenge["cid"]: scoreboards[-1].solves[challenge["cid"]]
