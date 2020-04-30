@@ -23,8 +23,8 @@ async def on_startup(app):
             NATURAL INNER JOIN teams
             ORDER BY TIMESTAMP
         """)
-        for submission in submissions:
-            scoreboards.append(scoreboards[-1].solve(*submission))
+        for team, cid, timestamp in submissions:
+            scoreboards.append(scoreboards[-1].solve(team, r8.challenges[cid], timestamp))
     if len(scoreboards) > 1:
         scoreboards[0].timestamp = min(scoreboards[0].timestamp, scoreboards[1].timestamp)
     r8.echo(

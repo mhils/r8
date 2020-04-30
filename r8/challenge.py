@@ -285,7 +285,7 @@ class _Challenges:
             r8.echo(cid, "Error on start.", err=True)
             traceback.print_exc()
             # if start failed, don't bother with stop.
-            inst.stop = asyncio.coroutine(lambda: None)
+            inst.stop = lambda: asyncio.sleep(0)
 
     async def stop(self):
         await asyncio.gather(*[
