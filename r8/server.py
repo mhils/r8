@@ -23,7 +23,7 @@ async def serve_static(request: web.Request):
 def make_app() -> web.Application:
     app = web.Application()
     aiohttp_jinja2.setup(app, loader=jinja2.FileSystemLoader(r8.settings["static_dir"]))
-    app.add_subapp("/api/", rest_api.app)
+    app.add_subapp("/api/", rest_api.make_app())
     app.router.add_get('/{filename:(\\w+\\.html)?}', render_template)
     app.router.add_get('/{path:.+}', serve_static)
     return app

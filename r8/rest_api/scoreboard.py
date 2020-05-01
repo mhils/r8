@@ -59,12 +59,11 @@ routes = web.RouteTableDef()
 @routes.get('/state')
 @authenticated
 async def get_state(user: str, request: web.Request):
-    if not r8.settings.get("scoring", False):
-        return web.HTTPForbidden()
     challenges = await r8.util.get_challenges(user)
 
     return web.json_response({
-        "teams": [t for t in r8.util.get_teams() if not t.startswith("_")],  # only show active teams: list(scoreboards[-1].scores.keys()),
+        "teams": [t for t in r8.util.get_teams() if not t.startswith("_")],
+        # only show active teams: list(scoreboards[-1].scores.keys()),
         "challenges": challenges,
         "solves": {
             challenge["cid"]: scoreboards[-1].solves[challenge["cid"]]
@@ -77,8 +76,6 @@ async def get_state(user: str, request: web.Request):
 @routes.get('/updates')
 @authenticated
 async def get_updates(user: str, request: web.Request):
-    if not r8.settings.get("scoring", False):
-        return web.HTTPForbidden()
     ws = web.WebSocketResponse(heartbeat=25)
     await ws.prepare(request)
     ws_connections.add(ws)
