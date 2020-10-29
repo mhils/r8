@@ -16,6 +16,10 @@
     border-color: #28a745;
 }
 
+.card-footer:empty {
+    display: none;
+}
+
 svg {
     transition: all 1s ease-in-out;
 }

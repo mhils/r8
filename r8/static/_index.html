@@ -130,7 +130,7 @@
             logout().then(onLogout);
         }
 
-        return <nav className="navbar sticky-top navbar-dark bg-dark">
+        return <nav className="navbar sticky-top {% block navstyle %}navbar-dark bg-dark{% endblock %}">
             <div className="container">
                 <a className="navbar-brand overflow-auto" href="#">
                     <Logo/>

@@ -208,6 +208,8 @@ def tolerate_connection_error(f):
             return await f(*args, **kwds)
         except ConnectionError:
             pass
+        except asyncio.IncompleteReadError:
+            pass
 
     return wrapper
 
