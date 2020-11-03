@@ -4,7 +4,7 @@ Description=r8 ctf system
 [Service]
 Type=simple
 ExecStart=/root/venv/bin/r8 run
-WorkingDirectory=/root/r8
+WorkingDirectory=/root
 Restart=always
 
 [Install]

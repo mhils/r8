@@ -2,7 +2,6 @@ import abc
 import asyncio
 import functools
 import inspect
-import re
 import time
 import traceback
 from pathlib import Path
@@ -62,7 +61,7 @@ class Challenge:
 
     @property
     def active(self) -> bool:
-        """`True` if the challenge is currently active, `False` otherwise."""
+        """`True` if the challenge is currently active, `False` otherwise (read-only)."""
         t_start, t_stop = self._active_times()
         return t_start <= time.time() <= t_stop
 
@@ -87,7 +86,7 @@ class Challenge:
     async def start(self) -> None:
         """
         Called when the challenge is started,
-        can be used to e.g. start additional servers.
+        can be used to start additional services for example.
 
         Note that challenge instances are always started immediately when running r8,
         independent of when the challenge will be active. This makes sure that there
@@ -110,12 +109,12 @@ class Challenge:
         r8.echo(self.id, message, err)
 
     def log(
-        self,
-        ip: r8.util.THasIP,
-        type: str,
-        data: Optional[str] = None,
-        *,
-        uid: Optional[str] = None
+            self,
+            ip: r8.util.THasIP,
+            type: str,
+            data: Optional[str] = None,
+            *,
+            uid: Optional[str] = None
     ) -> None:
         """
         Log an event for the current challenge.
@@ -124,13 +123,13 @@ class Challenge:
         r8.log(ip, type, data, uid=uid, cid=self.id)
 
     def log_and_create_flag(
-        self,
-        ip: r8.util.THasIP,
-        user: Optional[str] = None,
-        *,
-        max_submissions: int = 1,
-        flag: Optional[str] = None,
-        challenge: Optional[str] = None,
+            self,
+            ip: r8.util.THasIP,
+            user: Optional[str] = None,
+            *,
+            max_submissions: int = 1,
+            flag: Optional[str] = None,
+            challenge: Optional[str] = None,
     ) -> str:
         """
         Create a new flag that can be redeemed for this challenge and log its creation.
@@ -185,7 +184,7 @@ class Challenge:
             return web.HTTPNotFound()
 
     async def handle_post_request(self, user: str, request: web.Request) \
-        -> Union[str, web.StreamResponse]:
+            -> Union[str, web.StreamResponse]:
         """
         HTTP POST requests to `/api/challenges/cid/*` land here. Serves 404s by default.
 
