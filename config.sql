@@ -1,17 +1,18 @@
 BEGIN;
 
 -- Configure which challenge instances should be displayed to users at which point in time.
+-- Note that times are generally UTC.
 -- You can pass a single string argument to challenges by appending it in parentheses.
 DELETE FROM challenges;
 INSERT INTO challenges (cid, team, t_start, t_stop) VALUES
   -- expired
-  ('Attendance(01.01.2018)', 0, datetime('2018-01-01 00:00:00'), datetime('2018-01-01 14:00:00')),
+  ('Basic(Example Challenge (expired))', 0, datetime('2000-01-01 00:00:00'), datetime('2011-01-01 11:11:00+01:00')),
   -- solved
-  ('Attendance(05.01.2018)', 0, datetime('2018-01-05 00:00:00'), datetime('2018-01-05 14:00:00')),
+  ('Basic(Example Challenge (solved))', 0, datetime('now'), datetime('now','+1 month')),
   -- active
-  ('Attendance(' || date('now') || ')', 0, datetime('now'), datetime('now','+1 day')),
+  ('Basic(Example Challenge (active))', 0, datetime('now'), datetime('now','+1 month')),
   -- still invisible
-  ('Attendance(01.01.2042)', 0, datetime('2042-01-01 00:00:00'), datetime('2042-01-01 14:00:00')),
+  ('Basic(Example Challenge (appears in the future))', 0, datetime('2042-01-01 00:00:00'), datetime('2042-01-01 14:00:00')),
   -- Other examples
   ('TcpServer', 1, datetime('now'), datetime('now','+1 month')),
   ('WebServer', 1, datetime('now'), datetime('now','+1 month')),
@@ -40,7 +41,7 @@ INSERT INTO teams (tid, uid) VALUES
 
 --
 --
--- The SQL statements only serve to illustrate the r8 UI.
+-- The SQL statements below only serve to illustrate the r8 UI.
 -- In a production deployment, we would COMMIT; here and be done.
 --
 --
@@ -48,11 +49,11 @@ INSERT INTO teams (tid, uid) VALUES
 DELETE FROM flags;
 INSERT INTO flags (fid, cid, max_submissions) VALUES
   -- easy to memorize flags for testing.
-  ('expired', 'Attendance(01.01.2018)', 999999),
-  ('da', 'Attendance(' || date('now') || ')', 999999),
-  ('limited', 'Attendance(' || date('now') || ')', 0),
-  ('future', 'Attendance(01.01.2042)', 999999),
-  ('solved', 'Attendance(05.01.2018)', 1)
+  ('expired', 'Basic(Example Challenge (expired))', 999999),
+  ('active', 'Basic(Example Challenge (active))', 999999),
+  ('limited', 'Basic(Example Challenge (active))', 0),
+  ('future', 'Basic(Example Challenge (appears in the future))', 999999),
+  ('solved', 'Basic(Example Challenge (solved))', 1)
 ;
 
 DELETE FROM events;

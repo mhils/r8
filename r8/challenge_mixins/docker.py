@@ -80,7 +80,7 @@ class DockerChallenge(r8.Challenge):
                 err=True
             )
         if proc.returncode != 0:
-            raise DockerError(f"Execution error.", cmd, proc, stdout, stderr)
+            raise DockerError(f"Execution error.\ncmd={shlex.join(cmd)!r}\n{proc.returncode=}\n{stdout=}\n{stderr=}")
         return proc, stdout, stderr
 
     async def start(self):

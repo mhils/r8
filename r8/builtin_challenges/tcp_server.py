@@ -8,7 +8,7 @@ class TcpServer(r8.Challenge):
     server: asyncio.AbstractServer = None
     address: tuple[str, int] = ("", 8001)
 
-    title = "2 * 3 * 7"
+    title = "TCP Service Example"
 
     challenge = b"What's the answer to life, the universe and everything?\n"
     response = r"42"

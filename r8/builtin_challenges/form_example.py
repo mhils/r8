@@ -4,7 +4,7 @@ import r8
 
 
 class FormExample(r8.Challenge):
-    title = "The Fabulous Form"
+    title = "Form Example"
 
     async def description(self, user: str, solved: bool):
         return r8.util.media(None, """

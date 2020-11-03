@@ -7,7 +7,7 @@ import r8.challenge_mixins
 
 
 class DockerHelloWorld(r8.challenge_mixins.DockerChallenge):
-    title = "Hello World from Docker!"
+    title = "Docker Container Example"
 
     dockerfile = Path(__file__).parent / "docker-helloworld"
 

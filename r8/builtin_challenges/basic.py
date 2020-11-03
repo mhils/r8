@@ -1,10 +1,11 @@
 import r8
 
 
-class Attendance(r8.Challenge):
+class Basic(r8.Challenge):
     """
-    Challenge type to record class attendance.
+    A *very* basic challenge that only has a title.
+    This can be useful to for example record class attendance.
     """
     @property
     def title(self):
-        return f"Attendance {self.args}"
+        return self.args

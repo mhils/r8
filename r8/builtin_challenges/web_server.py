@@ -4,7 +4,7 @@ import r8.challenge_mixins
 
 
 class WebServer(r8.challenge_mixins.WebServerChallenge):
-    title = "Web Web"
+    title = "Embedded Web Application Example"
     address = ("", 8203)
 
     async def description(self, user: str, solved: bool):
