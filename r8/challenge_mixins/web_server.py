@@ -1,7 +1,6 @@
 import abc
 import urllib.parse
-from collections.abc import Callable
-from typing import Union
+from typing import Union, Callable
 
 from aiohttp import web
 from aiohttp.web import StaticResource, middleware
