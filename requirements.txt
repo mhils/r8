@@ -21,3 +21,4 @@ six==1.15.0
 texttable==1.6.3
 typing-extensions==3.7.4.3
 yarl==1.6.2
+-e .
