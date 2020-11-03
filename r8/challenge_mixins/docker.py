@@ -5,7 +5,7 @@ import secrets
 import shlex
 import time
 from pathlib import Path
-from typing import ClassVar, Optional, Set, Tuple
+from typing import ClassVar, Optional
 
 import r8
 
@@ -35,7 +35,7 @@ class DockerChallenge(r8.Challenge):
     max_concurrent: ClassVar[asyncio.Semaphore] = asyncio.Semaphore(r8.settings.get("docker_max_concurrent", 5))
     timeout = r8.settings.get("docker_timeout", 10)
     debug = r8.settings.get("docker_debug", False)
-    active_users: ClassVar[Set[str]] = set()
+    active_users: ClassVar[set[str]] = set()
 
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
@@ -59,7 +59,7 @@ class DockerChallenge(r8.Challenge):
         except asyncio.CancelledError:
             pass
 
-    async def _exec(self, *cmd) -> Tuple[asyncio.subprocess.Process, bytes, bytes]:
+    async def _exec(self, *cmd) -> tuple[asyncio.subprocess.Process, bytes, bytes]:
         spin = asyncio.ensure_future(self.spin())
         try:
             proc = await asyncio.create_subprocess_exec(

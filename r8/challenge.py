@@ -6,7 +6,7 @@ import re
 import time
 import traceback
 from pathlib import Path
-from typing import ClassVar, Dict, List, Optional, Tuple, Type, Union
+from typing import ClassVar, Optional, Union
 
 import pkg_resources
 from aiohttp import web
@@ -24,7 +24,7 @@ class Challenge:
     Will be served from :meth:`handle_get_request`.
     """
 
-    tags: ClassVar[List[str]] = []
+    tags: ClassVar[list[str]] = []
     """Tags for the challenge. This can be used to signal task category of difficulty."""
 
     flag: ClassVar[str] = None
@@ -67,7 +67,7 @@ class Challenge:
         return t_start <= time.time() <= t_stop
 
     @functools.lru_cache(maxsize=None)
-    def _active_times(self) -> Tuple[int, int]:
+    def _active_times(self) -> tuple[int, int]:
         with r8.db:
             return r8.db.execute("""
                 SELECT CAST(strftime('%s', t_start) AS INT), CAST(strftime('%s', t_stop) AS INT) FROM challenges WHERE cid = ?
@@ -222,7 +222,7 @@ class Challenge:
         challenges.add_class(cls)  # register challenge with r8 on init.
 
 
-def get_challenges() -> List[str]:
+def get_challenges() -> list[str]:
     with r8.db:
         cursor = r8.db.execute("SELECT cid FROM challenges")
         return [row[0] for row in cursor.fetchall()]
@@ -233,9 +233,9 @@ def class_name(cid: str) -> str:
 
 
 class _Challenges:
-    _classes: Dict[str, Type[Challenge]]
+    _classes: dict[str, type[Challenge]]
     """All challenges that have been loaded."""
-    _instances: Dict[str, Challenge]
+    _instances: dict[str, Challenge]
     """All challenge instances"""
 
     def __init__(self):
@@ -250,7 +250,7 @@ class _Challenges:
         for cid in get_challenges():
             self._instances[cid] = self.make_instance(cid)
 
-    def add_class(self, cls: Type[Challenge]) -> None:
+    def add_class(self, cls: type[Challenge]) -> None:
         """Called by Challenge.__init_subclass__"""
         assert cls.__name__ not in self._classes
         self._classes[cls.__name__] = cls

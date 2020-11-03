@@ -25,7 +25,7 @@ setup(
         "Operating System :: OS Independent",
         "Topic :: Education",
         "Topic :: Education :: Computer Aided Instruction (CAI)",
-        'Programming Language :: Python :: 3.8',
+        'Programming Language :: Python :: 3.9',
     ],
     keywords="ctf grading capture the flag networking",
     url="https://github.com/mhils/r8",
@@ -43,7 +43,7 @@ setup(
         ]
     },
     install_requires=[
-        "click>=7.0",
+        "click",
         "texttable",
         "argon2_cffi",
         "aiohttp",

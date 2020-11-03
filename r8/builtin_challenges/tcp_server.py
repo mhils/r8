@@ -1,13 +1,12 @@
 import asyncio
 import re
-from typing import Tuple
 
 import r8
 
 
 class TcpServer(r8.Challenge):
     server: asyncio.AbstractServer = None
-    address: Tuple[str, int] = ("", 8001)
+    address: tuple[str, int] = ("", 8001)
 
     title = "2 * 3 * 7"
 

@@ -19,7 +19,7 @@ r8 is successfully being used for teaching at the University of California, Berk
 
 In short, install r8 as a Python package using your preferred way. We recommend the following:
 
-Make sure you have Python 3.8 or above. Clone the repository, create a Python virtual environment 
+Make sure you have Python 3.9 or above. Clone the repository, create a Python virtual environment 
 into which we install all dependencies, and finally install r8:
 
 ```shell

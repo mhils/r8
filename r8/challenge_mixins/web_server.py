@@ -1,6 +1,7 @@
 import abc
 import urllib.parse
-from typing import Callable, Tuple, Union
+from collections.abc import Callable
+from typing import Union
 
 from aiohttp import web
 from aiohttp.web import StaticResource, middleware
@@ -18,7 +19,7 @@ class WebServerChallenge(r8.Challenge):
 
     @property
     @abc.abstractmethod
-    def address(self) -> Tuple[str, int]:
+    def address(self) -> tuple[str, int]:
         """The web server address"""
         pass
 

@@ -10,7 +10,7 @@ r8 API Reference
     .. autoattribute:: title
         :annotation: : str = "Hello World"
     .. autoattribute:: tags
-        :annotation: : List[str] = []
+        :annotation: : list[str] = []
     .. autoattribute:: flag
         :annotation: : str = "__flag__{...}"
     .. automethod:: description

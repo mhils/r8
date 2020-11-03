@@ -1,6 +1,5 @@
 import random
 from pathlib import Path
-from typing import List
 
 import click
 
@@ -36,14 +35,14 @@ def generate(ctx: click.Context, n, length, max_len, hash):
         animals = clean(f.readlines())
 
     for _ in range(n):
-        parts: List[str] = []
+        parts: list[str] = []
         for _ in range(1, length, 2):
             parts.append(random.choice(adjectives))
             parts.append(random.choice(animals))
         if length % 2:
             parts.insert(0, random.choice(adjectives))
         password = "".join(x.capitalize() for x in parts)
-        print(password, end=", " if hash else "\n")
+        print(password, end="; " if hash else "\n")
         if hash:
             ctx.invoke(hash_password, password=password)
 

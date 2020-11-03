@@ -8,11 +8,11 @@ import secrets
 import sqlite3
 import textwrap
 import traceback
+from collections.abc import Iterable
 from functools import wraps
 from pathlib import Path
-from typing import Iterable, List, Optional, Tuple, TypeVar, Union
+from typing import Optional, TypeVar, Union
 
-import aiohttp
 import argon2
 import blinker
 import click
@@ -33,7 +33,7 @@ def get_team(user: str) -> Optional[str]:
         return None
 
 
-def get_teams() -> List[str]:
+def get_teams() -> list[str]:
     """Get a list of all teams"""
     with r8.db:
         return [
@@ -42,7 +42,7 @@ def get_teams() -> List[str]:
         ]
 
 
-def get_users() -> List[str]:
+def get_users() -> list[str]:
     """Get a list of all teams"""
     with r8.db:
         return [
@@ -214,7 +214,7 @@ def tolerate_connection_error(f):
     return wrapper
 
 
-def format_address(address: Tuple[str, int]) -> str:
+def format_address(address: tuple[str, int]) -> str:
     """Format an `(ip, port)` address tuple."""
     host, port = address
     if not host:
@@ -628,7 +628,7 @@ async def get_challenges(user: str):
 def serve_static(static_dir: Union[str, Path, Iterable[Union[Path, str]]], insecure_path: str) -> web.StreamResponse:
     if isinstance(static_dir, (Path, str)):
         static_dir = [static_dir]
-    search_paths: List[Path] = [Path(x).resolve() for x in static_dir]
+    search_paths: list[Path] = [Path(x).resolve() for x in static_dir]
 
     path = insecure_path.lstrip("/") or "index.html"
     filename = re.sub(

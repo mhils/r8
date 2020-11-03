@@ -2,14 +2,14 @@
 The public API of r8 that is exposed to challenges.
 """
 import sqlite3
-import typing
+from typing import Any
 
 from r8 import util
 from r8.challenge import Challenge, challenges
 from r8.util import echo, log
 
 db: sqlite3.Connection
-settings: typing.Dict[str, typing.Any] = {}
+settings: dict[str, Any] = {}
 
 __all__ = ["Challenge", "challenges", "db", "util", "log", "echo"]
 

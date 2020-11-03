@@ -3,7 +3,7 @@ import copy
 import functools
 import math
 from math import ceil
-from typing import Counter, DefaultDict, List, Optional
+from typing import Optional
 
 import r8
 
@@ -35,8 +35,8 @@ def challenge_points(challenge: "r8.Challenge", solves: int) -> int:
 class Scoreboard:
     """Immutable snapshot of scores at a given point in time."""
     timestamp: TUnixtime
-    scores: Counter[TTeamId]
-    solves: DefaultDict[TChallengeId, List[TTeamId]]
+    scores: collections.Counter[TTeamId]
+    solves: collections.defaultdict[TChallengeId, list[TTeamId]]
 
     def __init__(self, timestamp: Optional[TUnixtime] = None):
         self.timestamp = timestamp

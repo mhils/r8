@@ -1,7 +1,6 @@
 import asyncio
 import time
 import weakref
-from typing import List
 
 import aiohttp
 from aiohttp import web
@@ -10,7 +9,7 @@ import r8
 from .auth import authenticated
 from ..scoring import Scoreboard
 
-scoreboards: List[Scoreboard] = [Scoreboard()]
+scoreboards: list[Scoreboard] = [Scoreboard()]
 ws_connections = weakref.WeakSet()
 
 

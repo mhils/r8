@@ -1,6 +1,6 @@
 import functools
 import time
-from typing import List, Optional
+from typing import Optional
 
 import click
 
@@ -8,7 +8,7 @@ import r8
 from r8 import util
 
 
-def min_distinguishable_column_width(elements: List[str]) -> int:
+def min_distinguishable_column_width(elements: list[str]) -> int:
     elements = set(elements)
     if not elements:
         return 0
