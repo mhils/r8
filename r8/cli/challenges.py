@@ -20,7 +20,7 @@ def list(rows, query):
     Print the state of all created challenges.
 
     Accepts an optional query argument to limit the selection,
-    e.g. "WHERE cid LIKE 'Attendance%'".
+    e.g. "WHERE cid LIKE 'Basic%'".
     """
     util.run_sql(f"""
     SELECT cid, COUNT(uid) AS solved, t_start, t_stop, team FROM challenges

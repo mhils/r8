@@ -2,10 +2,10 @@ BEGIN;
 
 DELETE FROM challenges;
 INSERT INTO challenges (cid, team, t_start, t_stop) VALUES
-  ('Attendance(expired)', 0, datetime('2018-01-01 00:00:00'), datetime('2018-01-01 14:00:00')),
-  ('Attendance(solved)', 0, datetime('2018-01-05 00:00:00'), datetime('2018-01-05 14:00:00')),
-  ('Attendance(active)', 0, datetime('now'), datetime('now','+1 day')),
-  ('Attendance(future)', 0, datetime('2042-01-01 00:00:00'), datetime('2042-01-01 14:00:00'))
+  ('Basic(expired)', 0, datetime('2018-01-01 00:00:00'), datetime('2018-01-01 14:00:00')),
+  ('Basic(solved)', 0, datetime('2018-01-05 00:00:00'), datetime('2018-01-05 14:00:00')),
+  ('Basic(active)', 0, datetime('now'), datetime('now','+1 day')),
+  ('Basic(future)', 0, datetime('2042-01-01 00:00:00'), datetime('2042-01-01 14:00:00'))
 ;
 
 DELETE FROM users;
@@ -27,7 +27,7 @@ INSERT INTO teams (tid, uid) VALUES
 
 DELETE FROM flags;
 INSERT INTO flags (fid, cid, max_submissions) VALUES
-  ('solved', 'Attendance(solved)', 999999)
+  ('solved', 'Basic(solved)', 999999)
 ;
 
 DELETE FROM submissions;

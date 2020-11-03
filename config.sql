@@ -58,10 +58,10 @@ INSERT INTO flags (fid, cid, max_submissions) VALUES
 
 DELETE FROM events;
 INSERT INTO events (time, ip, type, data, cid, uid) VALUES
-  ('2018-01-04 23:59:11', '127.0.0.1', 'get-challenges', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/64.0.3282.186 Safari/537.36', null, 'user1'),
-  ('2018-01-04 23:59:25', '127.0.0.1', 'flag-submit', 'solved', 'Attendance(05.01.2018)', 'user1'),
-  ('2018-01-04 23:59:32', '127.0.0.1', 'flag-err-solved', 'solved', 'Attendance(05.01.2018)', 'user1'),
-  ('2018-01-04 23:59:59', '127.0.0.1', 'flag-err-unknown', 'a', null, 'user1');
+  (datetime('now','-60 seconds'), '127.0.0.1', 'get-challenges', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/64.0.3282.186 Safari/537.36', null, 'user1'),
+  (datetime('now','-40 seconds'), '127.0.0.1', 'flag-submit', 'solved', 'Basic(Example Challenge (solved))', 'user1'),
+  (datetime('now','-37 seconds'), '127.0.0.1', 'flag-err-solved', 'solved', 'Basic(Example Challenge (solved))', 'user1'),
+  (datetime('now','-21 seconds'), '127.0.0.1', 'flag-err-unknown', 'a', null, 'user1');
 
 DELETE FROM submissions;
 INSERT INTO submissions (uid, fid) VALUES

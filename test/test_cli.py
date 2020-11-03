@@ -27,7 +27,7 @@ def r8cli():
 
 def test_challenges(r8cli):
     assert "FormExample" in r8cli("challenges list-available").output
-    assert "Attendance(active)" in r8cli("challenges list").output
+    assert "Basic(active)" in r8cli("challenges list").output
 
 
 def test_events(r8cli):
@@ -35,7 +35,7 @@ def test_events(r8cli):
 
 
 def test_flags(r8cli):
-    r8cli("flags create Attendance(active) foo")
+    r8cli("flags create Basic(active) foo")
     r8cli("flags submit foo user1")
     r8cli("flags limit foo")
     with pytest.raises(RuntimeError, match='Revoke all submissions first'):
