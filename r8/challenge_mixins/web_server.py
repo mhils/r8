@@ -26,7 +26,7 @@ class WebServerChallenge(r8.Challenge):
     def make_app(self) -> web.Application:
         raise NotImplementedError()
 
-    async def start(self):
+    async def start(self) -> None:
         self.echo("Starting server...")
         app = self.make_app()
         if self.log_web_requests:
@@ -38,7 +38,7 @@ class WebServerChallenge(r8.Challenge):
         self.echo(f"Running at {r8.util.format_address(self.address)}.")
         await super().start()
 
-    async def stop(self):
+    async def stop(self) -> None:
         await super().stop()
         self.echo("Stopping server...")
         await self.runner.cleanup()

@@ -261,6 +261,21 @@ def echo(namespace: str, message: str, err: bool = False) -> None:
 THasIP = TypeVar("THasIP", str, tuple, asyncio.StreamWriter, asyncio.BaseTransport, web.Request)
 
 
+def get_ip(ip: THasIP) -> str:
+    """
+    Extract the actual IP address
+
+    Warning: This function is susceptible to spoofed X-Forwarded-For headers.
+    """
+    if isinstance(ip, web.Request):
+        ip = ip.headers.get("X-Forwarded-For", ip.transport)
+    if isinstance(ip, (asyncio.StreamWriter, asyncio.BaseTransport)):
+        ip = ip.get_extra_info("peername")
+    if isinstance(ip, tuple):
+        ip = ip[0]
+    return ip
+
+
 def log(
         ip: THasIP,
         type: str,
@@ -279,12 +294,7 @@ def log(
         cid: Challenge this log entry relates to.
         uid: User this log entry relates to.
     """
-    if isinstance(ip, web.Request):
-        ip = ip.headers.get("X-Forwarded-For", ip.transport)
-    if isinstance(ip, (asyncio.StreamWriter, asyncio.BaseTransport)):
-        ip = ip.get_extra_info("peername")
-    if isinstance(ip, tuple):
-        ip = ip[0]
+    ip = get_ip(ip)
     if data:
         data = data[:1024]
     with r8.db:
