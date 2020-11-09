@@ -89,16 +89,17 @@ async def login(request: web.Request):
         r8.util.verify_hash(ok[0], password)
         r8.log(request, "login-success", uid=user)
         token = r8.util.auth_sign.sign(user.encode()).decode()
-        secure_flag = "; Secure"
-        if r8.settings["origin"].startswith("http://"):
-            secure_flag = ""
-        return web.json_response(
-            {},
-            headers={
-                # aiohttp doesn't support SameSite as of writing this.
-                "Set-Cookie": f"token={token}; Path=/; Max-Age=31536000; SameSite=strict; HttpOnly{secure_flag}"
-            }
+        is_secure = not r8.settings["origin"].startswith("http://")
+        resp = web.json_response({})
+        resp.set_cookie(
+            "token", token,
+            path="/",
+            max_age=31536000,
+            samesite="strict",
+            httponly=True,
+            secure=is_secure,
         )
+        return resp
     except (argon2.exceptions.VerificationError, ValueError):
         r8.log(request, "login-fail", user, uid=user if ok else None)
         return web.HTTPUnauthorized(

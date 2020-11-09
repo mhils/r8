@@ -1,6 +1,6 @@
 import abc
 import urllib.parse
-from typing import Union, Callable
+from typing import Callable, Union
 
 from aiohttp import web
 from aiohttp.web import StaticResource, middleware
@@ -9,7 +9,11 @@ import r8
 
 
 def log_nonstatic(request: web.Request) -> bool:
-    return not isinstance(request.match_info.handler.__self__, StaticResource)
+    return not isinstance(getattr(request.match_info.handler, "__self__", None), StaticResource)
+
+
+def log_nonsafe(request: web.Request) -> bool:
+    return request.method not in ("GET", "HEAD", "OPTIONS", "TRACE")
 
 
 class WebServerChallenge(r8.Challenge):
