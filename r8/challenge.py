@@ -2,10 +2,11 @@ import abc
 import asyncio
 import functools
 import inspect
+import json
 import time
 import traceback
 from pathlib import Path
-from typing import ClassVar, Optional, Union
+from typing import Any, ClassVar, Optional, Union
 
 import pkg_resources
 from aiohttp import web
@@ -192,7 +193,7 @@ class Challenge:
         """
         return web.HTTPNotFound()
 
-    def get_data(self, key: str, *, cid: Optional[str] = None) -> Optional[str]:
+    def get_data(self, key: str, *, cid: Optional[str] = None) -> Any:
         """
         Get persistent challenge data for a specific key.
 
@@ -200,11 +201,15 @@ class Challenge:
             cid: If given, override the challenge for which data should be accessed.
         """
         with r8.db:
-            return (r8.db.execute("""
+            data = r8.db.execute("""
                 SELECT value FROM data WHERE cid = ? AND key = ?
-            """, (cid or self.id, key)).fetchone() or [None])[0]
+            """, (cid or self.id, key)).fetchone()
+            if data:
+                return json.loads(data[0])
+            else:
+                return None
 
-    def set_data(self, key: str, value: str, *, cid: Optional[str] = None):
+    def set_data(self, key: str, value: Any, *, cid: Optional[str] = None):
         """
         Set persistent challenge data for a specific key.
 
@@ -214,7 +219,7 @@ class Challenge:
         with r8.db:
             r8.db.execute(
                 """INSERT OR REPLACE INTO data (cid, key, value) VALUES (?,?,?)""",
-                (cid or self.id, key, value)
+                (cid or self.id, key, json.dumps(value))
             )
 
     def __init_subclass__(cls, **kwargs):
