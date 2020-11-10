@@ -1,5 +1,4 @@
 import abc
-import urllib.parse
 from typing import Callable, Union
 
 from aiohttp import web
@@ -59,23 +58,36 @@ def make_logger(challenge: WebServerChallenge):
         if not should_log:
             return await handler(request)
 
-        text = await request.text()
-        if request.content_type == 'application/x-www-form-urlencoded':
-            text = urllib.parse.unquote(text)
-        data = f"{request.method} {request.path_qs} {text}".rstrip()
+        req_str = f"{request.method} {request.path_qs}"
         # We want this to appear before any challenge-specific logging...
-        rowid = r8.log(request, "handle-request", data, cid=challenge.id)
+        rowid = r8.log(request, "handle-request", req_str, cid=challenge.id)
+
+        resp_str: str = ""
         try:
             resp = await handler(request)
-            with r8.db:
-                r8.db.execute("""UPDATE events SET data = ? WHERE ROWID = ?""",
-                              (f"{data} -> {resp.status} {resp.reason}", rowid))
+            resp_str = f"{resp.status} {resp.reason}"
         except Exception as e:
-            with r8.db:
-                r8.db.execute("""UPDATE events SET data = ? WHERE ROWID = ?""",
-                              (f"{data} -> {e}", rowid))
+            resp_str = f"{e}"
             raise
         else:
             return resp
+        finally:
+            req_text: str = ""
+            try:
+                if request._post is not None or request.content_type in (
+                        "application/x-www-form-urlencoded",
+                        "multipart/form-data"
+                ):
+                    req_data = await request.post()
+                    req_text = "&".join(f"{k}={v}" for k, v in req_data.items())
+                else:
+                    req_text = await request.text()
+                req_text = req_text[:1024]
+            except Exception as e:
+                req_text = req_text or f"{e}"
+            req_str = f"{req_str} {req_text}".rstrip()
+            with r8.db:
+                r8.db.execute("""UPDATE events SET data = ? WHERE ROWID = ?""",
+                              (f"{req_str} -> {resp_str}", rowid))
 
     return log_request
