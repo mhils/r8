@@ -16,7 +16,7 @@ def cli():
 @util.with_database()
 def view():
     """Print all settings"""
-    util.run_sql(f"SELECT * FROM settings")
+    util.run_sql(f"SELECT * FROM settings", rows=100)
 
 
 @cli.command()
@@ -39,7 +39,7 @@ def set(key, value):
     value = json.dumps(value)
     with r8.db:
         r8.db.execute("INSERT OR REPLACE INTO settings (key, value) VALUES (?,?)", (key, value))
-    util.run_sql(f"SELECT * FROM settings")
+    util.run_sql(f"SELECT * FROM settings", rows=100)
 
 
 @cli.command()
@@ -49,5 +49,5 @@ def delete(key):
     """Update a setting"""
     with r8.db:
         r8.db.execute("DELETE FROM settings WHERE key = ?", (key,))
-    util.run_sql(f"SELECT * FROM settings")
+    util.run_sql(f"SELECT * FROM settings", rows=100)
 

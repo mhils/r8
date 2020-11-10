@@ -31,6 +31,17 @@ class DockerChallenge(r8.Challenge):
     """Support for `docker run` in challenges"""
     dockerfile: ClassVar[Optional[Path]] = None
     docker_tag: ClassVar[Optional[str]] = None
+    docker_args: tuple[str, ...] = (
+        "--network", "none",
+        #  --memory and --memory-swap are set to the same value, this prevents containers from using any swap.
+        "--memory", "512m",
+        "--memory-swap", "512m",
+        "--kernel-memory", "128m",
+        "--cpu-shares", "2",
+        "--blkio-weight", "10",
+        "--cap-drop", "all",
+        "--user", "nobody",
+    )
 
     max_concurrent: ClassVar[asyncio.Semaphore] = asyncio.Semaphore(r8.settings.get("docker_max_concurrent", 5))
     timeout = r8.settings.get("docker_timeout", 10)
@@ -93,6 +104,12 @@ class DockerChallenge(r8.Challenge):
                 str(self.dockerfile.absolute())
             )
             self.echo(f"Docker: {self.docker_tag} built.")
+        else:
+            _, stdout, _ = await self._exec("docker", "images", "-q", self.docker_tag)
+            if not stdout:
+                self.echo(f"Docker: Pulling {self.docker_tag}...")
+                await self._exec("docker", "pull", self.docker_tag)
+                self.echo(f"Docker: {self.docker_tag} pulled.")
         await self._exec("docker", "inspect", self.docker_tag)
 
     async def docker_run_unlimited(self, *args) -> str:
@@ -105,15 +122,9 @@ class DockerChallenge(r8.Challenge):
             "docker", "run",
             "--rm",
             "--name", name,
-            "--network", "none",
-            "--memory", "256m",
-            "--memory-swap", "256m",
-            "--kernel-memory", "128m",
-            "--cpu-shares", "2",
-            "--blkio-weight", "10",
-            "--cap-drop", "all",
-            "--user", "nobody",
-            self.docker_tag, *args
+            *self.docker_args,
+            self.docker_tag,
+            *args
         ]
 
         try:
