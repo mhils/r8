@@ -401,7 +401,7 @@ def backup_db(f):
             backup_dir = Path.home() / ".r8"
             backup_dir.mkdir(exist_ok=True)
             time = datetime.datetime.now().strftime("%Y%m%d-%H%M%S")
-            with open(backup_dir / f"backup-{time}.sql", 'w') as out:
+            with open(backup_dir / f"backup-{time}.sql", 'w', encoding="utf8") as out:
                 for line in r8.db.iterdump():
                     out.write('%s\n' % line)
         return f(**kwds)
