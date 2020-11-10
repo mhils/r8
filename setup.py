@@ -48,7 +48,6 @@ setup(
         "argon2_cffi",
         "aiohttp",
         "aiohttp_jinja2",
-        "aiodns",
         "itsdangerous",
         "blinker",
     ],
