@@ -31,6 +31,7 @@ def cli(debug) -> None:
         server.start(),
         r8.challenges.start()
     ))
+    r8.echo("r8", "Started.")
 
     if os.name != "nt":
         loop.add_signal_handler(signal.SIGTERM, loop.stop)

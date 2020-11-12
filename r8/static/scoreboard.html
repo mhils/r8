@@ -110,7 +110,7 @@
 
         window.ws = new WebSocket(location.origin.replace(/^http/, "ws") + "/api/scoreboard/updates");
         window.ws.onopen = () => console.log("WebSocket connection opened.");
-        window.ws.onerror = (e) => {
+        window.ws.onclose = (e) => {
             console.error(e);
             window.setTimeout(() => location.reload(), 5000);
         };

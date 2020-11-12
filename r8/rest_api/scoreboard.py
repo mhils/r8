@@ -1,6 +1,5 @@
 import asyncio
 import time
-import weakref
 
 import aiohttp
 from aiohttp import web
@@ -10,7 +9,7 @@ from .auth import authenticated
 from ..scoring import Scoreboard
 
 scoreboards: list[Scoreboard] = [Scoreboard()]
-ws_connections = weakref.WeakSet()
+ws_connections: set[web.WebSocketResponse] = set()
 
 
 async def on_startup(app):
@@ -40,16 +39,31 @@ def on_solve(sender, user, cid):
     if team.startswith("_"):
         return
     scoreboards.append(scoreboards[-1].solve(team, r8.challenges[cid], time.time()))
+
+    data = scoreboards[-1].to_json()
     for ws in ws_connections:
-        try:
-            asyncio.create_task(ws.send_json(scoreboards[-1].to_json()))
-        except ConnectionError:
-            pass
+        asyncio.create_task(send_task(ws, data))
+
+
+async def send_task(ws: web.WebSocketResponse, data) -> None:
+    try:
+        await ws.send_json(data)
+    except ConnectionError:
+        pass
 
 
 async def on_shutdown(app):
-    for ws in ws_connections:
-        await ws.close(code=aiohttp.WSCloseCode.GOING_AWAY, message='Server shutdown')
+    await asyncio.gather(*[
+        shutdown_task(ws)
+        for ws in ws_connections
+    ])
+
+
+async def shutdown_task(ws: web.WebSocketResponse) -> None:
+    try:
+        await ws.close(code=aiohttp.WSCloseCode.GOING_AWAY, message=b'server shutdown')
+    except ConnectionError:
+        pass
 
 
 routes = web.RouteTableDef()
@@ -91,8 +105,7 @@ async def get_updates(user: str, request: web.Request):
             elif msg.type == aiohttp.WSMsgType.ERROR:
                 r8.echo("scoreboard", f'ws connection closed with exception {ws.exception()}')
     finally:
-        ws_connections.discard(ws)
-        # r8.echo('scoreboard', 'websocket connection closed')
+        ws_connections.remove(ws)
     return ws
 
 

@@ -42,6 +42,7 @@ class DockerChallenge(r8.Challenge):
         "--cap-drop", "all",
         "--user", "nobody",
     )
+    docker_started: bool = False
 
     max_concurrent: ClassVar[asyncio.Semaphore] = asyncio.Semaphore(r8.settings.get("docker_max_concurrent", 5))
     timeout = r8.settings.get("docker_timeout", 10)
@@ -111,9 +112,12 @@ class DockerChallenge(r8.Challenge):
                 await self._exec("docker", "pull", self.docker_tag)
                 self.echo(f"Docker: {self.docker_tag} pulled.")
         await self._exec("docker", "inspect", self.docker_tag)
+        self.docker_started = True
 
     async def docker_run_unlimited(self, *args) -> str:
         """`docker run` without rate limits"""
+        if not self.docker_started:
+            raise DockerError("Docker service not started.")
         self.echo(f"Docker: run {' '.join(args)}")
         name = "r8_" + secrets.token_hex(8)
         start = time.time()

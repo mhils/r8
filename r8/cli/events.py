@@ -54,7 +54,7 @@ def cli(rows, watch, query):
         time.sleep(0.5)
 
 
-@functools.lru_cache()
+@functools.cache
 def get_widths():
     time_w = 19
     ip_w = 15

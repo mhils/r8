@@ -173,13 +173,13 @@
             return <form className="col-md-5 col-lg-4 text-center" onSubmit={this.onSubmit}>
 
                 <div className="form-group">
-                    <input name="username" type="email" placeholder="foo@example.com"
+                    <input name="username" type="email" placeholder="foo@uibk.ac.at"
                            className="form-control" value={this.state.username}
                            required autoComplete="username"
                            onChange={this.onChange}/>
                 </div>
                 <div className="form-group">
-                    <input name="nickname" type="text" placeholder="Display Name (public)"
+                    <input name="nickname" type="text" placeholder="Team Name (public, SFW)"
                            className="form-control" value={this.state.nickname}
                            required autoComplete="nickname"
                            onChange={this.onChange}/>
@@ -469,8 +469,12 @@
                     break;
                 case "login":
                     body = <div className="container p-5">
+                        {% block login %}{% endblock %}
                         <div className="row p-5 justify-content-md-center">
                             <Login onLogin={this.onLogin}/>
+                            {% if r8.settings.register %}
+                            <Register onLogin={this.onLogin}/>
+                            {% endif %}
                         </div>
                     </div>;
                     break;

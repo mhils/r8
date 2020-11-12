@@ -77,7 +77,7 @@ class Scoreboard:
         )
         return f"Scoreboard[{leaders}]"
 
-    @functools.lru_cache(maxsize=None)
+    @functools.cache
     def to_json(self) -> dict:
         return {
             "timestamp": self.timestamp,
