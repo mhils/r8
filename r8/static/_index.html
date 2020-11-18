@@ -162,6 +162,7 @@
                 username: "",
                 password: "",
                 nickname: "",
+                category: "",
                 error: false
             };
             this.onChange = this.onChange.bind(this);
@@ -172,7 +173,7 @@
             return <form className="col-md-5 col-lg-4 text-center" onSubmit={this.onSubmit}>
 
                 <div className="form-group">
-                    <input name="username" type="email" placeholder="foo@uibk.ac.at"
+                    <input name="username" type="email" placeholder="foo@student.uibk.ac.at"
                            className="form-control" value={this.state.username}
                            required autoComplete="username"
                            onChange={this.onChange}/>
@@ -182,6 +183,18 @@
                            className="form-control" value={this.state.nickname}
                            required autoComplete="nickname"
                            onChange={this.onChange}/>
+                </div>
+                <div className="form-group">
+                    <select name="category" placeholder="wat"
+                            className="form-control" value={this.state.category}
+                            required
+                            onChange={this.onChange}>
+                        <option disabled value="">Team Category</option>
+                        <option value=" ">We are playing for fun. (not eligible for prizes)</option>
+                        <option value=" 🐣">All team members are first term students at UIBK.</option>
+                        <option value=" 🐤">All team members are bachelor students at UIBK.</option>
+                        <option value=" 🐔">All team members are students at UIBK.</option>
+                    </select>
                 </div>
                 <div className="form-group">
                     <input name="password" type="password" placeholder="Password"
@@ -214,7 +227,7 @@
                 let req = {
                     username: this.state.username.trim(),
                     password: this.state.password.trim(),
-                    nickname: this.state.nickname.trim(),
+                    nickname: (this.state.nickname.trim() + this.state.category).trim(),
                 };
                 fetchApi("/api/auth/register", {
                     method: "POST",
