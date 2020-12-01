@@ -85,7 +85,7 @@
         }
 
         refresh() {
-            fetchApi("/api/scoreboard/state")
+            fetchApi("/api/scoreboard/state" + location.search)
                 .then(state => {
                     // make solve lookup faster.
                     let solves = {};
@@ -110,7 +110,7 @@
 
         componentDidMount() {
             this.refresh();
-            this.ws = new WebSocket(location.origin.replace(/^http/, "ws") + "/api/scoreboard/updates");
+            this.ws = new WebSocket(location.origin.replace(/^http/, "ws") + "/api/scoreboard/updates" + location.search);
             this.ws.onopen = () => console.log("WebSocket connection opened.");
             this.ws.onclose = (e) => {
                 console.error(e);

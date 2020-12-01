@@ -57,7 +57,7 @@
     }
 
 
-    fetchApi("/api/scoreboard/state").then(data => {
+    fetchApi("/api/scoreboard/state" + location.search).then(data => {
         let x, i, j;
         let {scoreboards, teams} = data;
         let knownTeams = new Set(teams);
@@ -108,7 +108,7 @@
                 }
             });
 
-        window.ws = new WebSocket(location.origin.replace(/^http/, "ws") + "/api/scoreboard/updates");
+        window.ws = new WebSocket(location.origin.replace(/^http/, "ws") + "/api/scoreboard/updates" + location.search);
         window.ws.onopen = () => console.log("WebSocket connection opened.");
         window.ws.onclose = (e) => {
             console.error(e);
