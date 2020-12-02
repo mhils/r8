@@ -83,3 +83,20 @@ class Scoreboard:
             "timestamp": self.timestamp,
             "scores": dict(self.scores)
         }
+
+
+if __name__ == "__main__":
+    import matplotlib.pyplot as plt
+
+    N = 50
+    dummy = r8.Challenge("test")
+
+    r8.settings = {
+        "scoring": True,
+        "scoring_alpha": 0.1,
+        "scoring_beta": 2,
+    }
+    plt.plot(range(1, N), [challenge_points(dummy, i) for i in range(1, N)])
+    plt.ylabel("score")
+    plt.xlabel("solves")
+    plt.show()
