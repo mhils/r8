@@ -36,7 +36,7 @@
 
     function legendFormatter(data) {
         if (data.x === undefined) {
-            data.xHTML = "<h1>Current Ranking</h1>";
+            data.xHTML = "<h1>Current Ranking</h1><small>🐣&nbsp;first year, 🐤&nbsp;bachelor, 🐔&nbsp;master</small>";
             data.series.forEach((s, i) => {
                 s.yHTML = this.getValue(this.numRows() - 1, i + 1) || 0;
             });
