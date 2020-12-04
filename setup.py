@@ -52,7 +52,8 @@ setup(
         "blinker",
     ],
     extras_require={
-        "faster": [
+        "extra": [
+            "wcwidth",
             "aiohttp[speedups]",
         ],
         "dev": [

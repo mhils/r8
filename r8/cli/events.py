@@ -1,11 +1,17 @@
 import functools
 import time
+from math import ceil
 from typing import Optional
 
 import click
 
 import r8
 from r8 import util
+
+try:
+    from wcwidth import wcswidth
+except ImportError:
+    wcswidth = len
 
 
 def min_distinguishable_column_width(elements: list[str]) -> int:
@@ -20,6 +26,21 @@ def min_distinguishable_column_width(elements: list[str]) -> int:
         else:
             break
     return n + 1
+
+
+def format_untrusted_col(data: Optional[str], width: int) -> str:
+    if data:
+        data = r8.util.console_escape(data)[:width]
+    else:
+        data = "-"
+    data = data
+    while (curr_width := wcswidth(data)) > width:
+        chars_to_remove = ceil((curr_width - width) / 2)
+        data = data[:-chars_to_remove]
+    if curr_width < width:
+        return data + (" " * (width - curr_width))
+    else:
+        return data
 
 
 @click.command("events")
@@ -86,16 +107,13 @@ def format_event(
     ip = ip[:ip_w].rjust(ip_w)
     type = type[:type_w].ljust(type_w)
 
-    cid = (cid or "-")[:cid_w].ljust(cid_w)
-    uid = (uid or "-")[:uid_w].ljust(uid_w)
-    tid = (tid or "-")[:tid_w].ljust(tid_w)
+    cid = (cid or "-")[:cid_w]  # .ljust(cid_w)
+    uid = format_untrusted_col(uid, uid_w)
+    tid = format_untrusted_col(tid, uid_w)
 
     total_w, _ = click.get_terminal_size()
     data_w = total_w - time_w - ip_w - type_w - cid_w - uid_w - tid_w - 6
     data_w = max(0, data_w)
-    if data:
-        data = r8.util.console_escape(data)
-    else:
-        data = "-"
-    data = data[:data_w].ljust(data_w)
+    data = format_untrusted_col(data, data_w)
+
     return f"{time} {ip} {tid} {uid} {type} {data} {cid}"
