@@ -5,6 +5,7 @@ import html
 import json
 import re
 import secrets
+import shutil
 import sqlite3
 import textwrap
 import traceback
@@ -426,16 +427,19 @@ def run_sql(query: str, parameters=None, *, rows: int = 10) -> None:
         try:
             cursor = r8.db.execute(query, parameters or ())
         except Exception as e:
+            r8.db.rollback()
             return click.secho(str(e), fg="red")
-        data = cursor.fetchmany(rows)
-    table = texttable.Texttable(click.get_terminal_size()[0])
+        data = cursor.fetchmany(rows + 1)
+    table = texttable.Texttable(shutil.get_terminal_size((0, 0))[0])
     if data:
         table.set_cols_align(["r" if isinstance(x, int) else "l" for x in data[0]])
     if cursor.description:
         table.set_deco(table.BORDER | table.HEADER | table.VLINES)
         header = [x[0] for x in cursor.description]
-        table.add_rows([header] + data)
+        table.add_rows([header] + data[:rows])
         print(table.draw())
+        if len(data) > rows:
+            click.secho(f"(only first {rows} rows shown)", fg="yellow")
     else:
         print("Statement did not return data.")
 

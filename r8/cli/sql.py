@@ -128,6 +128,7 @@ def file(input, debug):
             r8.db.execute("PRAGMA defer_foreign_keys = OFF")
         except sqlite3.OperationalError as e:
             click.secho(str(e), fg="red")
+            r8.db.rollback()
 
 
 @cli.command()

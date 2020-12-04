@@ -1,4 +1,5 @@
 import functools
+import shutil
 import time
 from math import ceil
 from typing import Optional
@@ -111,7 +112,7 @@ def format_event(
     uid = format_untrusted_col(uid, uid_w)
     tid = format_untrusted_col(tid, uid_w)
 
-    total_w, _ = click.get_terminal_size()
+    total_w, _ = shutil.get_terminal_size((200, 0))
     data_w = total_w - time_w - ip_w - type_w - cid_w - uid_w - tid_w - 6
     data_w = max(0, data_w)
     data = format_untrusted_col(data, data_w)

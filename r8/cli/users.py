@@ -1,4 +1,5 @@
 import collections
+import shutil
 
 import click
 import texttable
@@ -106,7 +107,7 @@ def cli(entry_filter, challenge_filter, transpose, format, teams, team_solves):
         table_contents = list(zip(*table_contents))
 
     if format == "table":
-        table = texttable.Texttable(click.get_terminal_size()[0])
+        table = texttable.Texttable(shutil.get_terminal_size((0, 0))[0])
         table.set_cols_align(["l"] + ["c"] * (len(table_contents[0]) - 1))
         table.set_deco(table.BORDER | table.HEADER | table.VLINES)
         table.add_rows(table_contents)
