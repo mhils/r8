@@ -13,6 +13,7 @@ r8 API Reference
         :annotation: : list[str] = []
     .. autoattribute:: flag
         :annotation: : str = "__flag__{...}"
+    .. autoattribute:: points
     .. automethod:: description
     .. automethod:: visible
 
@@ -52,7 +53,7 @@ r8 API Reference
 
         <h3>Key-Value Storage</h3>
 
-    Challenges can store additional data in a persistent key value storage in the database.
+    Challenges can store additional data in a persistent key value JSON storage in the database.
 
     .. automethod:: get_data
     .. automethod:: set_data

@@ -1,8 +1,0 @@
-#!/bin/sh
-
-tmux kill-server
-tmux new-session -d -s r8-status
-tmux send-keys "journalctl -u r8 -f" enter
-tmux split-window -h
-tmux send-keys "r8 events" enter
-tmux attach-session -t r8-status

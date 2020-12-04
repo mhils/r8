@@ -1,2 +1,0 @@
-# m h  dom mon dow   command
-0 0 * * * cd /root && /root/venv/bin/r8 sql stmt --backup SELECT 1 >> /var/log/r8-backup.log 2>&1
