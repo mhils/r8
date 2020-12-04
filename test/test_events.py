@@ -1,4 +1,6 @@
-from r8.cli.events import format_untrusted_col, min_distinguishable_column_width
+import pytest
+
+from r8.cli.events import format_untrusted_col, min_distinguishable_column_width, wcswidth
 
 
 def test_format_untrusted_col_simple():
@@ -11,6 +13,7 @@ def test_format_untrusted_col_escape_chars():
     assert format_untrusted_col("\x07", 5) == "␇    "
 
 
+@pytest.mark.skipif(wcswidth is len, reason="requires wcwidth")
 def test_format_untrusted_col_emoji():
     assert format_untrusted_col("😃", 5) == "😃   "
     assert format_untrusted_col("😃😃😃😃😃😃😃", 6) == "😃😃😃"
