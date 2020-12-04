@@ -11,8 +11,7 @@
 </head>
 <body class="bg-light">
 <div id="root"></div>
-{% block footer %}
-{% endblock %}
+{% block footer %}{% endblock %}
 <script src="js/polyfills.js"></script>
 <script src="js/react.js"></script>
 <script src="js/react-dom.js"></script>
@@ -292,7 +291,7 @@
             super(props);
 
             this.state = {
-                flag: "",  // maybe this one? __flag__{30b1bef89d542fe722551d0d3e575a72}
+                flag: "",{% block easteregg %}{% endblock %}
                 error: false,
                 success: false,
             };
