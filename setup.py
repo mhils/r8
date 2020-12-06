@@ -42,6 +42,7 @@ setup(
             "dir = r8.builtin_challenges"
         ]
     },
+    python_requires='>=3.9',
     install_requires=[
         "click",
         "texttable",
