@@ -1,6 +1,6 @@
 [Unit]
 Description=r8 ctf system
-# ln -s /root/r8/misc/r8.service /etc/systemd/system/r8.servicen
+# ln -s /root/r8/misc/r8.service /etc/systemd/system/r8.service
 
 [Service]
 Type=simple

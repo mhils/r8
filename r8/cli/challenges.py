@@ -37,10 +37,15 @@ def list_available_challenges():
     """
     List all available challenges.
     """
-    assert not r8.challenges._classes
     for entry_point in pkg_resources.iter_entry_points('r8.challenges'):
-        print(f"{entry_point.module_name}:")
         entry_point.load()
-        for c in sorted(r8.challenges._classes):
+
+    challenges = {}
+    for name, cls in r8.challenges._classes.items():
+        mod = cls.__module__.split(".")[0]
+        challenges.setdefault(mod, []).append(name)
+
+    for mod, challenges in sorted(challenges.items()):
+        print(f"{mod}:")
+        for c in sorted(challenges):
             print(f" - {c}")
-        r8.challenges._classes.clear()
