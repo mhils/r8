@@ -48,7 +48,9 @@ class Scoreboard:
             team: TTeamId,
             challenge: "r8.Challenge",
             timestamp: TUnixtime
-    ) -> "Scoreboard":
+    ) -> Optional["Scoreboard"]:
+        if team.startswith("_"):
+            return None
         if team in self.solves[challenge.id]:
             raise ValueError(f"{challenge.id} already solved by {team}.")
 
@@ -56,6 +58,9 @@ class Scoreboard:
         old_score = challenge_points(challenge, existing_solves)
         new_score = challenge_points(challenge, existing_solves + 1)
         score_delta = old_score - new_score
+
+        if score_delta == 0:
+            return None
 
         ret = copy.deepcopy(self)
         ret.timestamp = timestamp

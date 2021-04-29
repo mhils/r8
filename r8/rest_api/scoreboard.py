@@ -6,7 +6,7 @@ from aiohttp import web
 
 import r8
 from .auth import authenticated
-from ..scoring import Scoreboard
+from ..scoring import Scoreboard, challenge_points
 
 scoreboards: list[Scoreboard] = [Scoreboard()]
 ws_connections: set[web.WebSocketResponse] = set()
@@ -22,9 +22,8 @@ async def on_startup(app):
             ORDER BY TIMESTAMP
         """)
         for team, cid, timestamp in submissions:
-            if team.startswith("_"):
-                continue
-            scoreboards.append(scoreboards[-1].solve(team, r8.challenges[cid], timestamp))
+            if next := scoreboards[-1].solve(team, r8.challenges[cid], timestamp):
+                scoreboards.append(next)
     if len(scoreboards) > 1:
         scoreboards[0].timestamp = min(scoreboards[0].timestamp, scoreboards[1].timestamp)
     r8.echo(
@@ -36,9 +35,10 @@ async def on_startup(app):
 
 def on_solve(sender, user, cid):
     team = r8.util.get_team(user)
-    if team.startswith("_"):
+    if next := scoreboards[-1].solve(team, r8.challenges[cid], time.time()):
+        scoreboards.append(next)
+    else:
         return
-    scoreboards.append(scoreboards[-1].solve(team, r8.challenges[cid], time.time()))
 
     data = scoreboards[-1].to_json()
     for ws in ws_connections:
