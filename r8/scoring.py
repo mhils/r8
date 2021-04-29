@@ -59,7 +59,7 @@ class Scoreboard:
         new_score = challenge_points(challenge, existing_solves + 1)
         score_delta = old_score - new_score
 
-        if score_delta == 0:
+        if old_score == new_score == 0:
             return None
 
         ret = copy.deepcopy(self)

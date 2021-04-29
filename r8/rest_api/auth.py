@@ -12,14 +12,14 @@ def authenticated(f: Callable[[str, web.Request], Any]) -> Callable[[web.Request
     """decorator that injects an authenticated user argument into the request handler"""
 
     @wraps(f)
-    def wrapper(request):
+    async def wrapper(request):
         token = request.query.get("token", "") or request.cookies.get("token", "")
         try:
             user = r8.util.auth_sign.unsign(token).decode()
         except itsdangerous.BadData:
             return web.HTTPUnauthorized()
         else:
-            return f(user, request)
+            return await f(user, request)
 
     return wrapper
 
