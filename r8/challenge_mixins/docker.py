@@ -141,7 +141,14 @@ class DockerChallenge(r8.Challenge):
             try:
                 await self._exec("docker", "kill", name)
             except DockerError as e:
-                if "No such container" not in str(e):
+                not_running = (
+                    "No such container" in str(e)
+                    or
+                    "is not running" in str(e)
+                )
+                if not_running:
+                    pass
+                else:
                     self.echo(str(e), err=True)
                     raise
             else:
