@@ -1,5 +1,6 @@
 import asyncio
 import re
+from typing import Optional
 
 import r8
 
@@ -36,10 +37,27 @@ class TcpServer(r8.Challenge):
     async def handle_connection(self, reader, writer):
         self.log(writer, "connected")
 
+        line: Optional[bytes]
+        try:
+            line = await asyncio.wait_for(reader.readline(), 0.5)
+        except asyncio.TimeoutError:
+            line = None
+        else:
+            if line.startswith(b"GET "):
+                writer.write(b'HTTP/1.1 400 Bad Request\r\n'
+                             b'\r\n'
+                             b'<a href="https://en.wikipedia.org/wiki/Netcat">This is not an HTTP service.</a>')
+                await writer.drain()
+                writer.close()
+                return
+
         writer.write(self.challenge)
         await writer.drain()
 
-        code = await reader.readline()
+        if line is not None:
+            code = line
+        else:
+            code = await reader.readline()
         code = code.decode("ascii", "replace").strip()
 
         is_correct = re.search(self.response, code, re.IGNORECASE)
