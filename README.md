@@ -26,7 +26,7 @@ into which we install all dependencies, and finally install r8:
 ```shell
 python3 -m venv venv
 git clone https://github.com/mhils/r8.git
-venv/bin/pip install -e r8
+venv/bin/pip install -e ./r8
 ```
 
 Activate the virtual environment. This always needs to be done to make the `r8` command available:
