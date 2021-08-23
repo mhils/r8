@@ -132,8 +132,7 @@
         return <nav className="navbar sticky-top {% block navstyle %}navbar-dark bg-dark{% endblock %}">
             <div className="container">
                 <a className="navbar-brand overflow-auto" href="#">
-                    <Logo/>
-                    {{ self.title() }}
+                    <Logo/> {{ self.title() }}
                 </a>
                 {% if r8.settings.start and r8.settings.end %}
                     {% if time.time() < r8.settings.start %}
@@ -326,7 +325,7 @@
         }
 
         render() {
-            return <section className="text-center bg-dark">
+            return <section className="text-center {% block submitstyle %}bg-dark{% endblock %}">
                 <form className="container p-5" onSubmit={this.onSubmit}>
                     <div className="form-group">
                         <input name="flag" type="text" className="form-control text-center"
