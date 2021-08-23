@@ -107,6 +107,11 @@ It is recommended to use [r8-example](https://github.com/mhils/r8-example) as a 
 and place challenges in a new separate repository. See `r8.builtin_challenges` and `r8_example` 
 for challenge examples.
 
+## Customizing the HTML template
+
+r8 provides some simple means to modify the default HTML template, for example to add a custom logo.
+An example can be found in the [`misc/custom-template`](misc/custom-template) directory.
+
 ## Architecture
 
 r8 consists of the following parts:

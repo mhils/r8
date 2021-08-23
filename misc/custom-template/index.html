@@ -1,0 +1,21 @@
+{% extends "_index.html" %}
+
+{% block title %}Mountain CTF{% endblock %}
+
+{% block logo %}
+    function Logo() {
+        return <img alt="logo" src="logo.svg" width="32" height="32"/>;
+    }
+{% endblock %}
+
+{% block footer %}
+<footer class="text-center m-4">
+    Please reach out to foo@bar if you encounter any technical issues!
+</footer>
+{% endblock %}
+
+{# Style changes using builtin Bootstrap classes #}
+{% block navstyle %}navbar-light bg-light{% endblock %}
+{% block submitstyle %}bg-dark{% endblock %}
+
+{% block easteregg %}  // here's a free flag __flag__{123456}{% endblock %}
