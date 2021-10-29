@@ -21,7 +21,11 @@ class FromFolder(r8.Challenge):
         self.path = Path(self.args).absolute()
 
     async def start(self):
-        self.title = (self.path / "title.txt").read_text()
+        try:
+            self.title = (self.path / "title.txt").read_text()
+        except IOError as e:
+            self.title = f"Cannot read challenge title: {e}."
+            raise
         flags = list(self.path.glob("*/flag.txt"))
         for flag in flags:
             with open(flag) as f:
@@ -35,6 +39,6 @@ class FromFolder(r8.Challenge):
         except IOError:
             return """
             <div class="alert alert-danger">
-                No challenge created for your group. Please report a bug!
+                No challenge description found for your user. Please contact staff!
             </div>
             """

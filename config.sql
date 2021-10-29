@@ -18,7 +18,7 @@ INSERT INTO challenges (cid, team, t_start, t_stop) VALUES
   ('WebServer', 1, datetime('now'), datetime('now','+1 month')),
   ('FormExample', 1, datetime('now'), datetime('now','+1 month')),
   ('DockerHelloWorld', 1, datetime('now'), datetime('now','+1 month')),
-  ('FromFolder(../r8/misc/folder-example)', 1, datetime('now'), datetime('now','+1 month','start of day'))
+  ('FromFolder(r8/misc/folder-example)', 1, datetime('now'), datetime('now','+1 month','start of day'))
 ;
 
 -- Configure all user accounts. See `r8 password --help` for password generation.
