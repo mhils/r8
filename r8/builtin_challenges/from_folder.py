@@ -24,8 +24,10 @@ class FromFolder(r8.Challenge):
         try:
             self.title = (self.path / "title.txt").read_text()
         except IOError as e:
-            self.title = f"Cannot read challenge title: {e}."
-            raise
+            err = f"Error reading challenge title: {e}."
+            self.title = err
+            self.echo(err, err=True)
+            return
         flags = list(self.path.glob("*/flag.txt"))
         for flag in flags:
             with open(flag) as f:

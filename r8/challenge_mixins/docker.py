@@ -3,6 +3,7 @@ import binascii
 import re
 import secrets
 import shlex
+import shutil
 import time
 from pathlib import Path
 from typing import ClassVar, Optional
@@ -92,12 +93,30 @@ class DockerChallenge(r8.Challenge):
                 err=True
             )
         if proc.returncode != 0:
-            raise DockerError(f"Execution error.\ncmd={shlex.join(cmd)!r}\n{proc.returncode=}\n{stdout=}\n{stderr=}")
+            err = (
+                f"Execution error (return code: {proc.returncode})\n"
+                f"[command]\n"
+                f"{shlex.join(cmd)}"
+            )
+            if stdout:
+                err += (
+                    f"\n[stdout]"
+                    f"\n{stdout.decode(errors='backslashreplace').strip()}"
+                )
+            if stderr:
+                err += (
+                    f"\n[stderr]"
+                    f"\n{stderr.decode(errors='backslashreplace').strip()}"
+                )
+            raise DockerError(err)
         return proc, stdout, stderr
 
     async def start(self):
         await super().start()
         if self.dockerfile:
+            if shutil.which("docker") is None:
+                self.echo("Docker not installed. Cannot build challenge.", err=True)
+                return
             self.echo(f"Docker: Building {self.docker_tag}...")
             await self._exec(
                 "docker", "build",
