@@ -18,10 +18,10 @@ class FromFolder(r8.Challenge):
 
     def __init__(self, cid: str) -> None:
         super().__init__(cid)
-        self.path = Path(self.args)
-        self.title = (self.path / "title.txt").read_text()
+        self.path = Path(self.args).absolute()
 
     async def start(self):
+        self.title = (self.path / "title.txt").read_text()
         flags = list(self.path.glob("*/flag.txt"))
         for flag in flags:
             with open(flag) as f:
