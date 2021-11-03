@@ -16,9 +16,11 @@ INSERT INTO challenges (cid, team, t_start, t_stop) VALUES
   -- Other examples
   ('TcpServer', 1, datetime('now'), datetime('now','+1 month')),
   ('WebServer', 1, datetime('now'), datetime('now','+1 month')),
-  ('FormExample', 1, datetime('now'), datetime('now','+1 month')),
-  ('DockerHelloWorld', 1, datetime('now'), datetime('now','+1 month')),
-  ('FromFolder(r8/misc/folder-example)', 1, datetime('now'), datetime('now','+1 month','start of day'))
+  -- requires docker to be installed:
+  -- ('DockerHelloWorld', 1, datetime('now'), datetime('now','+1 month')),
+  -- should use an absolute path to be independent of the current working directory:
+  -- ('FromFolder(r8/misc/folder-example)', 1, datetime('now'), datetime('now','+1 month','start of day')),
+  ('FormExample', 1, datetime('now'), datetime('now','+1 month'))
 ;
 
 -- Configure all user accounts. See `r8 password --help` for password generation.
