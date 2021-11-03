@@ -131,7 +131,7 @@ To speed up development, the server can be automatically reloaded on changes usi
 ## Deployment
 
 For production use, it is recommended to run r8 on a throwaway VM behind a TLS-terminating reverse 
-proxy such as nginx. A couple of auxiliary configuration examples are provided in the [./misc](./misc) folder:
+proxy such as Caddy or nginx. A couple of auxiliary configuration examples are provided in the [./misc](./misc) folder:
 
- - `nginx.conf`: nginx configuration example for an HTTPS-only deployment.
+ - `Caddyfile`: Caddyfile configuration example for an HTTPS-only deployment.
  - `r8.service`: systemd service file example.
