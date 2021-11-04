@@ -59,11 +59,15 @@ def hash_password(password):
 @click.argument("user")
 @click.password_option()
 def update(user, password):
-    """Update a user's password."""
+    """Update a user's password.
+
+    Note that this change may only be temporary if you reset credentials in `config.sql`.
+    """
     password = util.hash_password(password)
     with r8.db:
         exists = r8.db.execute("SELECT COUNT(*) FROM users WHERE uid = ?", (user,)).fetchone()[0]
         if not exists:
             raise click.UsageError("User does not exist.")
         r8.db.execute("UPDATE users SET password = ? WHERE uid = ?", (password, user))
-    r8.echo("r8", f"Password updated.")
+    r8.echo("r8", f"Password updated. "
+                  f"Note that this change may only be temporary if you reset credentials in `config.sql`.")
