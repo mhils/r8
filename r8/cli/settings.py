@@ -8,14 +8,19 @@ from r8 import util
 
 @click.group("settings")
 def cli():
-    """View and modify settings."""
+    """View and modify the r8 configuration
+
+    r8's database has a `settings` table where keys as strings and values are
+    JSON objects, e.g. numbers, strings, or list of strings. The subcommands
+    available here can be used to view or modify the configuration.
+    """
     pass
 
 
 @cli.command()
 @util.with_database()
 def view():
-    """Print all settings"""
+    """Print the current configuration"""
     util.run_sql(f"SELECT * FROM settings", rows=100)
 
 
@@ -24,7 +29,18 @@ def view():
 @click.argument("value", nargs=-1)
 @util.with_database()
 def set(key, value):
-    """Update a setting"""
+    """Set a configuration key to a specific value
+
+    Set KEY to VALUE.
+    If multiple values are passed, they are treated as a list of strings.
+    If a single value is passed that is not valid JSON, it is treated as a string.
+
+    \b
+    Examples:
+        - r8 settings set host localhost
+        - r8 settings set port 8000
+        - r8 settings set static_dir /first/directory /second/directory
+    """
     if len(value) == 1:
         value = value[0]
         try:
@@ -46,8 +62,7 @@ def set(key, value):
 @click.argument("key")
 @util.with_database()
 def delete(key):
-    """Update a setting"""
+    """Delete a configuration key."""
     with r8.db:
         r8.db.execute("DELETE FROM settings WHERE key = ?", (key,))
     util.run_sql(f"SELECT * FROM settings", rows=100)
-
