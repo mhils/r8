@@ -602,17 +602,25 @@ async def get_challenges(user: str):
                 for key, value in zip(column_names, row)
             } for row in cursor.fetchall()
         ]
-    results = [
-        x for x in results
-        if x["solve_time"] or await r8.challenges[x["cid"]].visible(user)
-    ]
     for challenge in results:
         challenge["team"] = bool(challenge["team"])
-        inst: r8.Challenge = r8.challenges[challenge["cid"]]
+
         try:
+            inst: r8.Challenge = r8.challenges[challenge["cid"]]
             challenge["title"] = str(inst.title)
         except Exception:
-            challenge["title"] = "Title Error"
+            challenge["title"] = challenge['cid']
+            challenge["visible"] = True
+            challenge["tags"] = []
+            challenge["description"] = f"<pre>{html.escape(traceback.format_exc())}</pre>"
+            continue
+
+        try:
+            challenge["visible"] = challenge["solve_time"] or await inst.visible(user)
+            if not challenge["visible"]:
+                continue
+        except Exception:
+            challenge["visible"] = True
             challenge["tags"] = []
             challenge["description"] = f"<pre>{html.escape(traceback.format_exc())}</pre>"
             continue
@@ -636,7 +644,10 @@ async def get_challenges(user: str):
         else:
             challenge["first_solve_bonus"] = scoring.first_solve_bonus(inst, challenge["solves"])
 
-    return results
+    return [
+        x for x in results
+        if x["visible"]
+    ]
 
 
 def serve_static(static_dir: Union[str, Path, Iterable[Union[Path, str]]], insecure_path: str) -> web.StreamResponse:
