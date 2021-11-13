@@ -141,7 +141,7 @@
                         {% set target = r8.settings.end %}
                     {% endif %}
                     <span className="navbar-text">
-                    <Countdown target={new Date({{target*1000}})}/>
+                    <Countdown target={new Date({{ target * 1000 }})}/>
                 </span>
                 {% endif %}
                 <span className="navbar-text">
@@ -233,8 +233,7 @@
                 username: "",
                 password: "",
                 error: false,
-            }
-            ;
+            };
             this.onChange = this.onChange.bind(this);
             this.onSubmit = this.onSubmit.bind(this);
         }
@@ -387,13 +386,16 @@
         let first_solve_bonus = null;
         if (challenge.first_solve_bonus) {
             if (challenge.solve_time) {
-                first_solve_bonus = <span title={`Awarded first solve bonus as #${challenge.solve_rank}.`}>+{challenge.first_solve_bonus}</span>
+                first_solve_bonus = <span
+                    title={`Awarded first solve bonus as #${challenge.solve_rank}.`}>+{challenge.first_solve_bonus}</span>
             } else {
                 first_solve_bonus =
-                    <span title={`First Solve Bonus ${challenge.solves} solves so far)`} className="ml-1">🔥 {challenge.first_solve_bonus}</span>;
+                    <span title={`First Solve Bonus ${challenge.solves} solves so far)`}
+                          className="ml-1">🔥 {challenge.first_solve_bonus}</span>;
             }
         } else {
-            first_solve_bonus = <span className="ml-1">({challenge.solves} solve{challenge.solves !== 1 ? 's' : ''})</span>;
+            first_solve_bonus =
+                <span className="ml-1">({challenge.solves} solve{challenge.solves !== 1 ? 's' : ''})</span>;
         }
 
         return <div className={className}>
@@ -441,6 +443,7 @@
             super(props);
             this.state = {
                 uiState: "fetching",
+                error: false,
                 user: false,
                 team: false,
                 challenges: []
@@ -479,6 +482,9 @@
                 case "dashboard":
                     body = <Dashboard challenges={this.state.challenges} onSolve={this.onSolve}/>;
                     break;
+                case "error":
+                    body = <pre className="alert alert-danger m-5" role="alert">{this.state.error}</pre>;
+                    break;
             }
 
             return <React.Fragment>
@@ -500,20 +506,32 @@
         }
 
         fetchStatus() {
-            fetchApi("/api/challenges/")
-                .then(status => {
-                    console.debug("status", status);
-                    this.setState({
-                        uiState: "dashboard",
-                        challenges: status.challenges,
-                        user: status.user,
-                        team: status.team,
-                    })
-                })
-                .catch(error => {
-                    console.error(error);
-                    this.setState({uiState: "login"})
-                })
+            return fetch("/api/challenges/", {credentials: "same-origin"})
+                .catch(err => {throw "Network error."})
+                .then(resp => {
+                    if (resp.status === 401) {
+                        this.setState({uiState: "login"});
+                    } else {
+                        return resp.text().then(text => {
+                            let status;
+                            try {
+                                status = JSON.parse(text);
+                            } catch (e) {
+                                throw text;
+                            }
+                            console.debug("status", status);
+                            this.setState({
+                                uiState: "dashboard",
+                                challenges: status.challenges,
+                                user: status.user,
+                                team: status.team,
+                            });
+                        });
+                    }
+                }).catch(err => {
+                    console.error(err);
+                    this.setState({uiState: "error", error: String(err)});
+                });
         }
     }
 
