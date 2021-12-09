@@ -78,7 +78,7 @@ async def get_state(user: str, request: web.Request):
     return web.json_response({
         "teams": [t for t in r8.util.get_teams() if not t.startswith("_")],
         # only show active teams: list(scoreboards[-1].scores.keys()),
-        "challenges": challenges,
+        "challenges": [c for c in challenges if c["points"] > 0],
         "solves": {
             challenge["cid"]: scoreboards[-1].solves[challenge["cid"]]
             for challenge in challenges
