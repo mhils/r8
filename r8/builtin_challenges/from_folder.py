@@ -22,7 +22,7 @@ class FromFolder(r8.Challenge):
 
     async def start(self):
         try:
-            self.title = (self.path / "title.txt").read_text()
+            self.title = (self.path / "title.txt").read_text("utf8")
         except IOError as e:
             err = f"Error reading challenge title: {e}."
             self.title = err
@@ -37,7 +37,7 @@ class FromFolder(r8.Challenge):
     async def description(self, user: str, solved: bool):
         desc = self.path / r8.util.get_team(user) / "description.html"
         try:
-            return desc.read_text()
+            return desc.read_text("utf8")
         except IOError:
             return """
             <div class="alert alert-danger">
