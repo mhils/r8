@@ -1,12 +1,14 @@
 import asyncio
 import datetime
 import functools
+import gzip
 import html
 import json
 import re
 import secrets
 import shutil
 import sqlite3
+import sys
 import textwrap
 import traceback
 from collections.abc import Iterable
@@ -401,8 +403,18 @@ def backup_db(f):
         if backup:
             backup_dir = Path.home() / ".r8"
             backup_dir.mkdir(exist_ok=True)
+
+            total, used, free = shutil.disk_usage(backup_dir)
+            if free < 1024 * 1024 * 1024:
+                click.secho(
+                    f"Attempted to backup the database to {backup_dir}, but less than 1GB if disk space "
+                    f"is available. Aborting.",
+                    fg="red", err=True
+                )
+                sys.exit(1)
+
             time = datetime.datetime.now().strftime("%Y%m%d-%H%M%S")
-            with open(backup_dir / f"backup-{time}.sql", 'w', encoding="utf8") as out:
+            with gzip.open(backup_dir / f"backup-{time}.sql.gz", 'wt', encoding="utf8") as out:
                 for line in r8.db.iterdump():
                     out.write('%s\n' % line)
         return f(**kwds)
