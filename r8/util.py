@@ -407,9 +407,10 @@ def backup_db(f):
             total, used, free = shutil.disk_usage(backup_dir)
             if free < 1024 * 1024 * 1024:
                 click.secho(
-                    f"Attempted to backup the database to {backup_dir}, but less than 1GB if disk space "
+                    f"Attempted to backup the database to {backup_dir}, but less than 1GB of disk space "
                     f"is available. Aborting.",
-                    fg="red", err=True
+                    fg="red",
+                    err=True,
                 )
                 sys.exit(1)
 
