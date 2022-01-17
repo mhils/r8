@@ -6,12 +6,11 @@
 
 r8 is a simple [jeopardy-style](https://ctftime.org/ctf-wtf/) CTF system. What sets it apart from other platforms?
 
-1. r8 is intentionally simple. It won't send emails, support multi-server deployments, 
-or provide an LDAP integration.
-2. r8 is designed to support university courses. It can be deployed for an entire semester and
-includes challenge scheduling functionality and logging capabilities to detect cheating.
-3. r8 is written in modern Python 3. This generally makes it easy to spawn additional network 
-services or interface with other tools and languages.
+1. r8 is intentionally simple. It won't send emails, support multi-server deployments,
+   or provide an LDAP integration.
+3. r8 is designed to support CTF events, but also entire university courses. 
+   It can be deployed for an entire semester and includes challenge scheduling functionality and logging capabilities to detect cheating.
+3. r8 is written in modern Python 3. This generally makes it easy to spawn additional network services or interface with other tools and languages.
 
 r8 is successfully being used for teaching at the University of California, Berkeley and the University of Innsbruck, 
 Austria.
@@ -118,11 +117,11 @@ r8 consists of the following parts:
   1. The core **`r8` application** written in Python, which manages the currently active challenges. 
      It provides a command-line API for administration (`r8.cli`), a REST API for users (`r8.server`), 
      and a Python API for challenges (`r8.Challenge`).
-  2. **CTF challenges** implemented in Python 3.8+. All challenges need to inherit from `r8.Challenge` 
+  2. **CTF challenges** implemented in Python. All challenges need to inherit from `r8.Challenge` 
      and must be registered using entrypoints so that they are imported on start. 
      See `r8.builtin_challenges` and `r8_example` for challenge examples and each repo's `setup.py` for entrypoint declaration.
   3. An SQLite **database** that contains information on users, groups, challenge scheduling, and flags.
-     There also is an event log that can be used to e.g. detect indicators of plagiarism.
+     There also is an event log that can be used to help students or detect indicators of plagiarism.
   4. A **web interface** that allows users to view challenges and enter flags, implemented using React and Bootstrap.
      To simplify development, there is no compilation step.
 
