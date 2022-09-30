@@ -1,3 +1,4 @@
+from __future__ import annotations
 import collections
 import copy
 import functools
@@ -12,7 +13,7 @@ TChallengeId = str
 TUnixtime = float
 
 
-def first_solve_bonus(challenge: "r8.Challenge", existing_solves: int) -> int:
+def first_solve_bonus(challenge: r8.Challenge, existing_solves: int) -> int:
     if not r8.settings.get("scoring", False):
         return 0
     if challenge.points == 0:
@@ -20,15 +21,15 @@ def first_solve_bonus(challenge: "r8.Challenge", existing_solves: int) -> int:
     return math.floor(r8.settings.get("scoring_first_solve_bonus", 0) / 2 ** existing_solves)
 
 
-def challenge_points(challenge: "r8.Challenge", solves: int) -> int:
+def challenge_points(challenge: r8.Challenge, solves: int) -> int:
     if not r8.settings.get("scoring", False):
         return 0
     if challenge.points is not None:
         return challenge.points
     if solves == 0:
         return 500
-    alpha = r8.settings.get("scoring_alpha", 0.25)
-    beta = r8.settings.get("scoring_beta", 2.0)
+    alpha = r8.settings.get("scoring_alpha", 0)
+    beta = r8.settings.get("scoring_beta", 1)
     return round(470 / (1 + (alpha * (solves - 1)) ** beta)) + 30
 
 
@@ -46,7 +47,7 @@ class Scoreboard:
     def solve(
             self,
             team: TTeamId,
-            challenge: "r8.Challenge",
+            challenge: r8.Challenge,
             timestamp: TUnixtime
     ) -> Optional["Scoreboard"]:
         if team.startswith("_"):
