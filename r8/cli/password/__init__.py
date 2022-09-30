@@ -58,10 +58,10 @@ def hash_password(password):
 @util.with_database()
 @click.argument("user")
 @click.password_option()
-def update(user, password):
-    """Update a user's password.
+def update_temporary(user, password):
+    """Update a user's password in the live database.
 
-    Note that this change may only be temporary if you reset credentials in `config.sql`.
+    This change will be undone if you reset credentials in `config.sql`.
     """
     password = util.hash_password(password)
     with r8.db:
