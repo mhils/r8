@@ -31,6 +31,9 @@ def init(origin, static_dir, host, port, database) -> None:
         raise click.UsageError("Database already exists.")
     conn = util.sqlite3_connect(database)
     conn.executescript("""
+        /* Do not add `ON DELETE CASCADE` to the key constraints, it does not work well with our config.sql approach.
+           SQL triggers fire immediately (even if constraints are deferred), so a `DELETE FROM challenges; 
+           INSERT INTO challenges [...];` will delete all dependents in between. */
         CREATE TABLE users (
             uid TEXT PRIMARY KEY NOT NULL,
             password TEXT NOT NULL
