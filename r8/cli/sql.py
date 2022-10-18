@@ -133,7 +133,8 @@ def file(input, debug):
 
 @cli.command()
 @util.with_database()
-def tables():
+@click.option('--rows', help="Example rows per table", show_default=True, type=int, default=1)
+def tables(rows):
     """Print overview of all tables."""
     table_names = [
         x[0] for x in
@@ -141,4 +142,4 @@ def tables():
     ]
     for table in table_names:
         click.secho(f"[{table}]", fg="green")
-        util.run_sql(f"SELECT * FROM {table} LIMIT 1")
+        util.run_sql(f"SELECT * FROM {table} LIMIT {rows}")
