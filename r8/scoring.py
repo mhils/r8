@@ -1,10 +1,10 @@
 from __future__ import annotations
+
 import collections
 import copy
 import functools
 import math
 from math import ceil
-from typing import Optional
 
 import r8
 
@@ -18,7 +18,9 @@ def first_solve_bonus(challenge: r8.Challenge, existing_solves: int) -> int:
         return 0
     if challenge.points == 0:
         return 0
-    return math.floor(r8.settings.get("scoring_first_solve_bonus", 0) / 2 ** existing_solves)
+    return math.floor(
+        r8.settings.get("scoring_first_solve_bonus", 0) / 2**existing_solves
+    )
 
 
 def challenge_points(challenge: r8.Challenge, solves: int) -> int:
@@ -35,6 +37,7 @@ def challenge_points(challenge: r8.Challenge, solves: int) -> int:
 
 class Scoreboard:
     """Immutable snapshot of scores at a given point in time."""
+
     timestamp: TUnixtime
     scores: collections.Counter[TTeamId]
     solves: collections.defaultdict[TChallengeId, list[TTeamId]]
@@ -45,11 +48,8 @@ class Scoreboard:
         self.solves = collections.defaultdict(list)
 
     def solve(
-            self,
-            team: TTeamId,
-            challenge: r8.Challenge,
-            timestamp: TUnixtime
-    ) -> Optional[Scoreboard]:
+        self, team: TTeamId, challenge: r8.Challenge, timestamp: TUnixtime
+    ) -> Scoreboard | None:
         if team.startswith("_"):
             return None
         if team in self.solves[challenge.id]:
@@ -78,17 +78,13 @@ class Scoreboard:
     def __repr__(self):
         leaders = ", ".join(
             f"#{i + 1} {name} ({ceil(score)})"
-            for i, (name, score)
-            in enumerate(self.scores.most_common(3))
+            for i, (name, score) in enumerate(self.scores.most_common(3))
         )
         return f"Scoreboard[{leaders}]"
 
     @functools.cache
     def to_json(self) -> dict:
-        return {
-            "timestamp": self.timestamp,
-            "scores": dict(self.scores)
-        }
+        return {"timestamp": self.timestamp, "scores": dict(self.scores)}
 
 
 if __name__ == "__main__":

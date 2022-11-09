@@ -16,12 +16,15 @@ class TcpServer(r8.Challenge):
     fail = b"Not convinced!\n"
 
     async def description(self, user: str, solved: bool):
-        return r8.util.media(self.api_url("tcp_server.svg"), f"""
+        return r8.util.media(
+            self.api_url("tcp_server.svg"),
+            f"""
             <p>
             There is an important question to be answered. 
             Connect to the TCP service at <code>{r8.util.get_host()}:{self.address[1]}</code>.
             </p>
-        """)
+        """,
+        )
 
     async def start(self):
         self.server = await asyncio.start_server(self.handle_connection, *self.address)
@@ -44,9 +47,11 @@ class TcpServer(r8.Challenge):
             line = None
         else:
             if line.startswith(b"GET "):
-                writer.write(b'HTTP/1.1 400 Bad Request\r\n'
-                             b'\r\n'
-                             b'<a href="https://en.wikipedia.org/wiki/Netcat">This is not an HTTP service.</a>')
+                writer.write(
+                    b"HTTP/1.1 400 Bad Request\r\n"
+                    b"\r\n"
+                    b'<a href="https://en.wikipedia.org/wiki/Netcat">This is not an HTTP service.</a>'
+                )
                 await writer.drain()
                 writer.close()
                 return

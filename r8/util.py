@@ -14,7 +14,9 @@ import traceback
 from collections.abc import Iterable
 from functools import wraps
 from pathlib import Path
-from typing import Optional, TypeVar, Union
+from typing import Optional
+from typing import TypeVar
+from typing import Union
 
 import argon2
 import blinker
@@ -30,7 +32,9 @@ from r8 import scoring
 def get_team(user: str) -> Optional[str]:
     """Get a given user's team."""
     with r8.db:
-        row = r8.db.execute("""SELECT tid FROM teams WHERE uid = ?""", (user,)).fetchone()
+        row = r8.db.execute(
+            """SELECT tid FROM teams WHERE uid = ?""", (user,)
+        ).fetchone()
         if row:
             return row[0]
         return None
@@ -40,24 +44,21 @@ def get_teams() -> list[str]:
     """Get a list of all teams"""
     with r8.db:
         return [
-            x[0] for x in
-            r8.db.execute("SELECT DISTINCT tid FROM teams").fetchall()
+            x[0] for x in r8.db.execute("SELECT DISTINCT tid FROM teams").fetchall()
         ]
 
 
 def get_users() -> list[str]:
     """Get a list of all teams"""
     with r8.db:
-        return [
-            x[0] for x in
-            r8.db.execute("SELECT uid FROM users").fetchall()
-        ]
+        return [x[0] for x in r8.db.execute("SELECT uid FROM users").fetchall()]
 
 
 def has_solved(user: str, challenge: str) -> bool:
     """Check if a user has solved a challenge."""
     with r8.db:
-        return r8.db.execute("""
+        return r8.db.execute(
+            """
             SELECT COUNT(*)
             FROM challenges
             NATURAL JOIN flags
@@ -69,7 +70,9 @@ def has_solved(user: str, challenge: str) -> bool:
                 )
             )
             WHERE challenges.cid = ?
-        """, (user, user, challenge)).fetchone()[0]
+        """,
+            (user, user, challenge),
+        ).fetchone()[0]
 
 
 def media(src: Optional[str], desc: str, visible: bool = True):
@@ -81,12 +84,14 @@ def media(src: Optional[str], desc: str, visible: bool = True):
         desc: Media body.
         visible: If `False`, a generic challenge icon will be shown instead.
     """
-    return textwrap.dedent(f"""
+    return textwrap.dedent(
+        f"""
         <div class="media">
             <img class="mr-3" style="max-width: 128px; max-height: 128px;" src="{src if src and visible else "/challenge.svg"}">
             <div class="align-self-center media-body">{desc}</div>
         </div>
-        """)
+        """
+    )
 
 
 def spoiler(help_text: str, button_text="🕵️ Show Hint") -> str:
@@ -115,7 +120,8 @@ def challenge_form_js(cid: str) -> str:
     """
     JS Boilerplate for simple interactive form submissions in the challenge description.
     """
-    return """
+    return (
+        """
         <script>{ // make sure to add a block here so that `let` is scoped.
         let spinner = '<div class="spinner-border spinner-border-sm"></div>';
         let form = document.currentScript.previousElementSibling;
@@ -144,7 +150,9 @@ def challenge_form_js(cid: str) -> str:
             });
         });
         }</script>
-    """ % cid
+    """
+        % cid
+    )
 
 
 def challenge_invoke_button(cid: str, button_text: str) -> str:
@@ -182,7 +190,7 @@ def get_host() -> str:
     """
     Return the hostname of the CTF system.
     """
-    scheme, host, *_ = r8.settings['origin'].split(":")
+    scheme, host, *_ = r8.settings["origin"].split(":")
     return host.lstrip("/")
 
 
@@ -195,7 +203,7 @@ def connection_timeout(f):
             await asyncio.wait_for(f(*args, **kwds), 60)
         except asyncio.TimeoutError:
             writer = args[-1]
-            writer.write("\nconnection timed out.\n".encode())
+            writer.write(b"\nconnection timed out.\n")
             await writer.drain()
             writer.close()
 
@@ -261,7 +269,9 @@ def echo(namespace: str, message: str, err: bool = False) -> None:
     click.echo(click.style(f"[{namespace}] ", fg=color) + message, err=err)
 
 
-THasIP = TypeVar("THasIP", str, tuple, asyncio.StreamWriter, asyncio.BaseTransport, web.Request)
+THasIP = TypeVar(
+    "THasIP", str, tuple, asyncio.StreamWriter, asyncio.BaseTransport, web.Request
+)
 
 
 def get_ip(ip: THasIP) -> str:
@@ -280,12 +290,12 @@ def get_ip(ip: THasIP) -> str:
 
 
 def log(
-        ip: THasIP,
-        type: str,
-        data: Optional[str] = None,
-        *,
-        cid: Optional[str] = None,
-        uid: Optional[str] = None,
+    ip: THasIP,
+    type: str,
+    data: Optional[str] = None,
+    *,
+    cid: Optional[str] = None,
+    uid: Optional[str] = None,
 ) -> int:
     """
     Create a log entry.
@@ -303,15 +313,11 @@ def log(
     with r8.db:
         return r8.db.execute(
             "INSERT INTO events (ip, type, data, cid, uid) VALUES (?, ?, ?, ?, ?)",
-            (ip, type, data, cid, uid)
+            (ip, type, data, cid, uid),
         ).lastrowid
 
 
-def create_flag(
-        challenge: str,
-        max_submissions: int = 1,
-        flag: str = None
-) -> str:
+def create_flag(challenge: str, max_submissions: int = 1, flag: str = None) -> str:
     """
     Create a new flag for an existing challenge. When creating flags from challenges,
     see also :meth:`r8.Challenge.log_and_create_flag`.
@@ -326,7 +332,7 @@ def create_flag(
     with r8.db:
         r8.db.execute(
             "INSERT OR REPLACE INTO flags (fid, cid, max_submissions) VALUES (?,?,?)",
-            (flag, challenge, max_submissions)
+            (flag, challenge, max_submissions),
         )
     return flag
 
@@ -342,10 +348,7 @@ class Signer:
         if not self._signer:
             # We could in theory fall back to a random value if we don't have settings,
             # but not having a DB connection would be unexpected and we want to fail.
-            self._signer = itsdangerous.Signer(
-                r8.settings["secret"],
-                salt=self._salt
-            )
+            self._signer = itsdangerous.Signer(r8.settings["secret"], salt=self._salt)
 
     def sign(self, value):
         self._init()
@@ -358,12 +361,7 @@ class Signer:
 
 auth_sign = Signer("auth")
 
-database_rows = click.option(
-    '--rows',
-    type=int,
-    default=100,
-    help='Number of rows'
-)
+database_rows = click.option("--rows", type=int, default=100, help="Number of rows")
 
 
 def with_database(echo=False):
@@ -386,7 +384,9 @@ def with_database(echo=False):
                     try:
                         val = json.loads(v)
                     except ValueError as e:
-                        raise ValueError(f"Setting {k} is not JSON-deserializable: {v!r}") from e
+                        raise ValueError(
+                            f"Setting {k} is not JSON-deserializable: {v!r}"
+                        ) from e
                     r8.settings[k] = val
             return f(**kwds)
 
@@ -396,8 +396,12 @@ def with_database(echo=False):
 
 
 def backup_db(f):
-    @click.option("--backup/--no-backup", default=True, show_default=True,
-                  help="Backup database to ~/.r8 before execution.")
+    @click.option(
+        "--backup/--no-backup",
+        default=True,
+        show_default=True,
+        help="Backup database to ~/.r8 before execution.",
+    )
     @wraps(f)
     def wrapper(backup, **kwds):
         if backup:
@@ -415,9 +419,11 @@ def backup_db(f):
                 sys.exit(1)
 
             time = datetime.datetime.now().strftime("%Y%m%d-%H%M%S")
-            with gzip.open(backup_dir / f"backup-{time}.sql.gz", 'wt', encoding="utf8") as out:
+            with gzip.open(
+                backup_dir / f"backup-{time}.sql.gz", "wt", encoding="utf8"
+            ) as out:
                 for line in r8.db.iterdump():
-                    out.write('%s\n' % line)
+                    out.write("%s\n" % line)
         return f(**kwds)
 
     return wrapper
@@ -468,10 +474,7 @@ def verify_hash(hash: str, password: str) -> bool:
     return ph.verify(hash, password)
 
 
-_control_char_trans = {
-    x: x + 0x2400
-    for x in range(32)
-}
+_control_char_trans = {x: x + 0x2400 for x in range(32)}
 _control_char_trans[127] = 0x2421
 _control_char_trans = str.maketrans(_control_char_trans)
 
@@ -494,12 +497,7 @@ def correct_flag(flag: str) -> str:
 on_submit = blinker.Signal()
 
 
-def submit_flag(
-        flag: str,
-        user: str,
-        ip: THasIP,
-        force: bool = False
-) -> str:
+def submit_flag(flag: str, user: str, ip: THasIP, force: bool = False) -> str:
     """
     Returns:
         the challenge id
@@ -507,33 +505,46 @@ def submit_flag(
         ValueError, if there is an input error.
     """
     with r8.db:
-        user_exists = r8.db.execute("""
+        user_exists = r8.db.execute(
+            """
           SELECT 1 FROM users
           WHERE uid = ?
-        """, (user,)).fetchone()
+        """,
+            (user,),
+        ).fetchone()
         if not user_exists:
             r8.log(ip, "flag-err-unknown", flag)
             raise ValueError("Unknown user.")
 
-        flag, cid = (r8.db.execute("""
+        flag, cid = (
+            r8.db.execute(
+                """
           SELECT fid, cid FROM flags
           NATURAL INNER JOIN challenges
           WHERE fid = ? OR fid = ?
-        """, (flag, correct_flag(flag))).fetchone() or [flag, None])
+        """,
+                (flag, correct_flag(flag)),
+            ).fetchone()
+            or [flag, None]
+        )
         if not cid:
             r8.log(ip, "flag-err-unknown", flag, uid=user)
             raise ValueError("Unknown Flag ¯\\_(ツ)_/¯")
 
-        is_active = r8.db.execute("""
+        is_active = r8.db.execute(
+            """
           SELECT 1 FROM challenges
           WHERE cid = ? 
           AND datetime('now') BETWEEN t_start AND t_stop
-        """, (cid,)).fetchone()
+        """,
+            (cid,),
+        ).fetchone()
         if not is_active and not force:
             r8.log(ip, "flag-err-inactive", flag, uid=user, cid=cid)
             raise ValueError("Challenge is not active.")
 
-        is_already_submitted = r8.db.execute("""
+        is_already_submitted = r8.db.execute(
+            """
           SELECT COUNT(*) FROM submissions 
           NATURAL INNER JOIN flags
           NATURAL INNER JOIN challenges
@@ -541,24 +552,32 @@ def submit_flag(
           uid = ? OR
           challenges.team = 1 AND submissions.uid IN (SELECT uid FROM teams WHERE tid = (SELECT tid FROM teams WHERE uid = ?))
           )
-        """, (cid, user, user)).fetchone()[0]
+        """,
+            (cid, user, user),
+        ).fetchone()[0]
         if is_already_submitted:
             r8.log(ip, "flag-err-solved", flag, uid=user, cid=cid)
             raise ValueError("Challenge already solved.")
 
-        is_oversubscribed = r8.db.execute("""
+        is_oversubscribed = r8.db.execute(
+            """
           SELECT 1 FROM flags
           WHERE fid = ?
           AND (SELECT COUNT(*) FROM submissions WHERE flags.fid = submissions.fid) >= max_submissions
-        """, (flag,)).fetchone()
+        """,
+            (flag,),
+        ).fetchone()
         if is_oversubscribed and not force:
             r8.log(ip, "flag-err-used", flag, uid=user, cid=cid)
             raise ValueError("Flag already used too often.")
 
         r8.log(ip, "flag-submit", flag, uid=user, cid=cid)
-        r8.db.execute("""
+        r8.db.execute(
+            """
           INSERT INTO submissions (uid, fid) VALUES (?, ?)
-        """, (user, flag))
+        """,
+            (user, flag),
+        )
         on_submit.send(user=user, cid=cid)
     return cid
 
@@ -566,7 +585,8 @@ def submit_flag(
 async def get_challenges(user: str):
     """Get challenges to display for a specific user"""
     with r8.db:
-        cursor = r8.db.execute("""
+        cursor = r8.db.execute(
+            """
             WITH solves AS (
                 SELECT cid, COUNT(*) AS solves
                 FROM submissions
@@ -607,13 +627,13 @@ async def get_challenges(user: str):
             NATURAL LEFT JOIN solve_rank
             NATURAL LEFT JOIN solves
             WHERE t_start < datetime('now')  -- hide not yet active challenges
-        """, (user, user))
+        """,
+            (user, user),
+        )
         column_names = tuple(x[0] for x in cursor.description)
         results = [
-            {
-                key: value
-                for key, value in zip(column_names, row)
-            } for row in cursor.fetchall()
+            {key: value for key, value in zip(column_names, row)}
+            for row in cursor.fetchall()
         ]
     for challenge in results:
         challenge["team"] = bool(challenge["team"])
@@ -622,10 +642,12 @@ async def get_challenges(user: str):
             inst: r8.Challenge = r8.challenges[challenge["cid"]]
             challenge["title"] = str(inst.title)
         except Exception:
-            challenge["title"] = challenge['cid']
+            challenge["title"] = challenge["cid"]
             challenge["visible"] = True
             challenge["tags"] = []
-            challenge["description"] = f"<pre>{html.escape(traceback.format_exc())}</pre>"
+            challenge[
+                "description"
+            ] = f"<pre>{html.escape(traceback.format_exc())}</pre>"
             continue
 
         try:
@@ -635,45 +657,52 @@ async def get_challenges(user: str):
         except Exception:
             challenge["visible"] = True
             challenge["tags"] = []
-            challenge["description"] = f"<pre>{html.escape(traceback.format_exc())}</pre>"
+            challenge[
+                "description"
+            ] = f"<pre>{html.escape(traceback.format_exc())}</pre>"
             continue
 
         try:
             challenge["tags"] = [str(x) for x in inst.tags]
         except Exception:
             challenge["tags"] = []
-            challenge["description"] = f"<pre>{html.escape(traceback.format_exc())}</pre>"
+            challenge[
+                "description"
+            ] = f"<pre>{html.escape(traceback.format_exc())}</pre>"
             continue
 
         try:
-            challenge["description"] = await inst.description(user, bool(challenge["solve_time"]))
+            challenge["description"] = await inst.description(
+                user, bool(challenge["solve_time"])
+            )
         except Exception:
-            challenge["description"] = f"<pre>{html.escape(traceback.format_exc())}</pre>"
+            challenge[
+                "description"
+            ] = f"<pre>{html.escape(traceback.format_exc())}</pre>"
 
         challenge["points"] = scoring.challenge_points(inst, challenge["solves"])
 
         if challenge["solve_rank"]:
-            challenge["first_solve_bonus"] = scoring.first_solve_bonus(inst, challenge["solve_rank"] - 1)
+            challenge["first_solve_bonus"] = scoring.first_solve_bonus(
+                inst, challenge["solve_rank"] - 1
+            )
         else:
-            challenge["first_solve_bonus"] = scoring.first_solve_bonus(inst, challenge["solves"])
+            challenge["first_solve_bonus"] = scoring.first_solve_bonus(
+                inst, challenge["solves"]
+            )
 
-    return [
-        x for x in results
-        if x["visible"]
-    ]
+    return [x for x in results if x["visible"]]
 
 
-def serve_static(static_dir: Union[str, Path, Iterable[Union[Path, str]]], insecure_path: str) -> web.StreamResponse:
+def serve_static(
+    static_dir: Union[str, Path, Iterable[Union[Path, str]]], insecure_path: str
+) -> web.StreamResponse:
     if isinstance(static_dir, (Path, str)):
         static_dir = [static_dir]
     search_paths: list[Path] = [Path(x).resolve() for x in static_dir]
 
     path = insecure_path.lstrip("/") or "index.html"
-    filename = re.sub(
-        r"[^a-zA-Z0-9_./-]",
-        "",
-        path
-    )
+    filename = re.sub(r"[^a-zA-Z0-9_./-]", "", path)
 
     if ".." in filename or "//" in filename or filename.startswith("/"):
         return web.HTTPBadRequest()

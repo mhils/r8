@@ -14,7 +14,6 @@ def cli():
     JSON objects, e.g. numbers, strings, or list of strings. The subcommands
     available here can be used to view or modify the configuration.
     """
-    pass
 
 
 @cli.command()
@@ -54,7 +53,9 @@ def set(key, value):
         value = list(value)
     value = json.dumps(value)
     with r8.db:
-        r8.db.execute("INSERT OR REPLACE INTO settings (key, value) VALUES (?,?)", (key, value))
+        r8.db.execute(
+            "INSERT OR REPLACE INTO settings (key, value) VALUES (?,?)", (key, value)
+        )
     util.run_sql(f"SELECT * FROM settings", rows=100)
 
 

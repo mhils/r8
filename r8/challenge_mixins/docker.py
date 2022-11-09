@@ -6,7 +6,8 @@ import shlex
 import shutil
 import time
 from pathlib import Path
-from typing import ClassVar, Optional
+from typing import ClassVar
+from typing import Optional
 
 import r8
 
@@ -30,22 +31,33 @@ class DockerError(RuntimeError):
 
 class DockerChallenge(r8.Challenge):
     """Support for `docker run` in challenges"""
+
     dockerfile: ClassVar[Optional[Path]] = None
     docker_tag: ClassVar[Optional[str]] = None
     docker_args: tuple[str, ...] = (
-        "--network", "none",
+        "--network",
+        "none",
         #  --memory and --memory-swap are set to the same value, this prevents containers from using any swap.
-        "--memory", "512m",
-        "--memory-swap", "512m",
-        "--kernel-memory", "128m",
-        "--cpu-shares", "2",
-        "--blkio-weight", "10",
-        "--cap-drop", "all",
-        "--user", "nobody",
+        "--memory",
+        "512m",
+        "--memory-swap",
+        "512m",
+        "--kernel-memory",
+        "128m",
+        "--cpu-shares",
+        "2",
+        "--blkio-weight",
+        "10",
+        "--cap-drop",
+        "all",
+        "--user",
+        "nobody",
     )
     docker_started: bool = False
 
-    max_concurrent: ClassVar[asyncio.Semaphore] = asyncio.Semaphore(r8.settings.get("docker_max_concurrent", 5))
+    max_concurrent: ClassVar[asyncio.Semaphore] = asyncio.Semaphore(
+        r8.settings.get("docker_max_concurrent", 5)
+    )
     timeout = r8.settings.get("docker_timeout", 10)
     debug = r8.settings.get("docker_debug", False)
     active_users: ClassVar[set[str]] = set()
@@ -53,7 +65,9 @@ class DockerChallenge(r8.Challenge):
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
         if not self.dockerfile and not self.docker_tag:
-            raise RuntimeError(f"No dockerfile or docker tag attribute for {type(self).__name__}.")
+            raise RuntimeError(
+                f"No dockerfile or docker tag attribute for {type(self).__name__}."
+            )
         if not self.docker_tag:
             self.docker_tag = docker_tagify(self.id)
 
@@ -76,9 +90,7 @@ class DockerChallenge(r8.Challenge):
         spin = asyncio.ensure_future(self.spin())
         try:
             proc = await asyncio.create_subprocess_exec(
-                *cmd,
-                stdout=asyncio.subprocess.PIPE,
-                stderr=asyncio.subprocess.PIPE
+                *cmd, stdout=asyncio.subprocess.PIPE, stderr=asyncio.subprocess.PIPE
             )
             stdout, stderr = await proc.communicate()
         except ValueError as e:
@@ -87,10 +99,10 @@ class DockerChallenge(r8.Challenge):
             spin.cancel()
         if self.debug:
             self.echo(
-                f"\"{' '.join(shlex.quote(x) for x in cmd)}\" returned {proc.returncode}:" +
-                (f"\n[stdout]\n{stdout.decode()}" if stdout else "") +
-                (f"\n[stderr]\n{stderr.decode()}" if stderr else ""),
-                err=True
+                f"\"{' '.join(shlex.quote(x) for x in cmd)}\" returned {proc.returncode}:"
+                + (f"\n[stdout]\n{stdout.decode()}" if stdout else "")
+                + (f"\n[stderr]\n{stderr.decode()}" if stderr else ""),
+                err=True,
             )
         if proc.returncode != 0:
             err = (
@@ -119,9 +131,11 @@ class DockerChallenge(r8.Challenge):
                 return
             self.echo(f"Docker: Building {self.docker_tag}...")
             await self._exec(
-                "docker", "build",
-                "-t", self.docker_tag,
-                str(self.dockerfile.absolute())
+                "docker",
+                "build",
+                "-t",
+                self.docker_tag,
+                str(self.dockerfile.absolute()),
             )
             self.echo(f"Docker: {self.docker_tag} built.")
         else:
@@ -142,28 +156,27 @@ class DockerChallenge(r8.Challenge):
         start = time.time()
 
         cmd = [
-            "docker", "run",
+            "docker",
+            "run",
             "--rm",
-            "--name", name,
+            "--name",
+            name,
             *self.docker_args,
             self.docker_tag,
-            *args
+            *args,
         ]
 
         try:
             proc, stdout, stderr = await asyncio.wait_for(
-                self._exec(*cmd),
-                timeout=self.timeout
+                self._exec(*cmd), timeout=self.timeout
             )
         except asyncio.TimeoutError:
             self.echo(f"Docker: Timeout. Killing...")
             try:
                 await self._exec("docker", "kill", name)
             except DockerError as e:
-                not_running = (
-                    "No such container" in str(e)
-                    or
-                    "is not running" in str(e)
+                not_running = "No such container" in str(e) or "is not running" in str(
+                    e
                 )
                 if not_running:
                     pass
@@ -174,7 +187,9 @@ class DockerChallenge(r8.Challenge):
                 self.echo(f"Docker: Killed.")
             raise DockerError("Process timed out.", cmd)
         else:
-            self.echo(f"Docker: finished (time elapsed: {round(time.time() - start, 2)}s)")
+            self.echo(
+                f"Docker: finished (time elapsed: {round(time.time() - start, 2)}s)"
+            )
             return stdout.strip().decode()
 
     async def docker_run(self, user: str, *args) -> str:

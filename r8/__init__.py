@@ -5,8 +5,10 @@ import sqlite3
 from typing import Any
 
 from r8 import util
-from r8.challenge import Challenge, challenges
-from r8.util import echo, log
+from r8.challenge import Challenge
+from r8.challenge import challenges
+from r8.util import echo
+from r8.util import log
 
 db: sqlite3.Connection
 settings: dict[str, Any] = {}

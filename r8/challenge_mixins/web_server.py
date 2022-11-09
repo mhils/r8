@@ -1,14 +1,18 @@
 import abc
-from typing import Callable, Union
+from typing import Callable
+from typing import Union
 
 from aiohttp import web
-from aiohttp.web import StaticResource, middleware
+from aiohttp.web import middleware
+from aiohttp.web import StaticResource
 
 import r8
 
 
 def log_nonstatic(request: web.Request) -> bool:
-    return not isinstance(getattr(request.match_info.handler, "__self__", None), StaticResource)
+    return not isinstance(
+        getattr(request.match_info.handler, "__self__", None), StaticResource
+    )
 
 
 def log_nonsafe(request: web.Request) -> bool:
@@ -17,13 +21,14 @@ def log_nonsafe(request: web.Request) -> bool:
 
 class WebServerChallenge(r8.Challenge):
     runner: web.AppRunner = None
-    log_web_requests: Union[bool, Callable[[web.Request], bool]] = lambda self, x: log_nonstatic(x)
+    log_web_requests: Union[
+        bool, Callable[[web.Request], bool]
+    ] = lambda self, x: log_nonstatic(x)
 
     @property
     @abc.abstractmethod
     def address(self) -> tuple[str, int]:
         """The web server address"""
-        pass
 
     @abc.abstractmethod
     def make_app(self) -> web.Application:
@@ -75,8 +80,8 @@ def make_logger(challenge: WebServerChallenge):
             req_text: str = ""
             try:
                 if request._post is not None or request.content_type in (
-                        "application/x-www-form-urlencoded",
-                        "multipart/form-data"
+                    "application/x-www-form-urlencoded",
+                    "multipart/form-data",
                 ):
                     req_data = await request.post()
                     req_text = "&".join(f"{k}={v}" for k, v in req_data.items())
@@ -87,7 +92,9 @@ def make_logger(challenge: WebServerChallenge):
                 req_text = req_text or f"{e}"
             req_str = f"{req_str} {req_text}".rstrip()
             with r8.db:
-                r8.db.execute("""UPDATE events SET data = ? WHERE ROWID = ?""",
-                              (f"{req_str} -> {resp_str}", rowid))
+                r8.db.execute(
+                    """UPDATE events SET data = ? WHERE ROWID = ?""",
+                    (f"{req_str} -> {resp_str}", rowid),
+                )
 
     return log_request

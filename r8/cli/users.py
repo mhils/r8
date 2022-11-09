@@ -10,14 +10,27 @@ from r8 import util
 
 @click.command("users")
 @util.with_database()
-@click.option("--user", "entry_filter", multiple=True,
-              help="Only display users/teams that start with the given string. Can be passed multiple times.")
-@click.option("--challenge", "challenge_filter", multiple=True,
-              help="Only display challenges that start with the given string. Can be passed multiple times.")
+@click.option(
+    "--user",
+    "entry_filter",
+    multiple=True,
+    help="Only display users/teams that start with the given string. Can be passed multiple times.",
+)
+@click.option(
+    "--challenge",
+    "challenge_filter",
+    multiple=True,
+    help="Only display challenges that start with the given string. Can be passed multiple times.",
+)
 @click.option("-T", "transpose", is_flag=True, help="Transpose table.")
-@click.option("--format", type=click.Choice(['table', 'csv']), default="table")
+@click.option("--format", type=click.Choice(["table", "csv"]), default="table")
 @click.option("--teams", is_flag=True, help="Group users by teams.")
-@click.option("--team-solves/--no-team-solves", default=True, is_flag=True, help="Include team solves.")
+@click.option(
+    "--team-solves/--no-team-solves",
+    default=True,
+    is_flag=True,
+    help="Include team solves.",
+)
 def cli(entry_filter, challenge_filter, transpose, format, teams, team_solves):
     """View users and their progress."""
 
@@ -49,12 +62,9 @@ def cli(entry_filter, challenge_filter, transpose, format, teams, team_solves):
 
     if entry_filter:
         entries = [
-            entry for entry in entries
-            if any(entry.startswith(x) for x in entry_filter)
+            entry for entry in entries if any(entry.startswith(x) for x in entry_filter)
         ]
-    entry_index = {
-        x: i for i, x in enumerate(entries)
-    }
+    entry_index = {x: i for i, x in enumerate(entries)}
 
     challenges = {}
     for cid, is_team_challenge in all_challenges:
@@ -71,10 +81,7 @@ def cli(entry_filter, challenge_filter, transpose, format, teams, team_solves):
         SOLVED = "TRUE"
         NOT_SOLVED = "FALSE"
 
-    solved = {
-        cid: [NOT_SOLVED] * len(entries)
-        for cid in challenges
-    }
+    solved = {cid: [NOT_SOLVED] * len(entries) for cid in challenges}
     if teams:
         for _, tid, cid in submissions:
             if cid in challenges and tid in entry_index:
@@ -96,10 +103,9 @@ def cli(entry_filter, challenge_filter, transpose, format, teams, team_solves):
     else:
         header = "Challenge"
 
-    table_contents = (
-            [[header] + entries] +
-            [[cid] + solved for cid, solved in solved.items()]
-    )
+    table_contents = [[header] + entries] + [
+        [cid] + solved for cid, solved in solved.items()
+    ]
     if format == "table":
         for row in table_contents:
             row[0] = row[0][:22]
@@ -119,9 +125,9 @@ def cli(entry_filter, challenge_filter, transpose, format, teams, team_solves):
 
         tbl = table.draw()
         print(
-            tbl
-                .replace(SOLVED, click.style(SOLVED, fg="green"))
-                .replace(NOT_SOLVED, click.style(NOT_SOLVED, fg="red"))
+            tbl.replace(SOLVED, click.style(SOLVED, fg="green")).replace(
+                NOT_SOLVED, click.style(NOT_SOLVED, fg="red")
+            )
         )
     else:
         for row in table_contents:

@@ -7,14 +7,18 @@ class FormExample(r8.Challenge):
     title = "Form Example"
 
     async def description(self, user: str, solved: bool):
-        return r8.util.media(None, """
+        return r8.util.media(
+            None,
+            """
             <h6>What's your favorite IP address?</h6>
             <form>
                 <input class="form-control mb-1" name="ip" type="text" placeholder="0.0.0.0"/>
                 <button class="btn btn-primary mb-1">Submit</button>
                 <div class="response"></div>
             </form>
-            """ + r8.util.challenge_form_js(self.id))
+            """
+            + r8.util.challenge_form_js(self.id),
+        )
 
     async def handle_post_request(self, user: str, request: web.Request):
         json = await request.json()

@@ -38,7 +38,7 @@ def test_flags(r8cli):
     r8cli("flags create Basic(active) foo")
     r8cli("flags submit foo user1")
     r8cli("flags limit foo")
-    with pytest.raises(RuntimeError, match='Revoke all submissions first'):
+    with pytest.raises(RuntimeError, match="Revoke all submissions first"):
         r8cli("flags delete foo")
     r8cli("flags list")
 
@@ -70,9 +70,9 @@ def test_users(r8cli):
 
 def test_teams(r8cli):
     r8cli("teams list")
-    with pytest.raises(RuntimeError, match='Old team does not exist'):
+    with pytest.raises(RuntimeError, match="Old team does not exist"):
         r8cli("teams rename unknown unknown")
-    with pytest.raises(RuntimeError, match='New team name does already exist'):
+    with pytest.raises(RuntimeError, match="New team name does already exist"):
         r8cli("teams rename team1 team2")
     r8cli("teams rename team2 new-teamname")
     assert "new-teamname" in r8cli("teams list").output

@@ -13,7 +13,7 @@ _log_sql = print
 
 
 @click.command("run")
-@click.option('--debug', is_flag=True)
+@click.option("--debug", is_flag=True)
 @util.with_database(echo=True)
 def cli(debug) -> None:
     """Run the server."""
@@ -27,10 +27,7 @@ def cli(debug) -> None:
 
     r8.challenges.load()
 
-    loop.run_until_complete(asyncio.gather(
-        server.start(),
-        r8.challenges.start()
-    ))
+    loop.run_until_complete(asyncio.gather(server.start(), r8.challenges.start()))
     r8.echo("r8", "Started.")
 
     if os.name != "nt":
@@ -42,9 +39,11 @@ def cli(debug) -> None:
         pass
 
     r8.echo("r8", "Shutting down...")
-    loop.run_until_complete(asyncio.gather(
-        r8.challenges.stop(),
-        server.stop(),
-    ))
+    loop.run_until_complete(
+        asyncio.gather(
+            r8.challenges.stop(),
+            server.stop(),
+        )
+    )
     r8.echo("r8", "Shut down.")
     loop.close()

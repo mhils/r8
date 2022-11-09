@@ -2,13 +2,13 @@
 import re
 from pathlib import Path
 
-from setuptools import find_packages, setup
+from setuptools import find_packages
+from setuptools import setup
 
 here = Path(__file__).parent
 
 VERSION = re.search(
-    r'__version__ = "(.+?)"',
-    (here / "r8" / "__init__.py").read_text()
+    r'__version__ = "(.+?)"', (here / "r8" / "__init__.py").read_text()
 ).group(1)
 
 long_description = (here / "README.md").read_text()
@@ -25,7 +25,7 @@ setup(
         "Operating System :: OS Independent",
         "Topic :: Education",
         "Topic :: Education :: Computer Aided Instruction (CAI)",
-        'Programming Language :: Python :: 3.9',
+        "Programming Language :: Python :: 3.9",
     ],
     keywords="ctf grading capture the flag networking",
     url="https://github.com/mhils/r8",
@@ -38,11 +38,9 @@ setup(
         "console_scripts": [
             "r8 = r8.cli:main",
         ],
-        "r8.challenges": [
-            "dir = r8.builtin_challenges"
-        ]
+        "r8.challenges": ["dir = r8.builtin_challenges"],
     },
-    python_requires='>=3.9',
+    python_requires=">=3.9",
     install_requires=[
         "click",
         "texttable",
@@ -61,6 +59,6 @@ setup(
             "sphinx",
             "sphinxcontrib-trio",
             "pytest",
-        ]
-    }
+        ],
+    },
 )

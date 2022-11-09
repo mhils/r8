@@ -7,7 +7,6 @@ from r8 import util
 @click.group("flags")
 def cli():
     """Flag-related commands."""
-    pass
 
 
 @cli.command()
@@ -33,11 +32,15 @@ def limit(flag, max):
     current submissions, essentially locking the flag.
     """
     with r8.db:
-        exists = r8.db.execute("SELECT COUNT(*) FROM flags WHERE fid = ?", (flag,)).fetchone()[0]
+        exists = r8.db.execute(
+            "SELECT COUNT(*) FROM flags WHERE fid = ?", (flag,)
+        ).fetchone()[0]
         if not exists:
             raise click.UsageError("Flag does not exist.")
         if max is None:
-            max = r8.db.execute("SELECT COUNT(*) FROM submissions WHERE fid = ?", (flag,)).fetchone()[0]
+            max = r8.db.execute(
+                "SELECT COUNT(*) FROM submissions WHERE fid = ?", (flag,)
+            ).fetchone()[0]
         r8.db.execute("UPDATE flags SET max_submissions = ? WHERE fid = ?", (max, flag))
     print(f"{flag} restricted to {max} submissions")
 
@@ -54,13 +57,17 @@ def list(rows, challenge):
     else:
         where = ""
         parameters = None
-    util.run_sql(f"""
+    util.run_sql(
+        f"""
     SELECT cid, fid, COUNT(uid) AS submissions, max_submissions FROM flags
     LEFT JOIN submissions USING(fid)
     {where}
     GROUP BY fid
     ORDER BY cid, submissions DESC
-    """, parameters, rows=rows)
+    """,
+        parameters,
+        rows=rows,
+    )
 
 
 @cli.command()
@@ -87,21 +94,31 @@ def revoke(flag, user):
     """Revoke a flag submission [for a given user]."""
     with r8.db:
         submissions = [
-            x[0] for x in
-            r8.db.execute("SELECT uid FROM submissions WHERE fid=?", (flag,)).fetchall()
+            x[0]
+            for x in r8.db.execute(
+                "SELECT uid FROM submissions WHERE fid=?", (flag,)
+            ).fetchall()
         ]
         if not submissions:
             raise click.UsageError(f"No submissions for {flag}.")
         if user:
             if user in submissions:
-                r8.db.execute("DELETE FROM submissions WHERE fid = ? AND uid = ?", (flag, user))
+                r8.db.execute(
+                    "DELETE FROM submissions WHERE fid = ? AND uid = ?", (flag, user)
+                )
                 r8.echo("r8", f"Submission revoked.")
             else:
                 raise click.UsageError(f"Error: {user} did not submit {flag}.")
         else:
-            click.confirm(f"Deleting all {len(submissions)} submission for {flag}. Continue?", abort=True)
+            click.confirm(
+                f"Deleting all {len(submissions)} submission for {flag}. Continue?",
+                abort=True,
+            )
             r8.db.execute("DELETE FROM submissions WHERE fid = ?", (flag,))
-            r8.echo("r8", f"Submissions have been revoked for the following users: {', '.join(submissions)}")
+            r8.echo(
+                "r8",
+                f"Submissions have been revoked for the following users: {', '.join(submissions)}",
+            )
 
 
 @cli.command()
@@ -110,11 +127,17 @@ def revoke(flag, user):
 def delete(flag):
     """Delete an unsubmitted flag."""
     with r8.db:
-        exists = r8.db.execute("SELECT COUNT(*) FROM flags WHERE fid = ?", (flag,)).fetchone()[0]
+        exists = r8.db.execute(
+            "SELECT COUNT(*) FROM flags WHERE fid = ?", (flag,)
+        ).fetchone()[0]
         if not exists:
             raise click.UsageError("Flag does not exist.")
-        submissions = r8.db.execute("SELECT COUNT(*) FROM submissions WHERE fid = ?", (flag,)).fetchone()[0]
+        submissions = r8.db.execute(
+            "SELECT COUNT(*) FROM submissions WHERE fid = ?", (flag,)
+        ).fetchone()[0]
         if submissions:
-            raise click.UsageError("Cannot delete a flag that is in use. Revoke all submissions first.")
+            raise click.UsageError(
+                "Cannot delete a flag that is in use. Revoke all submissions first."
+            )
         r8.db.execute("DELETE FROM flags WHERE fid = ?", (flag,))
     r8.echo("r8", f"Successfully deleted {flag}.")

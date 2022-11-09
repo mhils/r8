@@ -14,11 +14,13 @@ async def get_challenges(user: str, request: web.Request):
     """Get the current challenge state."""
     r8.log(request, "get-challenges", request.headers.get("User-Agent"), uid=user)
     challenges = await r8.util.get_challenges(user)
-    return web.json_response({
-        "user": user,
-        "team": r8.util.get_team(user),
-        "challenges": challenges,
-    })
+    return web.json_response(
+        {
+            "user": user,
+            "team": r8.util.get_team(user),
+            "challenges": challenges,
+        }
+    )
 
 
 @routes.post("/submit")
@@ -31,10 +33,12 @@ async def submit_flag(user: str, request: web.Request):
     except ValueError as e:
         return web.HTTPBadRequest(reason=str(e))
     else:
-        return web.json_response({
-            "challenges": await r8.util.get_challenges(user),
-            "solved": r8.challenges[cid].title,
-        })
+        return web.json_response(
+            {
+                "challenges": await r8.util.get_challenges(user),
+                "solved": r8.challenges[cid].title,
+            }
+        )
 
 
 @routes.get("/{cid}{path:(/.*)?}")
@@ -53,7 +57,7 @@ async def handle_challenge_request(user: str, request: web.Request):
     else:
         path = (request.match_info["path"] + " ").lstrip()
         text = await request.text()
-        if request.content_type == 'application/x-www-form-urlencoded':
+        if request.content_type == "application/x-www-form-urlencoded":
             text = urllib.parse.unquote(text)
         data = path + text
         # We want this to appear before any challenge-specific logging...
@@ -63,12 +67,16 @@ async def handle_challenge_request(user: str, request: web.Request):
             if isinstance(resp, str):
                 resp = web.json_response({"message": resp})
             with r8.db:
-                r8.db.execute("""UPDATE events SET data = ? WHERE ROWID = ?""",
-                              (f"{data} -> {resp.status} {resp.reason}", rowid))
+                r8.db.execute(
+                    """UPDATE events SET data = ? WHERE ROWID = ?""",
+                    (f"{data} -> {resp.status} {resp.reason}", rowid),
+                )
         except Exception as e:
             with r8.db:
-                r8.db.execute("""UPDATE events SET data = ? WHERE ROWID = ?""",
-                              (f"{data} -> {e}", rowid))
+                r8.db.execute(
+                    """UPDATE events SET data = ? WHERE ROWID = ?""",
+                    (f"{data} -> {e}", rowid),
+                )
             raise
 
     return resp

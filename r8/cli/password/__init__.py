@@ -10,7 +10,6 @@ from r8 import util
 @click.group("password")
 def cli():
     """Password-related commands."""
-    pass
 
 
 @cli.command()
@@ -24,10 +23,7 @@ def generate(ctx: click.Context, n, length, max_len, hash):
     here = Path(__file__).parent
 
     def clean(lst):
-        return [
-            x.strip() for x in lst
-            if x.strip() and len(x.strip()) <= max_len
-        ]
+        return [x.strip() for x in lst if x.strip() and len(x.strip()) <= max_len]
 
     with open(here / "adjectives.txt") as f:
         adjectives = clean(f.readlines())
@@ -65,9 +61,14 @@ def update_temporary(user, password):
     """
     password = util.hash_password(password)
     with r8.db:
-        exists = r8.db.execute("SELECT COUNT(*) FROM users WHERE uid = ?", (user,)).fetchone()[0]
+        exists = r8.db.execute(
+            "SELECT COUNT(*) FROM users WHERE uid = ?", (user,)
+        ).fetchone()[0]
         if not exists:
             raise click.UsageError("User does not exist.")
         r8.db.execute("UPDATE users SET password = ? WHERE uid = ?", (password, user))
-    r8.echo("r8", f"Password updated. "
-                  f"Note that this change may only be temporary if you reset credentials in `config.sql`.")
+    r8.echo(
+        "r8",
+        f"Password updated. "
+        f"Note that this change may only be temporary if you reset credentials in `config.sql`.",
+    )

@@ -1,6 +1,8 @@
 import pytest
 
-from r8.cli.events import format_untrusted_col, min_distinguishable_column_width, wcswidth
+from r8.cli.events import format_untrusted_col
+from r8.cli.events import min_distinguishable_column_width
+from r8.cli.events import wcswidth
 
 
 def test_format_untrusted_col_simple():

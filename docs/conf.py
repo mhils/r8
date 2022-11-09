@@ -14,6 +14,4 @@ html_theme_options = {
 }
 html_show_copyright = False
 html_show_sourcelink = False
-html_sidebars = {
-    "**": []
-}
+html_sidebars = {"**": []}

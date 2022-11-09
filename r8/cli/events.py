@@ -22,7 +22,7 @@ def min_distinguishable_column_width(elements: list[str]) -> int:
 
     n = max(len(x) for x in elements)
     while n > 0:
-        if len(set(x[:n] for x in elements)) == len(elements):
+        if len({x[:n] for x in elements}) == len(elements):
             n -= 1
         else:
             break
@@ -59,15 +59,20 @@ def cli(rows, watch, query):
     query = " ".join(query)
 
     with r8.db:
-        seen = max(r8.db.execute(f"SELECT COUNT(*) FROM events {query}").fetchone()[0] - rows, 0)
+        seen = max(
+            r8.db.execute(f"SELECT COUNT(*) FROM events {query}").fetchone()[0] - rows,
+            0,
+        )
     while True:
         with r8.db:
-            new = r8.db.execute(f"""
+            new = r8.db.execute(
+                f"""
             SELECT time, ip, type, data, cid, uid
             FROM events
             {query}
             ORDER BY rowid
-            LIMIT 100 OFFSET {seen}""").fetchall()
+            LIMIT 100 OFFSET {seen}"""
+            ).fetchall()
         seen += len(new)
         for t, ip, type, data, cid, uid in new:
             print(format_event(t, ip, type, data, cid, uid, r8.util.get_team(uid)))
@@ -86,21 +91,20 @@ def get_widths():
     tid_w = max(10, min(tid_w, 25))
     type_w = 20
     with r8.db:
-        cids = [x[0] for x in
-                r8.db.execute("SELECT cid FROM challenges").fetchall()]
+        cids = [x[0] for x in r8.db.execute("SELECT cid FROM challenges").fetchall()]
     cid_w = min_distinguishable_column_width(cids)
     cid_w = max(15, min(cid_w, 25))
     return time_w, ip_w, tid_w, uid_w, type_w, cid_w
 
 
 def format_event(
-        time: str,
-        ip: str,
-        type: str,
-        data: Optional[str],
-        cid: Optional[str],
-        uid: Optional[str],
-        tid: Optional[str],
+    time: str,
+    ip: str,
+    type: str,
+    data: Optional[str],
+    cid: Optional[str],
+    uid: Optional[str],
+    tid: Optional[str],
 ):
     # TODO: This is messy and could take some refactoring.
     time_w, ip_w, tid_w, uid_w, type_w, cid_w = get_widths()

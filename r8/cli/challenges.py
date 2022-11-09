@@ -8,7 +8,6 @@ from r8 import util
 @click.group("challenges")
 def cli():
     """Challenge-related commands."""
-    pass
 
 
 @cli.command()
@@ -22,14 +21,17 @@ def list(rows, query):
     Accepts an optional query argument to limit the selection,
     e.g. "WHERE cid LIKE 'Basic%'".
     """
-    util.run_sql(f"""
+    util.run_sql(
+        f"""
     SELECT cid, COUNT(uid) AS solved, t_start, t_stop, team FROM challenges
     LEFT JOIN flags USING (cid)
     LEFT JOIN submissions USING (fid)
     {" ".join(query)}
     GROUP BY cid
     ORDER BY challenges.rowid
-    """, rows=rows)
+    """,
+        rows=rows,
+    )
 
 
 @cli.command("list-available")
@@ -37,7 +39,7 @@ def list_available_challenges():
     """
     List all available challenges.
     """
-    for entry_point in pkg_resources.iter_entry_points('r8.challenges'):
+    for entry_point in pkg_resources.iter_entry_points("r8.challenges"):
         entry_point.load()
 
     challenges = {}

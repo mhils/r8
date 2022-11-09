@@ -6,7 +6,10 @@ import json
 import time
 import traceback
 from pathlib import Path
-from typing import Any, ClassVar, Optional, Union
+from typing import Any
+from typing import ClassVar
+from typing import Optional
+from typing import Union
 
 import pkg_resources
 from aiohttp import web
@@ -39,7 +42,9 @@ class Challenge:
     def __init__(self, cid: str) -> None:
         self.id = cid
         if self.static_dir is None:
-            self.static_dir = Path(inspect.getfile(type(self))).parent.absolute() / "static"
+            self.static_dir = (
+                Path(inspect.getfile(type(self))).parent.absolute() / "static"
+            )
         if self.flag:
             r8.util.create_flag(self.id, 999999, self.flag)
 
@@ -47,7 +52,6 @@ class Challenge:
     @abc.abstractmethod
     def title(self) -> str:
         """The challenge name visible to the user."""
-        pass
 
     async def description(self, user: str, solved: bool) -> str:
         """
@@ -72,9 +76,12 @@ class Challenge:
     @functools.cache
     def _active_times(self) -> tuple[int, int]:
         with r8.db:
-            return r8.db.execute("""
+            return r8.db.execute(
+                """
                 SELECT CAST(strftime('%s', t_start) AS INT), CAST(strftime('%s', t_stop) AS INT) FROM challenges WHERE cid = ?
-            """, (self.id,)).fetchone()
+            """,
+                (self.id,),
+            ).fetchone()
 
     @property
     def args(self) -> str:
@@ -96,7 +103,6 @@ class Challenge:
         independent of when the challenge will be active. This makes sure that there
         are no surprising startup errors.
         """
-        pass
 
     async def stop(self) -> None:
         """
@@ -106,19 +112,18 @@ class Challenge:
         only flag generation and submission will be halted. This allows in-class
         demonstrations after the deadline.
         """
-        pass
 
     def echo(self, message: str, err: bool = False) -> None:
         """Print to console with the challenge's namespace added in front."""
         r8.echo(self.id, message, err)
 
     def log(
-            self,
-            ip: r8.util.THasIP,
-            type: str,
-            data: Optional[str] = None,
-            *,
-            uid: Optional[str] = None
+        self,
+        ip: r8.util.THasIP,
+        type: str,
+        data: Optional[str] = None,
+        *,
+        uid: Optional[str] = None,
     ) -> None:
         """
         Log an event for the current challenge.
@@ -127,13 +132,13 @@ class Challenge:
         r8.log(ip, type, data, uid=uid, cid=self.id)
 
     def log_and_create_flag(
-            self,
-            ip: r8.util.THasIP,
-            user: Optional[str] = None,
-            *,
-            max_submissions: int = 1,
-            flag: Optional[str] = None,
-            challenge: Optional[str] = None,
+        self,
+        ip: r8.util.THasIP,
+        user: Optional[str] = None,
+        *,
+        max_submissions: int = 1,
+        flag: Optional[str] = None,
+        challenge: Optional[str] = None,
     ) -> str:
         """
         Create a new flag that can be redeemed for this challenge and log its creation.
@@ -159,7 +164,9 @@ class Challenge:
         r8.log(ip, "flag-create", flag, uid=user, cid=challenge)
         return flag
 
-    def api_url(self, path: str, absolute: bool = False, user: Optional[str] = None) -> str:
+    def api_url(
+        self, path: str, absolute: bool = False, user: Optional[str] = None
+    ) -> str:
         """
         Construct a URL pointing to this challenge's API.
 
@@ -171,11 +178,14 @@ class Challenge:
         if not isinstance(absolute, bool):
             raise RuntimeError("api_url signature has changed.")
         if path and not path.startswith("/"):
-            path = "/" + path  # don't use .lstrip() to make sure that "" returns in no trailing "/"
+            path = (
+                "/" + path
+            )  # don't use .lstrip() to make sure that "" returns in no trailing "/"
         return r8.util.url_for(f"/api/challenges/{self.id}{path}", absolute, user)
 
-    async def handle_get_request(self, user: str, request: web.Request) -> Union[
-        str, web.StreamResponse]:
+    async def handle_get_request(
+        self, user: str, request: web.Request
+    ) -> Union[str, web.StreamResponse]:
         """
         HTTP GET requests to `/api/challenges/cid/*` land here.
         Serves static resources from :attr:`static_dir` by default.
@@ -187,8 +197,9 @@ class Challenge:
         else:
             return web.HTTPNotFound()
 
-    async def handle_post_request(self, user: str, request: web.Request) \
-            -> Union[str, web.StreamResponse]:
+    async def handle_post_request(
+        self, user: str, request: web.Request
+    ) -> Union[str, web.StreamResponse]:
         """
         HTTP POST requests to `/api/challenges/cid/*` land here. Serves 404s by default.
 
@@ -204,9 +215,12 @@ class Challenge:
             cid: If given, override the challenge for which data should be accessed.
         """
         with r8.db:
-            data = r8.db.execute("""
+            data = r8.db.execute(
+                """
                 SELECT value FROM data WHERE cid = ? AND key = ?
-            """, (cid or self.id, key)).fetchone()
+            """,
+                (cid or self.id, key),
+            ).fetchone()
             if data:
                 return json.loads(data[0])
             else:
@@ -222,7 +236,7 @@ class Challenge:
         with r8.db:
             r8.db.execute(
                 """INSERT OR REPLACE INTO data (cid, key, value) VALUES (?,?,?)""",
-                (cid or self.id, key, json.dumps(value))
+                (cid or self.id, key, json.dumps(value)),
             )
 
     def __init_subclass__(cls, **kwargs):
@@ -251,7 +265,7 @@ class _Challenges:
 
     def load(self):
         r8.echo("r8", "Loading challenges...")
-        for entry_point in pkg_resources.iter_entry_points('r8.challenges'):
+        for entry_point in pkg_resources.iter_entry_points("r8.challenges"):
             entry_point.load()
 
         for cid in get_challenges():
@@ -277,9 +291,7 @@ class _Challenges:
         return item in self._instances
 
     async def start(self):
-        await asyncio.gather(*[
-            self._start(cid) for cid in self._instances
-        ])
+        await asyncio.gather(*[self._start(cid) for cid in self._instances])
 
     async def _start(self, cid: str) -> None:
         inst = self[cid]
@@ -295,9 +307,7 @@ class _Challenges:
             inst.stop = lambda: asyncio.sleep(0)
 
     async def stop(self):
-        await asyncio.gather(*[
-            self._stop(cid) for cid in self._instances
-        ])
+        await asyncio.gather(*[self._stop(cid) for cid in self._instances])
 
     async def _stop(self, cid: str) -> None:
         inst = self[cid]

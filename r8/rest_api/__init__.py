@@ -1,7 +1,9 @@
 from aiohttp import web
 
 import r8
-from . import auth, challenges, scoreboard
+from . import auth
+from . import challenges
+from . import scoreboard
 
 
 def make_app() -> web.Application:
