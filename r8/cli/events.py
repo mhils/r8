@@ -64,7 +64,9 @@ def cli(rows, watch, query):
             0,
         )
 
-    click.secho(format_event("time", "ip", "type", "data", "cid", "uid", "tid"), fg="cyan")
+    click.secho(
+        format_event("time", "ip", "type", "data", "cid", "uid", "tid"), fg="cyan"
+    )
 
     while True:
         with r8.db:
