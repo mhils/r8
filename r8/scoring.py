@@ -39,7 +39,7 @@ class Scoreboard:
     scores: collections.Counter[TTeamId]
     solves: collections.defaultdict[TChallengeId, list[TTeamId]]
 
-    def __init__(self, timestamp: Optional[TUnixtime] = None):
+    def __init__(self, timestamp: TUnixtime | None = None):
         self.timestamp = timestamp
         self.scores = collections.Counter()
         self.solves = collections.defaultdict(list)
@@ -49,7 +49,7 @@ class Scoreboard:
             team: TTeamId,
             challenge: r8.Challenge,
             timestamp: TUnixtime
-    ) -> Optional["Scoreboard"]:
+    ) -> Optional[Scoreboard]:
         if team.startswith("_"):
             return None
         if team in self.solves[challenge.id]:
