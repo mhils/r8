@@ -47,7 +47,7 @@ def format_untrusted_col(data: Optional[str], width: int) -> str:
 @click.command("events")
 @util.with_database()
 @util.database_rows
-@click.option("--watch/--no-watch", default=True)
+@click.option("--watch/--no-watch", default=True, help="Follow event log.")
 @click.argument("query", nargs=-1)
 def cli(rows, watch, query):
     """
@@ -63,6 +63,9 @@ def cli(rows, watch, query):
             r8.db.execute(f"SELECT COUNT(*) FROM events {query}").fetchone()[0] - rows,
             0,
         )
+
+    click.secho(format_event("time", "ip", "type", "data", "cid", "uid", "tid"), fg="cyan")
+
     while True:
         with r8.db:
             new = r8.db.execute(
