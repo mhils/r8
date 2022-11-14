@@ -7,7 +7,6 @@ import shutil
 import smtplib
 import time
 from contextlib import redirect_stdout
-from dataclasses import dataclass
 from email.mime.text import MIMEText
 from pathlib import Path
 
@@ -152,16 +151,26 @@ def show(entry_filter, challenge_filter, transpose, format, teams, team_solves):
 
 @cli.command()
 @click.argument("usernames", default="usernames.txt", type=click.File("r"))
-@click.option("--teams", "teamnames", type=click.File("r"))
+@click.option(
+    "--teams",
+    "teamnames",
+    type=click.File("r"),
+    help="A text file with at least as many team names as there are users, for example r8/misc/teamnames.txt.",
+)
 @click.pass_context
 def make_sql(ctx: click.Context, usernames: io.StringIO, teamnames: io.StringIO):
-    """Generate SQL code to provision users from usernames.txt."""
+    """Generate SQL code to provision users from a list of usernames or email addresses."""
     users = usernames.read().strip().splitlines()
+
+    if not users:
+        raise click.UsageError("No users passed.")
 
     if teamnames:
         teams = teamnames.read().strip().splitlines()
         if len(teams) < len(users):
-            raise click.UsageError(f"There are {len(users)} users, but only {len(teams)} teams.")
+            raise click.UsageError(
+                f"There are {len(users)} users, but only {len(teams)} teams."
+            )
     else:
         teams = None
 
@@ -170,17 +179,19 @@ def make_sql(ctx: click.Context, usernames: io.StringIO, teamnames: io.StringIO)
     for user in users:
         f = io.StringIO()
         with redirect_stdout(f):
-            ctx.invoke(generate)
-        plaintext, _, hash = f.getvalue().partition("; ")
+            ctx.invoke(generate, hash=False)
+        password = f"$plain${f.getvalue().strip()}"
         if user != users[-1]:
-            print(f"  ('{user}', '{hash.strip()}'), -- {plaintext}")
+            print(f"  ('{user}', '{password}'),")
         else:
-            print(f"  ('{user}', '{hash.strip()}')  -- {plaintext}")
+            print(f"  ('{user}', '{password}')")
     click.secho(";", fg="cyan")
 
     if not teams:
         print("")
-        click.secho("The --teams option was not passed, skipping SQL for teams.", fg="yellow")
+        click.secho(
+            "The --teams option was not passed, skipping SQL for teams.", fg="yellow"
+        )
         return
 
     click.secho("\nDELETE FROM teams;", fg="cyan")
@@ -193,33 +204,26 @@ def make_sql(ctx: click.Context, usernames: io.StringIO, teamnames: io.StringIO)
     click.secho(";", fg="cyan")
 
 
-@dataclass
-class UserInfo:
-    username: str
-    password: str
-    team: str | None
-
-
 DEFAULT_MAIL = """
 # User credentials email template. Delete ~/.r8/mail.txt to restore the default.
 # Available variables:
-#  - ctf_domain
-#  - user.username
-#  - user.password
-#  - user.team
+#  - origin
+#  - username
+#  - password
+#  - team
 
 Hi,
 
 Here are your credentials for the CTF system.
 
-Website: https://{ctf_domain}
-Username: {user.username}
-Password: {user.password}
+Website: {origin}
+Username: {username}
+Password: {password}
 
 You should be able to login, but not see any challenges yet.
 
 The CTF has a public scoreboard. To protect your privacy, you (and everyone else) 
-will only appear under a randomly-chosen pseudonym. Your current alias is "{user.team}".
+will only appear under a randomly-chosen pseudonym. Your current alias is "{team}".
 
 Best,
 The CTF System
@@ -247,84 +251,151 @@ def _get_mail_template() -> str:
     return template
 
 
+def _validate_sender(ctx, param, value):
+    if not re.fullmatch(".+ <.+@.+>", value):
+        raise click.BadParameter(
+            'Sender must be in format "John Doe <john@example.com>".'
+        )
+    return value
+
+
 @cli.command()
-@click.option("--config", prompt="Configuration file", default="config.sql", type=click.File("r"),
-              help="The configuration file which includes plaintext passwords.")
-@click.option("--ctf-domain", prompt="CTF domain (e.g. ctf.example.com)",
-              help="The domain the CTF system is running on, e.g. `ctf.example.com`.")
-@click.option("--smtp-server", prompt="SMTP server", default="smtp.uibk.ac.at",
-              help="Server name for outgoing mail, e.g. smtp.uibk.ac.at.")
-@click.option("--smtp-username", prompt="SMTP username (e.g. noreply@uibk.ac.at)",
-              help="The sender's username, e.g. noreply@uibk.ac.at.")
-@click.password_option("--smtp-password", prompt="SMTP password", help="The sender's password.")
-@click.option("--subject", prompt="Email subject", default="CTF Credentials", help="The email subject.")
-@click.option("--sender", prompt="Email sender name", default="CTF System",
-              help='The sender\'s name displayed in the "From" field, e.g. "CTF System".')
-@click.option("--receiver-domain", prompt=True, default="uibk.ac.at",
-              help="The receiver's domain. All emails will go to <ctf username>@<receiver domain>.")
-def send_mails(
-    config: io.StringIO,
-    ctf_domain: str,
+@util.with_database()
+@click.option(
+    "--smtp-server",
+    prompt="SMTP server",
+    default="smtp.uibk.ac.at",
+    help="Server name for outgoing mail, e.g. smtp.uibk.ac.at.",
+)
+@click.option(
+    "--smtp-username", prompt="SMTP username", help="SMTP username for sending mail."
+)
+@click.password_option(
+    "--smtp-password", prompt="SMTP password", help="SMTP password for sending mail."
+)
+@click.option(
+    "--subject",
+    prompt="Email subject",
+    default="CTF Credentials",
+    help="The email subject.",
+)
+@click.option(
+    "--from",
+    "from_",
+    prompt="Email sender name",
+    default="CTF System <noreply@uibk.ac.at>",
+    callback=_validate_sender,
+    help='The sender\'s name displayed in the "From" field, e.g. "CTF System <noreply@uibk.ac.at>".',
+)
+@click.option(
+    "--recipient-domain",
+    help="Domain for all users where the username is only the local part of the email address.",
+)
+def send_credentials(
     smtp_server: str,
     smtp_username: str,
     smtp_password: str,
     subject: str,
-    sender: str,
-    receiver_domain: str,
+    from_: str,
+    recipient_domain: str | None,
 ):
     """
-    Send emails with credentials to all users.
+    Send emails with credentials to all users in the database.
 
-    This command has a few prerequisites:
-      1. The configuration file must include plaintext passwords as comments (as generated by `r8 users make-sql`).
-      2. Each user's email address is <username>@<same domain for all users>.
+    This command has two prerequisites:
+    First, passwords can only be sent out for users with plaintext passwords in the database.
+    Second, usernames must be full email addresses or the local part (the part before "@") of an email address
+    with all users sharing the same domain.
     """
-    contents = config.read()
-    passwords = re.findall(r"\('(.+?)',\s*'\$argon2.+?'\),?\s*--\s*(\S+)", contents)
 
-    if not passwords:
-        click.echo(
-            "Error finding users. Your configuration files should have lines like this:\n\n"
-            "('username', '$argon2id$...'), -- PlaintextPassword\n\n",
-            err=True
+    with r8.db:
+        all_users = r8.db.execute(
+            "SELECT uid, uid, password, tid FROM users NATURAL LEFT JOIN teams ORDER BY users.ROWID"
+        ).fetchall()
+
+    users = [
+        (user, email, password.removeprefix("$plain$"), team)
+        for (user, email, password, team) in all_users
+        if password.startswith("$plain$")
+    ]
+    print(f"Total users: {len(all_users)}")
+    print(f"Users with plaintext password: {len(users)}")
+
+    if not users:
+        click.secho("No users to send emails to.", fg="red")
+        raise click.Abort()
+    del all_users
+
+    has_team_count = sum(bool(team) for (_, _, _, team) in users)
+    if has_team_count == 0:
+        click.secho("No users with plaintext passwords have a team.", fg="yellow")
+    elif has_team_count == len(users):
+        click.secho("All users with plaintext passwords have a team.", fg="green")
+    else:
+        click.confirm(
+            f"Only {has_team_count} of {len(users)} users have a team. Continue?",
+            abort=True,
         )
-        return
 
-    teams = {}
-    team_sql = contents.partition("DELETE FROM teams;")[2]
-    for (a, b) in re.findall(r"\('(.+?)',\s*'(.+?)'\)", team_sql):
-        teams.setdefault(a, b)
-        teams.setdefault(b, a)
+    usernames_without_email = sum("@" not in email for (_, email, _, _) in users)
+    if usernames_without_email:
+        if not recipient_domain:
+            click.secho(
+                f"Users without an email address as username: {usernames_without_email}",
+                fg="yellow",
+            )
+            if usernames_without_email == len(users):
+                print("Please specify the domain under which they receive emails.")
+                recipient_domain = click.prompt(
+                    "Recipient domain: ", prompt_suffix="username@"
+                )
+            else:
+                print(
+                    f"You may specify a common domain under which they receive emails, "
+                    f"or press enter to skip these users."
+                )
+                recipient_domain = click.prompt(
+                    "Recipient domain: ",
+                    prompt_suffix="username@",
+                    default="",
+                    show_default=False,
+                )
+        if recipient_domain:
+            users = [
+                (
+                    username,
+                    email if "@" in email else f"{email}@{recipient_domain}",
+                    password,
+                    team,
+                )
+                for (username, email, password, team) in users
+            ]
+        else:
+            users = [
+                (username, email, password, team)
+                for (username, email, password, team) in users
+                if "@" in email
+            ]
 
-    try:
-        users = [
-            UserInfo(name, password, teams.get(name))
-            for (name, password) in passwords
-        ]
-    except KeyError:
-        # We either have teams for all users or none at all.
-        users = [
-            UserInfo(name, password, None)
-            for (name, password) in passwords
-        ]
-
-    for user in users:
-        print(user)
-    click.confirm(f"Found credentials for {len(users)} users. Is this correct?", abort=True)
+    click.confirm(f"Emailing {len(users)} users. Is this correct?", abort=True)
 
     template = _get_mail_template()
 
     with click.progressbar(users, label="Sending emails...") as progress:
-        for i, user in enumerate(progress):
-            message = MIMEText(template.format(
-                ctf_domain=ctf_domain,
-                user=user,
-            ))
-            message['Subject'] = subject
-            message['From'] = f"{sender} <{smtp_username}>"
-            message['To'] = f"{user.username}@{receiver_domain}"
+        for i, (username, email, password, team) in enumerate(progress):
+            message = MIMEText(
+                template.format(
+                    origin=r8.settings["origin"],
+                    username=username,
+                    password=password,
+                    team=team,
+                )
+            )
+            message["Subject"] = subject
+            message["From"] = from_
+            message["To"] = email
 
-            to = [message['To']]
+            to = [message["To"]]
             if not smtp_username.startswith("noreply"):
                 to.append(smtp_username)
 
@@ -339,9 +410,7 @@ def send_mails(
             s.starttls()
             s.login(smtp_username, smtp_password)
             s.sendmail(
-                message['From'],
-                [message['To'], smtp_username],
-                message.as_string()
+                message["From"], [message["To"], smtp_username], message.as_string()
             )
             s.quit()
 

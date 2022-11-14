@@ -23,14 +23,16 @@ INSERT INTO challenges (cid, team, t_start, t_stop) VALUES
   ('FormExample', 1, datetime('now'), datetime('now','+1 month'))
 ;
 
--- Configure all user accounts. See `r8 password --help` for password generation.
+-- Configure all user accounts. r8 does hashed passwords by default, but also supports plaintext credentials from
+-- config.sql. This may be useful to provision users with `r8 users send-credentials`.
+-- See `r8 password --help` for more details on password generation.
 DELETE FROM users;
 INSERT INTO users (uid, password) VALUES
   -- Username: userN
   -- Password: test
-  ('user1', '$argon2i$v=19$m=512,t=2,p=2$xDeorlDXJFgubKyG+YJvHQ$MC1qibUX5Ah04ZFHVPsqNQ'),  -- test
-  ('user2', '$argon2i$v=19$m=512,t=2,p=2$xDeorlDXJFgubKyG+YJvHQ$MC1qibUX5Ah04ZFHVPsqNQ'),  -- test
-  ('user3', '$argon2i$v=19$m=512,t=2,p=2$xDeorlDXJFgubKyG+YJvHQ$MC1qibUX5Ah04ZFHVPsqNQ')   -- test
+  ('user1', '$plain$test'),
+  ('user2', '$plain$test'),
+  ('user3', '$argon2i$v=19$m=512,t=2,p=2$xDeorlDXJFgubKyG+YJvHQ$MC1qibUX5Ah04ZFHVPsqNQ')
 ;
 
 -- Configure all teams. For challenges with team=1,

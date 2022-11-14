@@ -64,8 +64,17 @@ def test_sql(r8cli):
 
 
 def test_users(r8cli):
-    r8cli("users")
-    r8cli("users -T --teams --format csv")
+    r8cli("users show")
+    r8cli("users show -T --teams --format csv")
+    r8cli(
+        [
+            "users",
+            "make-sql",
+            str(here / "usernames.txt"),
+            "--teams",
+            str(here / "usernames.txt"),
+        ]
+    )
 
 
 def test_teams(r8cli):
