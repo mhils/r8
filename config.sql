@@ -45,6 +45,25 @@ INSERT INTO teams (tid, uid) VALUES
 ;
 
 
+INSERT OR
+REPLACE INTO settings (key, value)
+VALUES
+  -- Timestamp when the CTF starts. Optional, used for better scoreboard rendering and page auto-reload on start.
+  -- ('start', strftime('%s', datetime('2022-06-18 09:40:00-07:00')))
+  -- Enable scoreboard functionality
+  ('scoring', 'false'),
+  -- Bonus points for the first team to solve a challenge. Second team gets half of this, and so on.
+  ('scoring_first_solve_bonus', '8'),
+  -- Dynamic scoring - the more teams solve a challenge the fewer points it is worth.
+  -- See r8/scoring.py:challenge_points for the formula.
+  ('scoring_alpha', '0'),
+  ('scoring_beta', '1'),
+  -- Self-registration for users.
+  ('register', 'false'),
+  -- Language for localized challenges (ISO 639-1, e.g. "en" or "de").
+  ('lang', 'en'),
+;
+
 -- Delete unsubmitted flags for removed challenges to avoid foreign key constraints during configuration.
 DELETE FROM flags WHERE cid NOT IN (SELECT cid FROM challenges);
 --
