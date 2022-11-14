@@ -1,13 +1,5 @@
-import io
 import random
-import re
-import smtplib
-from contextlib import redirect_stdout
-from dataclasses import dataclass
-from email.mime.text import MIMEText
 from pathlib import Path
-from textwrap import dedent
-from time import sleep
 
 import click
 
