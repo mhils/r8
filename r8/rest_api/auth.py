@@ -83,7 +83,12 @@ async def login(request: web.Request):
     try:
         if not ok:
             raise ValueError()
-        r8.util.verify_hash(ok[0], password)
+        hash: str = ok[0]
+        if hash.startswith("$plain$"):
+            if hash.removeprefix("$plain$") != password:
+                raise ValueError()
+        else:
+            r8.util.verify_hash(hash, password)
         r8.log(request, "login-success", uid=user)
         token = r8.util.auth_sign.sign(user.encode()).decode()
         is_secure = not r8.settings["origin"].startswith("http://")

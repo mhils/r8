@@ -28,17 +28,18 @@ DELETE FROM users;
 INSERT INTO users (uid, password) VALUES
   -- Username: userN
   -- Password: test
-  ('user1', '$argon2i$v=19$m=512,t=2,p=2$xDeorlDXJFgubKyG+YJvHQ$MC1qibUX5Ah04ZFHVPsqNQ'),
-  ('user2', '$argon2i$v=19$m=512,t=2,p=2$xDeorlDXJFgubKyG+YJvHQ$MC1qibUX5Ah04ZFHVPsqNQ'),
-  ('user3', '$argon2i$v=19$m=512,t=2,p=2$xDeorlDXJFgubKyG+YJvHQ$MC1qibUX5Ah04ZFHVPsqNQ')
+  ('user1', '$argon2i$v=19$m=512,t=2,p=2$xDeorlDXJFgubKyG+YJvHQ$MC1qibUX5Ah04ZFHVPsqNQ'),  -- test
+  ('user2', '$argon2i$v=19$m=512,t=2,p=2$xDeorlDXJFgubKyG+YJvHQ$MC1qibUX5Ah04ZFHVPsqNQ'),  -- test
+  ('user3', '$argon2i$v=19$m=512,t=2,p=2$xDeorlDXJFgubKyG+YJvHQ$MC1qibUX5Ah04ZFHVPsqNQ')   -- test
 ;
 
 -- Configure all teams. For challenges with team=1,
 -- a single submission will mark challenges as solved by all team members.
 DELETE FROM teams;
 INSERT INTO teams (tid, uid) VALUES
-  ('42', 'user1'),
-  ('42', 'user2')
+  ('team 42', 'user1'),
+  ('team 42', 'user2'),
+  ('other team', 'user3')
 ;
 
 
