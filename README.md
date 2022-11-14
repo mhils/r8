@@ -127,6 +127,20 @@ r8 consists of the following parts:
 
 To speed up development, the server can be automatically reloaded on changes using [modd](https://github.com/cortesi/modd).
 
+## User Provisioning
+
+r8 can be set up to allow users to register themselves (by enabling the `register` setting, see `config.sql`), 
+but you may also use it with a fixed set of users.
+The following workflow works well to provision accounts for a class:
+
+1. Create a text file with one username per line. Those should be email addresses or the local part of an email address.
+   For example, add `john.doe` and `jane.doe` if their email addresses are `john.doe@example.com` and `jane.doe@example.com`.
+   If they are on different domains, use complete email addresses, e.g. `john@example.com` and `jane@other.example.org`.
+2. Run `r8 users make-sql usernames.txt` (optionally with `--teams r8/misc/teamnames.txt`).  
+   Put the output into your `config.sql` file.
+3. Run `r8 sql file config.sql` to apply the changes to the database.
+4. Run `r8 users send-credentials` to send out emails with login details.
+
 ## Deployment
 
 For production use, it is recommended to run r8 on a throwaway VM behind a TLS-terminating reverse 
