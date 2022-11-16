@@ -61,7 +61,7 @@ VALUES
   -- Self-registration for users.
   ('register', 'false'),
   -- Language for localized challenges (ISO 639-1, e.g. "en" or "de").
-  ('lang', 'en'),
+  ('lang', '"en"'),
 ;
 
 -- Delete unsubmitted flags for removed challenges to avoid foreign key constraints during configuration.
