@@ -2,6 +2,7 @@
 The public API of r8 that is exposed to challenges.
 """
 import sqlite3
+from collections.abc import Mapping
 from typing import Any
 
 from r8 import util
@@ -11,7 +12,7 @@ from r8.util import echo
 from r8.util import log
 
 db: sqlite3.Connection
-settings: dict[str, Any] = {}
+settings: Mapping[str, Any] = {}
 
 __all__ = ["Challenge", "challenges", "db", "util", "log", "echo"]
 

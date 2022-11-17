@@ -48,8 +48,12 @@ INSERT INTO teams (tid, uid) VALUES
 INSERT OR
 REPLACE INTO settings (key, value)
 VALUES
+  -- All values must be valid JSON, i.e. strings need to be quoted.
+
+  -- Origin (hostname/URL) under which r8 will be hosted. This is used to generate absolute URLs.
+  ('origin', 'http://localhost:8000'),
   -- Timestamp when the CTF starts. Optional, used for better scoreboard rendering and page auto-reload on start.
-  -- ('start', strftime('%s', datetime('2022-06-18 09:40:00-07:00')))
+  ('start', strftime('%s', datetime('now')))
   -- Enable scoreboard functionality
   ('scoring', 'false'),
   -- Bonus points for the first team to solve a challenge. Second team gets half of this, and so on.

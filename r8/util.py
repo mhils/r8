@@ -11,6 +11,7 @@ import sqlite3
 import sys
 import textwrap
 import traceback
+import warnings
 from collections.abc import Iterable
 from functools import wraps
 from pathlib import Path
@@ -383,10 +384,9 @@ def with_database(echo=False):
                 for k, v in r8.db.execute("SELECT key, value FROM settings").fetchall():
                     try:
                         val = json.loads(v)
-                    except ValueError as e:
-                        raise ValueError(
-                            f"Setting {k} is not JSON-deserializable: {v!r}"
-                        ) from e
+                    except ValueError:
+                        warnings.warn(f"Setting {k} is not a valid JSON value: {v!r}. It will be ignored.")
+                        continue
                     r8.settings[k] = val
             return f(**kwds)
 
