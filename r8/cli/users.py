@@ -379,7 +379,10 @@ def send_credentials(
                 if "@" in email
             ]
 
-    click.confirm(f"The plan is to email {len(users)} users. Continue with editing the email template?", abort=True)
+    click.confirm(
+        f"The plan is to email {len(users)} users. Continue with editing the email template?",
+        abort=True,
+    )
 
     template = _get_mail_template()
 
@@ -406,7 +409,10 @@ def send_credentials(
                 click.secho("=" * 20 + " First Email to be sent " + "=" * 20, fg="cyan")
                 print(str(message))
                 click.secho("=" * 64, fg="cyan")
-                click.confirm(f"Does the draft above look good? If yes, the first email will be sent.", abort=True)
+                click.confirm(
+                    f"Does the draft above look good? If yes, the first email will be sent.",
+                    abort=True,
+                )
 
             s = smtplib.SMTP(smtp_server, 587)
             s.starttls()

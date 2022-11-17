@@ -385,7 +385,9 @@ def with_database(echo=False):
                     try:
                         val = json.loads(v)
                     except ValueError:
-                        warnings.warn(f"Setting {k} is not a valid JSON value: {v!r}. It will be ignored.")
+                        warnings.warn(
+                            f"Setting {k} is not a valid JSON value: {v!r}. It will be ignored."
+                        )
                         continue
                     r8.settings[k] = val
             return f(**kwds)
