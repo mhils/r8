@@ -6,14 +6,13 @@
 
 r8 is a simple [jeopardy-style](https://ctftime.org/ctf-wtf/) CTF system. What sets it apart from other platforms?
 
-1. r8 is intentionally simple. It won't send emails, support multi-server deployments,
-   or provide an LDAP integration.
+1. r8 is intentionally simple. It won't support multi-server deployments, provide an LDAP integration.
 3. r8 is designed to support CTF events, but also entire university courses. 
    It can be deployed for an entire semester and includes challenge scheduling functionality and logging capabilities to detect cheating.
 3. r8 is written in modern Python 3. This generally makes it easy to spawn additional network services or interface with other tools and languages.
 
-r8 is successfully being used for teaching at the University of California, Berkeley and the University of Innsbruck, 
-Austria.
+r8 is successfully being used for teaching at the University of California, Berkeley, the University of Innsbruck,
+as well as some other places for hiring assessments.
 
 # Quick Start
 

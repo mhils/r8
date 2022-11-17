@@ -44,10 +44,10 @@ def list_available_challenges():
 
     challenges = {}
     for name, cls in r8.challenges._classes.items():
-        mod = cls.__module__.split(".")[0]
+        mod = cls.__module__.rsplit(".", maxsplit=1)[0]
         challenges.setdefault(mod, []).append(name)
 
     for mod, challenges in sorted(challenges.items()):
-        print(f"{mod}:")
+        click.secho(f"[{mod}]", fg="cyan")
         for c in sorted(challenges):
-            print(f" - {c}")
+            print(c)

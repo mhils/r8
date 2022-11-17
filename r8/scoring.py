@@ -95,8 +95,8 @@ if __name__ == "__main__":
 
     r8.settings = {
         "scoring": True,
-        "scoring_alpha": 0.1,
-        "scoring_beta": 2,
+        "scoring_alpha": 0.15,
+        "scoring_beta": 1,
     }
     plt.plot(range(1, N), [challenge_points(dummy, i) for i in range(1, N)])
     plt.ylabel("score")
