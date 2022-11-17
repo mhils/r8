@@ -306,6 +306,8 @@ def send_credentials(
     First, passwords can only be sent out for users with plaintext passwords in the database.
     Second, usernames must be full email addresses or the local part (the part before "@") of an email address
     with all users sharing the same domain.
+
+    This command will show explicit confirmation prompts before sending any emails.
     """
 
     with r8.db:
@@ -333,7 +335,7 @@ def send_credentials(
         click.secho("All users with plaintext passwords have a team.", fg="green")
     else:
         click.confirm(
-            f"Only {has_team_count} of {len(users)} users have a team. Continue?",
+            f"Only {has_team_count} of {len(users)} users have a team. Continue with setup?",
             abort=True,
         )
 
@@ -377,7 +379,7 @@ def send_credentials(
                 if "@" in email
             ]
 
-    click.confirm(f"Emailing {len(users)} users. Is this correct?", abort=True)
+    click.confirm(f"The plan is to email {len(users)} users. Continue with editing the email template?", abort=True)
 
     template = _get_mail_template()
 
@@ -404,7 +406,7 @@ def send_credentials(
                 click.secho("=" * 20 + " First Email to be sent " + "=" * 20, fg="cyan")
                 print(str(message))
                 click.secho("=" * 64, fg="cyan")
-                click.confirm(f"Does the email above look good?", abort=True)
+                click.confirm(f"Does the draft above look good? If yes, the first email will be sent.", abort=True)
 
             s = smtplib.SMTP(smtp_server, 587)
             s.starttls()
@@ -415,6 +417,6 @@ def send_credentials(
             s.quit()
 
             if i == 0:
-                click.confirm(f"First email sent. Continue?", abort=True)
+                click.confirm(f"First email sent. Send all other emails?", abort=True)
             # Don't run into rate limits.
             time.sleep(10)
