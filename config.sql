@@ -51,9 +51,9 @@ VALUES
   -- All values must be valid JSON, i.e. strings need to be quoted.
 
   -- Origin (hostname/URL) under which r8 will be hosted. This is used to generate absolute URLs.
-  ('origin', 'http://localhost:8000'),
+  ('origin', '"http://localhost:8000"'),
   -- Timestamp when the CTF starts. Optional, used for better scoreboard rendering and page auto-reload on start.
-  ('start', strftime('%s', datetime('now')))
+  ('start', strftime('%s', datetime('now'))),
   -- Enable scoreboard functionality
   ('scoring', 'false'),
   -- Bonus points for the first team to solve a challenge. Second team gets half of this, and so on.
@@ -65,7 +65,7 @@ VALUES
   -- Self-registration for users.
   ('register', 'false'),
   -- Language for localized challenges (ISO 639-1, e.g. "en" or "de").
-  ('lang', '"en"'),
+  ('lang', '"en"')
 ;
 
 -- Delete unsubmitted flags for removed challenges to avoid foreign key constraints during configuration.
