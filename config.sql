@@ -68,8 +68,10 @@ VALUES
   ('lang', '"en"')
 ;
 
--- Delete unsubmitted flags for removed challenges to avoid foreign key constraints during configuration.
+-- Delete unsubmitted flags and challenge data for challenges that have been removed.
+-- This avoids foreign key constraints errors during configuration.
 DELETE FROM flags WHERE cid NOT IN (SELECT cid FROM challenges);
+DELETE FROM data WHERE cid NOT IN (SELECT cid FROM challenges);
 --
 --
 -- The SQL statements below only serve to illustrate the r8 UI.
