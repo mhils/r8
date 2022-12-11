@@ -59,7 +59,7 @@ class DockerChallenge(r8.Challenge):
         r8.settings.get("docker_max_concurrent", 5)
     )
     """Maximum number of concurrent `docker run` commands."""
-    max_concurrent_build:  ClassVar[asyncio.Semaphore] = asyncio.Semaphore(1)
+    max_concurrent_build: ClassVar[asyncio.Semaphore] = asyncio.Semaphore(1)
     """Maximum number of concurrent `docker build` commands on startup."""
     timeout = r8.settings.get("docker_timeout", 10)
     debug = r8.settings.get("docker_debug", False)
