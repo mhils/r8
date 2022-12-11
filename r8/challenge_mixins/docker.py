@@ -58,6 +58,9 @@ class DockerChallenge(r8.Challenge):
     max_concurrent: ClassVar[asyncio.Semaphore] = asyncio.Semaphore(
         r8.settings.get("docker_max_concurrent", 5)
     )
+    """Maximum number of concurrent `docker run` commands."""
+    max_concurrent_build:  ClassVar[asyncio.Semaphore] = asyncio.Semaphore(1)
+    """Maximum number of concurrent `docker build` commands on startup."""
     timeout = r8.settings.get("docker_timeout", 10)
     debug = r8.settings.get("docker_debug", False)
     active_users: ClassVar[set[str]] = set()
@@ -129,15 +132,16 @@ class DockerChallenge(r8.Challenge):
             if shutil.which("docker") is None:
                 self.echo("Docker not installed. Cannot build challenge.", err=True)
                 return
-            self.echo(f"Docker: Building {self.docker_tag}...")
-            await self._exec(
-                "docker",
-                "build",
-                "-t",
-                self.docker_tag,
-                str(self.dockerfile.absolute()),
-            )
-            self.echo(f"Docker: {self.docker_tag} built.")
+            async with self.max_concurrent_build:
+                self.echo(f"Docker: Building {self.docker_tag}...")
+                await self._exec(
+                    "docker",
+                    "build",
+                    "-t",
+                    self.docker_tag,
+                    str(self.dockerfile.absolute()),
+                )
+                self.echo(f"Docker: {self.docker_tag} built.")
         else:
             _, stdout, _ = await self._exec("docker", "images", "-q", self.docker_tag)
             if not stdout:
