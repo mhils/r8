@@ -196,7 +196,7 @@ def make_sql(ctx: click.Context, usernames: io.StringIO, teamnames: io.StringIO)
 
     click.secho("\nDELETE FROM teams;", fg="cyan")
     click.secho("INSERT INTO teams (uid, tid) VALUES", fg="cyan")
-    for (user, team) in zip(users, teams):
+    for user, team in zip(users, teams):
         if user != users[-1]:
             print(f"  ('{user}', '{team}'),")
         else:
