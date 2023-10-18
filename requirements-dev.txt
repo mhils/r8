@@ -41,5 +41,5 @@ sphinxcontrib-qthelp==1.0.3
 sphinxcontrib-serializinghtml==1.1.5
 sphinxcontrib-trio==1.1.2
 texttable==1.6.4
-urllib3==1.26.17
+urllib3==1.26.18
 yarl==1.8.1
