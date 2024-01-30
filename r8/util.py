@@ -647,9 +647,9 @@ async def get_challenges(user: str):
             challenge["title"] = challenge["cid"]
             challenge["visible"] = True
             challenge["tags"] = []
-            challenge[
-                "description"
-            ] = f"<pre>{html.escape(traceback.format_exc())}</pre>"
+            challenge["description"] = (
+                f"<pre>{html.escape(traceback.format_exc())}</pre>"
+            )
             continue
 
         try:
@@ -659,18 +659,18 @@ async def get_challenges(user: str):
         except Exception:
             challenge["visible"] = True
             challenge["tags"] = []
-            challenge[
-                "description"
-            ] = f"<pre>{html.escape(traceback.format_exc())}</pre>"
+            challenge["description"] = (
+                f"<pre>{html.escape(traceback.format_exc())}</pre>"
+            )
             continue
 
         try:
             challenge["tags"] = [str(x) for x in inst.tags]
         except Exception:
             challenge["tags"] = []
-            challenge[
-                "description"
-            ] = f"<pre>{html.escape(traceback.format_exc())}</pre>"
+            challenge["description"] = (
+                f"<pre>{html.escape(traceback.format_exc())}</pre>"
+            )
             continue
 
         try:
@@ -678,9 +678,9 @@ async def get_challenges(user: str):
                 user, bool(challenge["solve_time"])
             )
         except Exception:
-            challenge[
-                "description"
-            ] = f"<pre>{html.escape(traceback.format_exc())}</pre>"
+            challenge["description"] = (
+                f"<pre>{html.escape(traceback.format_exc())}</pre>"
+            )
 
         challenge["points"] = scoring.challenge_points(inst, challenge["solves"])
 
