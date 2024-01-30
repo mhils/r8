@@ -1,6 +1,7 @@
 """
 The public API of r8 that is exposed to challenges.
 """
+
 import sqlite3
 from collections.abc import Mapping
 from typing import Any
