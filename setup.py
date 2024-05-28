@@ -49,6 +49,7 @@ setup(
         "aiohttp_jinja2",
         "itsdangerous",
         "blinker",
+        "setuptools",
     ],
     extras_require={
         "extra": [
