@@ -15,7 +15,7 @@ def cli():
 def list(rows):
     """Print all teams."""
     util.run_sql(
-        f"""
+        """
     SELECT tid, uid FROM teams
     ORDER BY tid, uid DESC
     """,

@@ -353,8 +353,8 @@ def send_credentials(
                 )
             else:
                 print(
-                    f"You may specify a common domain under which they receive emails, "
-                    f"or press enter to skip these users."
+                    "You may specify a common domain under which they receive emails, "
+                    "or press enter to skip these users."
                 )
                 recipient_domain = click.prompt(
                     "Recipient domain: ",
@@ -410,7 +410,7 @@ def send_credentials(
                 print(str(message))
                 click.secho("=" * 64, fg="cyan")
                 click.confirm(
-                    f"Does the draft above look good? If yes, the first email will be sent.",
+                    "Does the draft above look good? If yes, the first email will be sent.",
                     abort=True,
                 )
 
@@ -423,6 +423,6 @@ def send_credentials(
             s.quit()
 
             if i == 0:
-                click.confirm(f"First email sent. Send all other emails?", abort=True)
+                click.confirm("First email sent. Send all other emails?", abort=True)
             # Don't run into rate limits.
             time.sleep(10)

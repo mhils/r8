@@ -175,7 +175,7 @@ class DockerChallenge(r8.Challenge):
                 self._exec(*cmd), timeout=self.timeout
             )
         except asyncio.TimeoutError:
-            self.echo(f"Docker: Timeout. Killing...")
+            self.echo("Docker: Timeout. Killing...")
             try:
                 await self._exec("docker", "kill", name)
             except DockerError as e:
@@ -188,7 +188,7 @@ class DockerChallenge(r8.Challenge):
                     self.echo(str(e), err=True)
                     raise
             else:
-                self.echo(f"Docker: Killed.")
+                self.echo("Docker: Killed.")
             raise DockerError("Process timed out.", cmd)
         else:
             self.echo(

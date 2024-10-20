@@ -518,17 +518,14 @@ def submit_flag(flag: str, user: str, ip: THasIP, force: bool = False) -> str:
             r8.log(ip, "flag-err-unknown", flag)
             raise ValueError("Unknown user.")
 
-        flag, cid = (
-            r8.db.execute(
-                """
+        flag, cid = r8.db.execute(
+            """
           SELECT fid, cid FROM flags
           NATURAL INNER JOIN challenges
           WHERE fid = ? OR fid = ?
         """,
-                (flag, correct_flag(flag)),
-            ).fetchone()
-            or [flag, None]
-        )
+            (flag, correct_flag(flag)),
+        ).fetchone() or [flag, None]
         if not cid:
             r8.log(ip, "flag-err-unknown", flag, uid=user)
             raise ValueError("Unknown Flag ¯\\_(ツ)_/¯")

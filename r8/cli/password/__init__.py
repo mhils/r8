@@ -69,6 +69,6 @@ def update_temporary(user, password):
         r8.db.execute("UPDATE users SET password = ? WHERE uid = ?", (password, user))
     r8.echo(
         "r8",
-        f"Password updated. "
-        f"Note that this change may only be temporary if you reset credentials in `config.sql`.",
+        "Password updated. "
+        "Note that this change may only be temporary if you reset credentials in `config.sql`.",
     )

@@ -106,7 +106,7 @@ def revoke(flag, user):
                 r8.db.execute(
                     "DELETE FROM submissions WHERE fid = ? AND uid = ?", (flag, user)
                 )
-                r8.echo("r8", f"Submission revoked.")
+                r8.echo("r8", "Submission revoked.")
             else:
                 raise click.UsageError(f"Error: {user} did not submit {flag}.")
         else:

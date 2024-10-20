@@ -314,7 +314,7 @@ class _Challenges:
         try:
             await inst.stop()
         except Exception:
-            r8.echo(cid, f"Error on stop.", err=True)
+            r8.echo(cid, "Error on stop.", err=True)
             traceback.print_exc()
         else:
             if type(inst).stop is not Challenge.stop:
