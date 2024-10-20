@@ -60,6 +60,7 @@ setup(
             "sphinx",
             "sphinxcontrib-trio",
             "pytest",
+            "ruff",
         ],
     },
 )
