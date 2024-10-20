@@ -9,9 +9,7 @@ jobs:
   test:
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v1
-      - uses: actions/setup-python@v2
-        with:
-          python-version: 3.9
-      - run: pip install tox
-      - run: tox
+      - uses: mhils/workflows/checkout@v11
+      - uses: mhils/workflows/setup-python@v11
+      - uses: mhils/workflows/setup-uv@v11
+      - run: uv run tox

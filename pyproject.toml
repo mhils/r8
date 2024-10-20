@@ -1,0 +1,74 @@
+[project]
+name = "r8"
+description = "A ctf-style autograding system."
+readme = "README.md"
+requires-python = ">=3.9"
+license = { text="MIT" }
+authors = [{name = "Maximilian Hils", email = "r8@maximilianhils.com"}]
+dynamic = ["version"]
+classifiers = [
+    "License :: OSI Approved :: MIT License",
+    "Development Status :: 5 - Production/Stable",
+    "Intended Audience :: Education",
+    "Operating System :: OS Independent",
+    "Topic :: Education",
+    "Topic :: Education :: Computer Aided Instruction (CAI)",
+    "Programming Language :: Python :: 3.9",
+]
+
+dependencies = [
+    "click",
+    "texttable",
+    "argon2_cffi",
+    "aiohttp",
+    "aiohttp_jinja2",
+    "itsdangerous",
+    "blinker",
+    "setuptools",
+]
+[project.optional-dependencies]
+extra = [
+    "wcwidth",
+    "aiohttp[speedups]",
+]
+[tool.uv]
+dev-dependencies = [
+    "sphinx",
+    "sphinxcontrib-trio",
+    "pytest",
+    "ruff",
+    "tox",
+    "tox-uv",
+    "mypy",
+]
+
+[project.scripts]
+r8 = "r8.cli:main"
+
+[project.entry-points."r8.challenges"]
+dir = "r8.builtin_challenges"
+
+[project.urls]
+Homepage = "https://github.com/mhils/r8"
+
+[build-system]
+requires = ["setuptools"]
+build-backend = "setuptools.build_meta"
+
+[tool.setuptools.dynamic]
+version = {attr = "r8.__version__"}
+
+[tool.setuptools.packages.find]
+include = ["r8*"]
+
+[tool.tox]
+legacy_tox_ini = """
+[tox]
+envlist = lint, py
+toxworkdir = {env:TOX_WORK_DIR:.tox}
+runner = uv-venv-lock-runner
+
+[testenv]
+commands =
+    pytest
+"""
