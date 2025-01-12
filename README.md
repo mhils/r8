@@ -4,7 +4,7 @@
 <strong>r8 - /ɹeɪt/</strong>
 </p>
 
-r8 is a simple [jeopardy-style](https://ctftime.org/ctf-wtf/) CTF system. What sets it apart from other platforms?
+r8 is a simple [jeopardy-style](https://ctftime.org/ctf-wtf/) CTF ([Capture the Flag](https://en.wikipedia.org/wiki/Capture_the_flag_(cybersecurity))) system. What sets it apart from other platforms?
 
 1. r8 is intentionally simple. It won't support multi-server deployments or provide an LDAP integration.
 3. r8 is designed to support CTF events, but also entire university courses. 
